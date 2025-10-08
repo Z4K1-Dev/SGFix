@@ -78,7 +78,7 @@ export default function HomePage() {
   };
   
   // Socket integration
-  const { isConnected, connectionError } = useSocket('user')
+  const { isConnected, connectionError, isOfflineMode } = useSocket('user')
 
   useEffect(() => {
     fetchData()
@@ -121,13 +121,13 @@ export default function HomePage() {
   const fetchData = async () => {
     try {
       const [beritaRes, laporanRes] = await Promise.all([
-        fetch('/api/berita'),
+        fetch('/api/berita?published=true'),
         fetch('/api/laporan')
       ])
 
       if (beritaRes.ok) {
         const beritaData = await beritaRes.json()
-        setBerita(beritaData.filter((item: Berita) => item.published))
+        setBerita(beritaData)
       }
       if (laporanRes.ok) {
         setLaporan(await laporanRes.json())
@@ -277,7 +277,7 @@ export default function HomePage() {
                     <span className="text-xs font-medium">Online</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1 text-red-300">
+                  <div className="flex items-center gap-1 text-yellow-300">
                     <WifiOff size={14} />
                     <span className="text-xs font-medium">Offline</span>
                   </div>
@@ -331,8 +331,8 @@ export default function HomePage() {
                     }}
                   >
                     <div className="min-w-full h-full relative">
-                      <img 
-                        src="/ads1.jpg" 
+                      <img
+                        src="/pic1.jpg"
                         alt="Government Services Advertisement 1"
                         className={`w-full h-full object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
                       />
@@ -344,8 +344,8 @@ export default function HomePage() {
                       </div>
                     </div>
                     <div className="min-w-full h-full relative">
-                      <img 
-                        src="/ads2.jpg" 
+                      <img
+                        src="/pic2.jpg"
                         alt="Government Services Advertisement 2"
                         className={`w-full h-full object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
                       />
@@ -357,8 +357,8 @@ export default function HomePage() {
                       </div>
                     </div>
                     <div className="min-w-full h-full relative">
-                      <img 
-                        src="/ads3.jpg" 
+                      <img
+                        src="/pic3.jpg"
                         alt="Government Services Advertisement 3"
                         className={`w-full h-full object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
                       />
@@ -420,9 +420,12 @@ export default function HomePage() {
                   <CardTitle className="text-base font-semibold text-foreground">Layanan Cepat</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start h-12 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 active:shadow-none active:scale-[0.98] transition-all duration-200">
+                  <Button
+                    className="w-full justify-start h-12 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 active:shadow-none active:scale-[0.98] transition-all duration-200"
+                    onClick={() => window.location.href = '/buat-laporan'}
+                  >
                     <Camera className="mr-3" size={20} />
-                    Buat Laporan Foto
+                    Buat Laporan
                     <ChevronRight className="ml-auto" size={16} />
                   </Button>
                   <Button className="w-full justify-start h-12 bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border active:shadow-none active:scale-[0.98] transition-all duration-200">
@@ -545,11 +548,33 @@ export default function HomePage() {
                     <CardContent>
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{item.keterangan}</p>
                       {item.foto && (
-                        <div className="w-full h-32 bg-muted rounded-xl mb-3 flex items-center justify-center">
-                          <Camera size={32} />
+                        <div className="w-full h-32 bg-muted rounded-xl mb-3 overflow-hidden">
+                          <img
+                            src={item.foto}
+                            alt={item.judul}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback jika gambar gagal dimuat
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              target.parentElement!.innerHTML = `
+                                <div class="w-full h-32 bg-muted rounded-xl mb-3 flex items-center justify-center">
+                                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                  </svg>
+                                </div>
+                              `;
+                            }}
+                          />
                         </div>
                       )}
-                      <Button variant="outline" size="sm" className="w-full active:shadow-none active:scale-[0.98] transition-all duration-200" onClick={() => toast.info('Fitur detail laporan akan segera hadir')}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full active:shadow-none active:scale-[0.98] transition-all duration-200"
+                        onClick={() => window.location.href = `/laporan/${item.id}`}
+                      >
                         Lihat Detail
                       </Button>
                     </CardContent>
@@ -561,12 +586,30 @@ export default function HomePage() {
                       <MessageSquare size={64} />
                       <p className="text-base text-muted-foreground font-medium">Belum ada laporan</p>
                       <p className="text-sm text-muted-foreground mt-1">Buat laporan pertama Anda</p>
+                      <Button
+                        className="mt-4 bg-primary hover:bg-primary/90"
+                        onClick={() => window.location.href = '/buat-laporan'}
+                      >
+                        <Camera className="mr-2" size={16} />
+                        Buat Laporan Baru
+                      </Button>
                     </CardContent>
                   </Card>
                 )}
               </div>
             </TabsContent>
           </Tabs>
+
+          {/* Floating Action Button untuk Buat Laporan */}
+          <div className="fixed bottom-24 right-4 z-40">
+            <Button
+              size="lg"
+              className="w-14 h-14 rounded-full shadow-lg bg-primary hover:bg-primary/90"
+              onClick={() => window.location.href = '/buat-laporan'}
+            >
+              <Camera size={24} />
+            </Button>
+          </div>
         </main>
 
         {/* Bottom Navigation */}

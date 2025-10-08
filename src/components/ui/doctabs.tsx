@@ -10,7 +10,7 @@ const HomeIcon = ({ className = "w-5 h-5" }) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="1.75"
+    strokeWidth={1.75}
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
@@ -28,7 +28,7 @@ const UserIcon = ({ className = "w-5 h-5" }) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="1.75"
+    strokeWidth={1.75}
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
@@ -46,7 +46,7 @@ const SettingsIcon = ({ className = "w-5 h-5" }) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="1.75"
+    strokeWidth={1.75}
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
@@ -64,9 +64,9 @@ const FileText = ({ className = "w-5 h-5" }) => (
     viewBox="0 0 24 24" 
     fill="none" 
     stroke="currentColor" 
-    strokeWidth="1.75" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
+    strokeWidth={1.75}
+    strokeLinecap="round"
+    strokeLinejoin="round"
     className={className}
   >
     <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>
@@ -85,9 +85,9 @@ const Laporan = ({ className = "w-5 h-5" }) => (
     viewBox="0 0 24 24" 
     fill="none" 
     stroke="currentColor" 
-    strokeWidth="1.75" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
+    strokeWidth={1.75}
+    strokeLinecap="round"
+    strokeLinejoin="round"
     className={className}
   >
     <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/>

@@ -15,6 +15,7 @@ export const useSocket = (role: 'admin' | 'user') => {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isConnected, setIsConnected] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
     // Only import socket.io-client on the client side
@@ -28,65 +29,31 @@ export const useSocket = (role: 'admin' | 'user') => {
         const { io } = await import('socket.io-client')
 
         // Detect if we're in remote access environment
-        const isRemoteAccess = 
-          (window.location.hostname.includes('space.z.ai') || 
+        const isRemoteAccess =
+          (window.location.hostname.includes('space.z.ai') ||
            window.location.hostname.includes('preview-chat') ||
            window.location.protocol === 'https:')
-
-        console.log('Environment detection:', {
-          isRemoteAccess,
-          hostname: window.location?.hostname,
-          protocol: window.location?.protocol,
-          host: window.location?.host
-        })
 
         // Socket.io configuration
         let socketUrl: string
         let socketOptions: any = {
           forceNew: true,
-          reconnection: true,
-          reconnectionAttempts: isRemoteAccess ? 5 : 3,
-          reconnectionDelay: 2000,
-          timeout: 10000,
+          reconnection: false, // Disable auto reconnection to reduce errors
+          timeout: 5000, // Shorter timeout
           withCredentials: false
         }
 
         if (isRemoteAccess) {
-          // For remote access, try to use socket.io but with fallback
-          socketUrl = `${window.location.protocol}//${window.location.host}/api/socketio`
-          socketOptions.transports = ['polling'] // Only polling for remote
+          // For remote access, use fallback mode immediately
+          console.log('Remote access detected, using offline mode')
+          setConnectionError('Offline mode - real-time features not available')
+          setIsConnected(false)
+          return
+        } else {
+          socketUrl = '/api/socket/io'
+          socketOptions.transports = ['polling'] // Use polling only for better compatibility
           socketOptions.upgrade = false
           socketOptions.rememberUpgrade = false
-          
-          console.log('Remote socket configuration:', { url: socketUrl })
-          
-          // Test if socket.io is available by making a simple request first
-          try {
-            const testResponse = await fetch(`${socketUrl}?EIO=4&transport=polling`, {
-              method: 'GET',
-              headers: {
-                'Accept': 'text/plain',
-                'Content-Type': 'text/plain'
-              }
-            })
-            
-            if (!testResponse.ok) {
-              throw new Error('Socket.IO not available')
-            }
-            
-            console.log('Socket.IO endpoint is accessible')
-          } catch (testError) {
-            console.log('Socket.IO not accessible, using mock mode')
-            setConnectionError('Socket.IO not available in this environment')
-            setIsConnected(false)
-            return
-          }
-        } else {
-          socketUrl = '/api/socketio'
-          socketOptions.transports = ['websocket', 'polling']
-          socketOptions.upgrade = true
-          socketOptions.rememberUpgrade = true
-          console.log('Local socket configuration:', { url: socketUrl })
         }
 
         socketInstance = io(socketUrl, socketOptions)
@@ -112,22 +79,16 @@ export const useSocket = (role: 'admin' | 'user') => {
         })
 
         socketInstance.on('connect_error', (error: any) => {
-          console.error('Socket connection error:', error.message)
-          setConnectionError(error.message)
+          console.log('Socket connection failed, using fallback mode')
+          setConnectionError('Connection failed - using offline mode')
           setIsConnected(false)
           
-          // Additional logging for remote access debugging
-          if (isRemoteAccess) {
-            console.log('Remote access detected - connection details:', {
+          // Don't log full error to reduce console noise
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Socket connection details:', {
               url: socketUrl,
-              protocol: window.location.protocol,
-              hostname: window.location.hostname,
-              port: window.location.port,
-              userAgent: navigator.userAgent
+              error: error.message
             })
-            
-            // Set fallback mode for remote access
-            setConnectionError('Real-time features not available in this environment')
           }
         })
 
@@ -165,15 +126,28 @@ export const useSocket = (role: 'admin' | 'user') => {
     }
   }, [role])
 
+  // Set initialization complete after mount
+  useEffect(() => {
+    setIsInitialized(true)
+  }, [])
+
   const clearNotifications = () => {
     setNotifications([])
   }
+
+  // If socket is not connected after initialization, set a friendly message
+  useEffect(() => {
+    if (isInitialized && !isConnected && !connectionError) {
+      setConnectionError('Offline mode - real-time features not available')
+    }
+  }, [isInitialized, isConnected, connectionError])
 
   return {
     socket: null,
     isConnected,
     connectionError,
     notifications,
-    clearNotifications
+    clearNotifications,
+    isOfflineMode: isInitialized && !isConnected
   }
 }
