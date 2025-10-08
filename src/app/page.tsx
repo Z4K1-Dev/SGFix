@@ -391,7 +391,7 @@ export default function HomePage() {
 
               {/* Stats Cards */}
               <div className="grid grid-cols-2 gap-3 mb-6">
-                <Card className="p-4 border-0 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                <Card className="p-4 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
                       <FileText size={20} />
@@ -402,7 +402,7 @@ export default function HomePage() {
                   <p className="text-xs text-muted-foreground">Tersedia</p>
                 </Card>
                 
-                <Card className="p-4 border-0 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                <Card className="p-4 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
                       <MessageSquare size={20} />
@@ -415,7 +415,7 @@ export default function HomePage() {
               </div>
 
               {/* Quick Actions */}
-              <Card className="mb-6 border-0 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+              <Card className="mb-6 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base font-semibold text-foreground">Layanan Cepat</CardTitle>
                 </CardHeader>
@@ -442,7 +442,7 @@ export default function HomePage() {
               </Card>
 
               {/* Recent Activity */}
-              <Card className="border-0 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+              <Card className="shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base font-semibold text-foreground">Aktivitas Terkini</CardTitle>
                 </CardHeader>
@@ -478,7 +478,7 @@ export default function HomePage() {
             <TabsContent value="berita" className="px-4 pb-6 mt-4">
               <div className="space-y-4">
                 {berita.map((item) => (
-                  <Card key={item.id} className="border-0 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer" onClick={() => window.location.href = `/berita/${item.id}`}>
+                  <Card key={item.id} className="shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer" onClick={() => window.location.href = `/berita/${item.id}`}>
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -507,7 +507,7 @@ export default function HomePage() {
                   </Card>
                 ))}
                 {berita.length === 0 && (
-                  <Card className="border-0 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                  <Card className="shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
                     <CardContent className="text-center py-12">
                       <FileText size={64} />
                       <p className="text-base text-muted-foreground font-medium">Belum ada berita tersedia</p>
@@ -522,7 +522,7 @@ export default function HomePage() {
             <TabsContent value="laporan" className="px-4 pb-6 mt-4">
               <div className="space-y-4">
                 {laporan.map((item) => (
-                  <Card key={item.id} className="border-0 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                  <Card key={item.id} className="shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -581,7 +581,7 @@ export default function HomePage() {
                   </Card>
                 ))}
                 {laporan.length === 0 && (
-                  <Card className="border-0 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                  <Card className="shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
                     <CardContent className="text-center py-12">
                       <MessageSquare size={64} />
                       <p className="text-base text-muted-foreground font-medium">Belum ada laporan</p>

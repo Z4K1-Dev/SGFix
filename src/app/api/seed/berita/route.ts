@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     ]
 
     // Insert dummy berita ke database
-    const createdBerita = []
+    const createdBerita: any[] = []
     for (const berita of dummyBerita) {
       const created = await db.berita.create({
         data: berita

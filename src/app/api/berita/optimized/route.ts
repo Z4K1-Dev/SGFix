@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       if (search) {
         result = await beritaQueries.search(search, page, limit)
       } else {
-        result = await beritaQueries.getPublished(page, limit, kategoriId)
+        result = await beritaQueries.getPublished(page, limit, kategoriId || undefined)
       }
 
       return NextResponse.json(result)

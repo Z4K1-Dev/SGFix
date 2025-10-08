@@ -50,7 +50,7 @@ export default function LaporanDetailPage() {
   useEffect(() => {
     const fetchLaporanDetail = async () => {
       try {
-        const response = await fetch(`/api/laporan/${params.id}`)
+        const response = await fetch(`/api/laporan/${params?.id}`)
         
         if (!response.ok) {
           throw new Error('Laporan tidak ditemukan')
@@ -65,10 +65,10 @@ export default function LaporanDetailPage() {
       }
     }
 
-    if (params.id) {
+    if (params?.id) {
       fetchLaporanDetail()
     }
-  }, [params.id])
+  }, [params?.id])
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -301,8 +301,8 @@ export default function LaporanDetailPage() {
                 {laporan.balasan.map((balasan) => (
                   <Card key={balasan.id} className={`${
                     balasan.dariAdmin
-                      ? 'bg-blue-50 border-blue-200'
-                      : 'bg-gray-50 border-gray-200'
+                      ? 'bg-blue-50 border border-blue-200'
+                      : 'bg-gray-50 border border-gray-200'
                   }`}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">

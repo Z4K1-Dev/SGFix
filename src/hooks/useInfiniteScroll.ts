@@ -15,6 +15,7 @@ interface UseInfiniteScrollReturn<T> {
   hasMore: boolean
   loadMore: () => void
   reset: () => void
+  lastElementRef: (node: HTMLDivElement | null) => void
 }
 
 export function useInfiniteScroll<T>({

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { DocTabs } from '@/components/ui'
+import DocTabs from '@/components/doctabs'
 import { 
   ArrowLeft, 
   Calendar, 
@@ -58,16 +58,16 @@ export default function BeritaDetailPage() {
   const [activeTab, setActiveTab] = useState('artikel')
 
   useEffect(() => {
-    if (params.slug) {
+    if (params?.slug) {
       fetchBeritaDetail()
       fetchRelatedBerita()
     }
-  }, [params.slug])
+  }, [params?.slug])
 
   const fetchBeritaDetail = async () => {
     try {
       setLoading(true)
-      const slug = params.slug
+      const slug = params?.slug
       const response = await fetch(`/api/berita/${slug}`)
       
       if (response.ok) {
@@ -94,7 +94,7 @@ export default function BeritaDetailPage() {
 
   const fetchRelatedBerita = async () => {
     try {
-      const slug = params.slug
+      const slug = params?.slug
       const response = await fetch(`/api/berita/related/${slug}`)
       if (response.ok) {
         const data = await response.json()
@@ -274,20 +274,15 @@ export default function BeritaDetailPage() {
             {/* DocTabs Component */}
             <div className="mt-4">
               <DocTabs
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                articleContent={
-                  <div className="text-foreground leading-relaxed whitespace-pre-wrap">
-                    {berita.isi}
-                  </div>
-                }
-                articleData={berita}
-                isLiked={isLiked}
-                isBookmarked={isBookmarked}
-                onLike={handleLike}
-                onShare={handleShare}
-                onBookmark={handleBookmark}
-                formatDate={formatDate}
+                onChange={(index) => {
+                  if (index !== null) {
+                    const tabMap = ['artikel', 'komentar', 'bagikan'];
+                    const tabName = tabMap[index];
+                    if (tabName) {
+                      setActiveTab(tabName);
+                    }
+                  }
+                }}
               />
             </div>
 
@@ -297,8 +292,8 @@ export default function BeritaDetailPage() {
                 <h2 className="text-lg font-semibold mb-4">Berita Terkait</h2>
                 <div className="space-y-3">
                   {relatedBerita.map((item) => (
-                    <Card 
-                      key={item.id} 
+                    <Card
+                      key={item.id}
                       className="hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer"
                       onClick={() => router.push(`/berita/${item.id}`)}
                     >

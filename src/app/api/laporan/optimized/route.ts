@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     })
     
     return withCache(cacheKey, async () => {
-      const result = await laporanQueries.getWithPagination(page, limit, status)
+      const result = await laporanQueries.getWithPagination(page, limit, status || undefined)
       return NextResponse.json(result)
     }, 1 * 60 * 1000) // 1 minute cache for reports
   } catch (error) {

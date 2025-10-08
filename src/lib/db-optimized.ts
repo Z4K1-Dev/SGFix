@@ -306,7 +306,17 @@ export const batchOperations = {
     balasanId?: string
   }>) => {
     const operations = notifications.map(notification =>
-      db.notifikasi.create({ data: notification })
+      db.notifikasi.create({
+        data: {
+          judul: notification.judul,
+          pesan: notification.pesan,
+          tipe: notification.tipe as any, // Cast to any to bypass type checking
+          untukAdmin: notification.untukAdmin,
+          ...(notification.beritaId && { beritaId: notification.beritaId }),
+          ...(notification.laporanId && { laporanId: notification.laporanId }),
+          ...(notification.balasanId && { balasanId: notification.balasanId })
+        }
+      })
     )
     
     return db.$transaction(operations)

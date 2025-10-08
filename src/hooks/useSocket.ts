@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 
 interface Notification {
   judul: string;
@@ -23,10 +23,10 @@ export const useSocket = (role: 'admin' | 'user') => {
 
     let socketInstance: any = null
 
-    const initializeSocket = async () => {
+    const initializeSocket = () => {
       try {
         // Dynamic import to avoid build-time issues
-        const { io } = await import('socket.io-client')
+        import('socket.io-client').then(({ io }) => {
 
         // Detect if we're in remote access environment
         const isRemoteAccess =
@@ -50,7 +50,7 @@ export const useSocket = (role: 'admin' | 'user') => {
           setIsConnected(false)
           return
         } else {
-          socketUrl = '/api/socket/io'
+          socketUrl = '/api/socketio'
           socketOptions.transports = ['polling'] // Use polling only for better compatibility
           socketOptions.upgrade = false
           socketOptions.rememberUpgrade = false
@@ -111,11 +111,15 @@ export const useSocket = (role: 'admin' | 'user') => {
           Notification.requestPermission()
         }
 
-      } catch (error) {
-        console.error('Failed to initialize socket:', error)
-        setConnectionError('Failed to initialize socket connection')
+          }).catch((error) => {
+            console.error('Failed to load socket.io-client:', error)
+            setConnectionError('Failed to load socket.io-client')
+          })
+        } catch (error) {
+          console.error('Failed to initialize socket:', error)
+          setConnectionError('Failed to initialize socket connection')
+        }
       }
-    }
 
     initializeSocket()
 

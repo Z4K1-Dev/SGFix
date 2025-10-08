@@ -81,8 +81,8 @@ class DatabaseMonitor {
     };
   }
   
-  private getRecommendations(stats: any) {
-    const recommendations = [];
+  private getRecommendations(stats: any): string[] {
+    const recommendations: string[] = [];
     
     if (stats.averageDuration > 500) {
       recommendations.push('Pertimbangkan untuk menambah index pada query yang sering digunakan');

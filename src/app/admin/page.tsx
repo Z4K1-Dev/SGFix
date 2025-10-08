@@ -1,56 +1,48 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { 
-  Bell, 
-  FileText, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Send, 
-  MapPin, 
-  Camera,
-  Eye,
-  CheckCircle,
-  Clock,
+import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
+import { useSocket } from '@/hooks/useSocket'
+import {
   AlertCircle,
-  Home,
-  Wifi,
-  WifiOff,
-  Menu,
-  X,
-  Settings,
-  Image,
-  Moon,
-  Sun,
+  BarChart3,
+  Bell,
+  CheckCircle,
   ChevronDown,
   ChevronRight,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  BarChart3,
-  MessageSquare,
-  Calendar,
-  Search,
-  Filter,
-  Download,
-  RefreshCw,
+  Clock,
+  Edit,
+  Eye,
+  FileText,
+  Home,
+  Image,
   LayoutGrid,
-  MoreHorizontal
+  Menu,
+  MessageSquare,
+  Moon,
+  Plus,
+  RefreshCw,
+  Send,
+  Settings,
+  Sun,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+  Wifi,
+  WifiOff,
+  X
 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { toast } from 'sonner'
-import { useSocket } from '@/hooks/useSocket'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Area, AreaChart } from 'recharts'
 
 interface Berita {
   id: string
@@ -98,6 +90,20 @@ interface Notifikasi {
   createdAt: string
 }
 
+interface Aktivitas {
+  id: string
+  judul: string
+  deskripsi: string
+  tipe: string
+  status: string
+  pengguna: string
+  target: number
+  limit: number
+  reviewer: string
+  createdAt: string
+  updatedAt: string
+}
+
 export default function AdminPage() {
   const [berita, setBerita] = useState<Berita[]>([])
   const [kategori, setKategori] = useState<Kategori[]>([])
@@ -109,6 +115,9 @@ export default function AdminPage() {
   const [darkMode, setDarkMode] = useState(false)
   const [chartPeriod, setChartPeriod] = useState('3months')
   const [searchQuery, setSearchQuery] = useState('')
+  const [aktivitasData, setAktivitasData] = useState<Aktivitas[]>([])
+  const [selectedItems, setSelectedItems] = useState<string[]>([])
+  const [selectAll, setSelectAll] = useState(false)
   
   // Socket integration
   const { isConnected, connectionError, notifications: realtimeNotif, clearNotifications } = useSocket('admin')
@@ -215,11 +224,11 @@ export default function AdminPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      BARU: 'bg-blue-100 text-blue-800 border-blue-200',
-      DIPROSES: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      DITAMPAH: 'bg-orange-100 text-orange-800 border-orange-200',
-      DIKERJAKAN: 'bg-purple-100 text-purple-800 border-purple-200',
-      SELESAI: 'bg-green-100 text-green-800 border-green-200',
+      BARU: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800',
+      DIPROSES: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800',
+      DITAMPAH: 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800',
+      DIKERJAKAN: 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-800',
+      SELESAI: 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800',
     }
     return colors[status] || 'bg-muted text-muted-foreground border-border'
   }
@@ -291,6 +300,40 @@ export default function AdminPage() {
   }
 
   const chartData = generateChartData()
+  
+  // Memoize chart data to prevent regeneration on every render
+  const memoizedChartData = useMemo(() => chartData, [chartPeriod])
+
+  // Generate dummy aktivitas data
+  useEffect(() => {
+    const data: Aktivitas[] = []
+    const jenisAktivitas = ['berita', 'laporan', 'kategori', 'notifikasi', 'user']
+    const aksi = ['dibuat', 'diedit', 'dihapus', 'dipublikasi', 'dikomentari']
+    const status = ['success', 'pending', 'failed']
+    
+    for (let i = 1; i <= 20; i++) {
+      const randomJenis = jenisAktivitas[Math.floor(Math.random() * jenisAktivitas.length)]
+      const randomAksi = aksi[Math.floor(Math.random() * aksi.length)]
+      const randomStatus = status[Math.floor(Math.random() * status.length)]
+      const randomUser = ['Admin', 'User1', 'User2', 'User3', 'User4'][Math.floor(Math.random() * 5)]
+      
+      data.push({
+        id: `aktivitas-${i}`,
+        judul: `${randomJenis.charAt(0).toUpperCase() + randomJenis.slice(1)} ${randomAksi}`,
+        deskripsi: `${randomJenis} telah ${randomAksi} oleh ${randomUser}`,
+        tipe: randomJenis,
+        status: randomStatus,
+        pengguna: randomUser,
+        target: Math.floor(Math.random() * 100) + 1,
+        limit: Math.floor(Math.random() * 50) + 1,
+        reviewer: ['Admin', 'Editor', 'Moderator'][Math.floor(Math.random() * 3)],
+        createdAt: new Date(Date.now() - Math.floor(Math.random() * 7) * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - Math.floor(Math.random() * 3) * 24 * 60 * 60 * 1000).toISOString()
+      })
+    }
+    
+    setAktivitasData(data)
+  }, [])
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -303,16 +346,16 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-card border-r border-border transition-all duration-300 flex flex-col`}>
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-sidebar border-r border-sidebar-border transition-all duration-300 flex flex-col`}>
         {/* Top Section */}
-        <div className="p-4 border-b border-border">
+        <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center justify-between">
             {sidebarOpen && (
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                  <FileText className="text-primary-foreground" size={28} />
+                <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center">
+                  <FileText className="text-sidebar-primary-foreground" size={28} />
                 </div>
-                <span className="font-bold text-lg text-foreground">SmartGov</span>
+                <span className="font-bold text-lg text-sidebar-foreground">SmartGov</span>
               </div>
             )}
             <Button
@@ -321,7 +364,7 @@ export default function AdminPage() {
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="h-10 w-10 p-0"
             >
-              {sidebarOpen ? <X className="text-foreground" size={28} /> : <Menu className="text-foreground" size={28} />}
+              {sidebarOpen ? <X className="text-sidebar-foreground" size={28} /> : <Menu className="text-sidebar-foreground" size={28} />}
             </Button>
           </div>
         </div>
@@ -336,13 +379,13 @@ export default function AdminPage() {
                   <Button
                     variant={activeTab === item.id ? "default" : "ghost"}
                     size="default"
-                    className={`w-full justify-start h-10 ${!sidebarOpen && 'px-2'} hover:bg-primary/10 active:shadow-none active:scale-[0.98] transition-all duration-200`}
+                    className={`w-full justify-start h-10 ${!sidebarOpen && 'px-2'} hover:bg-sidebar-accent active:shadow-none active:scale-[0.98] transition-all duration-200`}
                     onClick={() => setActiveTab(item.id)}
                   >
-                    {sidebarOpen && <span className="ml-8 text-foreground">{item.label}</span>}
+                    {sidebarOpen && <span className="ml-8 text-sidebar-foreground">{item.label}</span>}
                   </Button>
-                  <Icon 
-                    className={`absolute top-1/2 transform -translate-y-1/2 text-foreground pointer-events-none ${sidebarOpen ? 'left-3' : 'left-1/2 -translate-x-1/2'}`}
+                  <Icon
+                    className={`absolute top-1/2 transform -translate-y-1/2 text-sidebar-foreground pointer-events-none ${sidebarOpen ? 'left-3' : 'left-1/2 -translate-x-1/2'}`}
                     width="28"
                     height="28"
                     strokeWidth="1.5"
@@ -354,24 +397,24 @@ export default function AdminPage() {
         </nav>
 
         {/* Footer Section */}
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-sidebar-border">
           <div className="space-y-2">
             <div className="relative">
               <Button
                 variant="ghost"
                 size="default"
-                className={`w-full justify-between h-10 ${!sidebarOpen && 'px-2'} hover:bg-primary/10 active:shadow-none active:scale-[0.98] transition-all duration-200`}
+                className={`w-full justify-between h-10 ${!sidebarOpen && 'px-2'} hover:bg-sidebar-accent active:shadow-none active:scale-[0.98] transition-all duration-200`}
                 onClick={() => setSettingsOpen(!settingsOpen)}
               >
                 <div className="flex items-center">
-                  {sidebarOpen && <span className="ml-8 text-foreground">Settings</span>}
+                  {sidebarOpen && <span className="ml-8 text-sidebar-foreground">Settings</span>}
                 </div>
                 {sidebarOpen && (
-                  settingsOpen ? <ChevronDown className="text-foreground" size={28} /> : <ChevronRight className="text-foreground" size={28} />
+                  settingsOpen ? <ChevronDown className="text-sidebar-foreground" size={28} /> : <ChevronRight className="text-sidebar-foreground" size={28} />
                 )}
               </Button>
-              <Settings 
-                className={`absolute top-1/2 transform -translate-y-1/2 text-foreground pointer-events-none ${sidebarOpen ? 'left-3' : 'left-1/2 -translate-x-1/2'}`}
+              <Settings
+                className={`absolute top-1/2 transform -translate-y-1/2 text-sidebar-foreground pointer-events-none ${sidebarOpen ? 'left-3' : 'left-1/2 -translate-x-1/2'}`}
                 width="28"
                 height="28"
                 strokeWidth="1.5"
@@ -380,19 +423,19 @@ export default function AdminPage() {
             
             {settingsOpen && sidebarOpen && (
               <div className="ml-6 space-y-2">
-                <Button variant="ghost" size="default" className="w-full justify-start h-10 hover:bg-primary/10 active:shadow-none active:scale-[0.98] transition-all duration-200">
+                <Button variant="ghost" size="default" className="w-full justify-start h-10 hover:bg-sidebar-accent active:shadow-none active:scale-[0.98] transition-all duration-200">
                   {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                  <Image className="text-foreground mr-2" size={28} />
-                  <span className="text-foreground">Image</span>
+                  <Image className="text-sidebar-foreground mr-2" size={28} />
+                  <span className="text-sidebar-foreground">Image</span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="default"
-                  className="w-full justify-start h-10 hover:bg-primary/10 active:shadow-none active:scale-[0.98] transition-all duration-200"
+                  className="w-full justify-start h-10 hover:bg-sidebar-accent active:shadow-none active:scale-[0.98] transition-all duration-200"
                   onClick={() => setDarkMode(!darkMode)}
                 >
-                  {darkMode ? <Sun className="text-foreground mr-2" size={28} /> : <Moon className="text-foreground mr-2" size={28} />}
-                  <span className="text-foreground">Themes</span>
+                  {darkMode ? <Sun className="text-sidebar-foreground mr-2" size={28} /> : <Moon className="text-sidebar-foreground mr-2" size={28} />}
+                  <span className="text-sidebar-foreground">Themes</span>
                 </Button>
               </div>
             )}
@@ -416,10 +459,10 @@ export default function AdminPage() {
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Button variant="outline" size="sm" className="hover:bg-primary/10 hover:border-primary/20 transition-all duration-200 active:shadow-none active:scale-[0.98]">
-                    <Bell className="mr-2" size={18} />
-                    Notifikasi
+                    <Bell className="text-foreground mr-2" size={18} />
+                    <span className="text-foreground">Notifikasi</span>
                     {unreadCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
                         {unreadCount}
                       </span>
                     )}
@@ -427,14 +470,14 @@ export default function AdminPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   {isConnected ? (
-                    <div className="flex items-center gap-1 text-green-600">
+                    <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                       <Wifi size={16} />
-                      <span className="text-xs">Connected</span>
+                      <span className="text-xs text-foreground">Connected</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1 text-red-600">
+                    <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
                       <WifiOff size={16} />
-                      <span className="text-xs">Disconnected</span>
+                      <span className="text-xs text-foreground">Disconnected</span>
                     </div>
                   )}
                 </div>
@@ -452,7 +495,7 @@ export default function AdminPage() {
                   {/* Stats Cards */}
                   <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
                     {/* Total Berita Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Total Berita</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{berita.length}</CardTitle>
@@ -472,7 +515,7 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Total Laporan Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Laporan Masuk</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{laporan.length}</CardTitle>
@@ -492,7 +535,7 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Active Kategori Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Kategori Aktif</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{kategori.length}</CardTitle>
@@ -512,7 +555,7 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Notifikasi Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Notifikasi Aktif</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{unreadCount}</CardTitle>
@@ -535,7 +578,7 @@ export default function AdminPage() {
                   {/* Charts Section */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 lg:px-6">
                     {/* Visitor Analytics Chart */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <CardTitle className="leading-none font-semibold">Total Visitors</CardTitle>
                         <CardDescription className="text-muted-foreground text-sm">
@@ -603,7 +646,7 @@ export default function AdminPage() {
                           } as React.CSSProperties}
                         >
                           <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                            <AreaChart data={memoizedChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <defs>
                                 <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor="var(--color-desktop)" stopOpacity={1}/>
@@ -657,7 +700,7 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Laporan Status Chart */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div>
                           <CardTitle className="leading-none font-semibold">Statistik Laporan</CardTitle>
@@ -670,14 +713,14 @@ export default function AdminPage() {
                       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
                         <div className="h-[250px] w-full">
                           <ResponsiveContainer width="100%" height="100%">
-                            <BarChart 
-                              data={[
+                            <BarChart
+                              data={useMemo(() => [
                                 { status: 'BARU', jumlah: laporan.filter(l => l.status === 'BARU').length || Math.floor(Math.random() * 10 + 5) },
                                 { status: 'DIPROSES', jumlah: laporan.filter(l => l.status === 'DIPROSES').length || Math.floor(Math.random() * 8 + 3) },
                                 { status: 'DITAMPAH', jumlah: laporan.filter(l => l.status === 'DITAMPAH').length || Math.floor(Math.random() * 6 + 2) },
                                 { status: 'DIKERJAKAN', jumlah: laporan.filter(l => l.status === 'DIKERJAKAN').length || Math.floor(Math.random() * 7 + 3) },
                                 { status: 'SELESAI', jumlah: laporan.filter(l => l.status === 'SELESAI').length || Math.floor(Math.random() * 15 + 8) }
-                              ]} 
+                              ], [laporan])}
                               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                             >
                               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
@@ -737,42 +780,130 @@ export default function AdminPage() {
                       </div>
                       
                       <div className="flex-1 outline-none relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
-                        <div className="overflow-hidden rounded-lg border">
-                          <Table>
-                            <TableHeader className="[&_tr]:border-b bg-muted sticky top-0 z-10">
-                              <TableRow>
-                                <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"></TableHead>
-                                <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
-                                  <div className="flex items-center justify-center">
-                                    <input type="checkbox" className="peer border-input dark:bg-input/30 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:data-[state=checked]:bg-primary data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50" />
-                                  </div>
-                                </TableHead>
-                                <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Judul</TableHead>
-                                <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Tipe</TableHead>
-                                <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Status</TableHead>
-                                <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
-                                  <div className="w-full text-right">Target</div>
-                                </TableHead>
-                                <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">
-                                  <div className="w-full text-right">Limit</div>
-                                </TableHead>
-                                <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]">Reviewer</TableHead>
-                                <TableHead className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"></TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody className="[&_tr:last-child]:border-0 **:data-[slot=table-cell]:first:w-8">
-                              {/* Sample Data Rows */}
-                              <TableRow className="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
-                                <TableCell className="p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] h-24 text-center" colSpan={9}>
-                                  <div className="text-center py-8">
-                                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                                    <p className="text-sm text-muted-foreground">Tidak ada data aktivitas terkini</p>
-                                    <p className="text-xs text-muted-foreground mt-1">Aktivitas akan muncul di sini</p>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            </TableBody>
-                          </Table>
+                        <div className="overflow-hidden rounded-lg border-border border">
+                          <div className="relative w-full overflow-y-auto overflow-x-hidden">
+                            <Table className="w-full caption-bottom text-sm">
+                              <TableHeader className="[&_tr]:border-b sticky top-0 z-10 bg-muted">
+                                <TableRow className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                  <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}></TableHead>
+                                  <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}>
+                                    <div className="flex items-center justify-center">
+                                      <button
+                                        type="button"
+                                        role="checkbox"
+                                        aria-checked={selectAll}
+                                        data-state={selectAll ? "checked" : "unchecked"}
+                                        value="on"
+                                        className="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                        aria-label="Select all"
+                                        onClick={() => {
+                                          if (selectAll) {
+                                            setSelectedItems([])
+                                          } else {
+                                            setSelectedItems(aktivitasData.map(item => item.id))
+                                          }
+                                          setSelectAll(!selectAll)
+                                        }}
+                                      ></button>
+                                    </div>
+                                  </TableHead>
+                                  <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}>Judul</TableHead>
+                                  <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}>Tipe</TableHead>
+                                  <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}>Status</TableHead>
+                                  <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}>
+                                    <div className="w-full text-right">Target</div>
+                                  </TableHead>
+                                  <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}>
+                                    <div className="w-full text-right">Limit</div>
+                                  </TableHead>
+                                  <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}>Reviewer</TableHead>
+                                  <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}></TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody className="[&_tr:last-child]:border-0 **:data-[slot=table-cell]:first:w-8">
+                                {/* Aktivitas Data Rows */}
+                                {aktivitasData.map((item) => (
+                                  <TableRow key={item.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                    <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                      <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus:outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:text-accent-foreground size-7 text-muted-foreground hover:bg-transparent" role="button" tabIndex={0} aria-disabled="false" aria-roledescription="sortable">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-grip-vertical size-3 text-muted-foreground">
+                                          <circle cx="9" cy="12" r="1"></circle>
+                                          <circle cx="9" cy="5" r="1"></circle>
+                                          <circle cx="9" cy="19" r="1"></circle>
+                                          <circle cx="15" cy="12" r="1"></circle>
+                                          <circle cx="15" cy="5" r="1"></circle>
+                                          <circle cx="15" cy="19" r="1"></circle>
+                                        </svg>
+                                        <span className="sr-only">Drag to reorder</span>
+                                      </button>
+                                    </TableCell>
+                                    <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                      <div className="flex items-center justify-center">
+                                        <button
+                                          type="button"
+                                          role="checkbox"
+                                          aria-checked={selectedItems.includes(item.id)}
+                                          data-state={selectedItems.includes(item.id) ? "checked" : "unchecked"}
+                                          value="on"
+                                          className="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                          aria-label="Select row"
+                                          onClick={() => {
+                                            if (selectedItems.includes(item.id)) {
+                                              setSelectedItems(selectedItems.filter(id => id !== item.id))
+                                            } else {
+                                              setSelectedItems([...selectedItems, item.id])
+                                            }
+                                          }}
+                                        ></button>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                      <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus:outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 underline-offset-4 hover:underline h-9 py-2 w-fit px-0 text-left text-foreground" type="button">
+                                        {item.judul}
+                                      </button>
+                                    </TableCell>
+                                    <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                      <div className="w-32">
+                                        <div className="inline-flex items-center rounded-md border py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 px-1.5 text-muted-foreground">
+                                          {item.tipe}
+                                        </div>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                      <Badge className={getStatusColor(item.status)}>
+                                        {item.status}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                      <form>
+                                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 sr-only" htmlFor={`${item.id}-target`}>Target</label>
+                                        <input className="flex rounded-md border px-3 py-1 text-base transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-8 w-16 border-transparent bg-transparent text-right shadow-none hover:bg-input/30 focus-visible:border focus-visible:bg-background" id={`${item.id}-target`} value={item.target} readOnly />
+                                      </form>
+                                    </TableCell>
+                                    <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                      <form>
+                                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 sr-only" htmlFor={`${item.id}-limit`}>Limit</label>
+                                        <input className="flex rounded-md border px-3 py-1 text-base transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-8 w-16 border-transparent bg-transparent text-right shadow-none hover:bg-input/30 focus-visible:border focus-visible:bg-background" id={`${item.id}-limit`} value={item.limit} readOnly />
+                                      </form>
+                                    </TableCell>
+                                    <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                      {item.reviewer}
+                                    </TableCell>
+                                    <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                                      <button className="items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus:outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground flex size-8 text-muted-foreground data-[state=open]:bg-muted" type="button">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ellipsis-vertical">
+                                          <circle cx="12" cy="12" r="1"></circle>
+                                          <circle cx="12" cy="5" r="1"></circle>
+                                          <circle cx="12" cy="19" r="1"></circle>
+                                        </svg>
+                                        <span className="sr-only">Open menu</span>
+                                      </button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
                         </div>
                         
                         {/* Pagination */}
@@ -839,7 +970,7 @@ export default function AdminPage() {
 
               <div className="grid gap-4">
                 {berita.map((item) => (
-                  <Card key={item.id} className="hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                  <Card key={item.id} className="cursor-pointer">
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -922,7 +1053,7 @@ export default function AdminPage() {
 
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {kategori.map((item) => (
-                  <Card key={item.id} className="hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                  <Card key={item.id} className="cursor-pointer">
                     <CardContent className="p-6">
                       <h3 className="text-lg font-semibold">{item.nama}</h3>
                       <p className="text-muted-foreground mt-2">{item.deskripsi || 'Tidak ada deskripsi'}</p>
@@ -962,7 +1093,7 @@ export default function AdminPage() {
 
               <div className="grid gap-4">
                 {laporan.map((item) => (
-                  <Card key={item.id} className="hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                  <Card key={item.id} className="cursor-pointer">
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -1060,7 +1191,7 @@ export default function AdminPage() {
 
               <div className="grid gap-4">
                 {notifikasi.map((item) => (
-                  <Card key={item.id} className={`${item.dibaca ? "opacity-60" : ""} hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer`}>
+                  <Card key={item.id} className={`${item.dibaca ? "opacity-60" : ""} cursor-pointer`}>
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
