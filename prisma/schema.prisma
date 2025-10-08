@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Kategori {
+  id          String   @id @default(cuid())
+  nama        String   @unique
+  deskripsi   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  berita      Berita[]
+  
+  @@index([nama])
+  @@index([createdAt])
+}
+
+model Berita {
+  id          String   @id @default(cuid())
+  judul       String
+  isi         String
+  gambar      String?
+  kategoriId  String
+  published   Boolean  @default(false)
+  author      String?
+  views       Int      @default(0)
+  likes       Int      @default(0)
+  comments    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  kategori    Kategori @relation(fields: [kategoriId], references: [id], onDelete: Cascade)
+  notifikasi  Notifikasi[]
+  
+  @@index([published])
+  @@index([kategoriId])
+  @@index([createdAt])
+  @@index([published, createdAt])
+  @@index([kategoriId, published])
+  @@index([views])
+  @@index([likes])
+}
+
+model Laporan {
+  id          String   @id @default(cuid())
+  judul       String
+  keterangan  String
+  foto        String?
+  latitude    Float?
+  longitude   Float?
+  status      Status   @default(BARU)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  balasan     Balasan[]
+  notifikasi  Notifikasi[]
+  
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([latitude, longitude])
+}
+
+model Balasan {
+  id          String   @id @default(cuid())
+  laporanId   String
+  isi         String
+  dariAdmin   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  laporan     Laporan  @relation(fields: [laporanId], references: [id], onDelete: Cascade)
+  notifikasi  Notifikasi[]
+  
+  @@index([laporanId])
+  @@index([createdAt])
+  @@index([dariAdmin])
+  @@index([laporanId, createdAt])
+}
+
+model Notifikasi {
+  id          String   @id @default(cuid())
+  judul       String
+  pesan       String
+  tipe        TipeNotif
+  untukAdmin  Boolean  @default(false)
+  dibaca      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  beritaId    String?
+  laporanId   String?
+  balasanId   String?
+  
+  berita      Berita?  @relation(fields: [beritaId], references: [id], onDelete: Cascade)
+  laporan     Laporan? @relation(fields: [laporanId], references: [id], onDelete: Cascade)
+  balasan     Balasan? @relation(fields: [balasanId], references: [id], onDelete: Cascade)
+  
+  @@index([untukAdmin])
+  @@index([dibaca])
+  @@index([tipe])
+  @@index([createdAt])
+  @@index([untukAdmin, dibaca])
+  @@index([beritaId])
+  @@index([laporanId])
+  @@index([balasanId])
+}
+
+enum Status {
+  BARU
+  DIPROSES
+  DITAMPAH
+  DIKERJAKAN
+  SELESAI
+}
+
+enum TipeNotif {
+  BERITA_BARU
+  BERITA_UPDATE
+  LAPORAN_BARU
+  LAPORAN_UPDATE
+  LAPORAN_BALASAN
+}

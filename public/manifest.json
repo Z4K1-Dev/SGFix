@@ -1,0 +1,18 @@
+{
+  "name": "Portal SmartGov",
+  "short_name": "SmartGov",
+  "description": "Portal pemerintahan digital dengan notifikasi realtime",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

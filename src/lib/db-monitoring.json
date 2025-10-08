@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "logQueries": true,
+  "logSlowQueries": true,
+  "slowQueryThreshold": 1000,
+  "maxConnections": 10,
+  "connectionTimeout": 30000
+}
