@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +9,8 @@ import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import DocTabs from '@/components/doctabs'
+import { BeritaSkeleton, LaporanSkeleton, StatsCardSkeleton, SliderSkeleton } from '@/components/loading-skeleton'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { 
   Home,
   FileText,
@@ -35,6 +38,9 @@ import {
 import { toast } from 'sonner'
 import { useSocket } from '@/hooks/useSocket'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 interface Berita {
   id: string
   judul: string
@@ -60,6 +66,8 @@ interface Laporan {
 export default function HomePage() {
   const [berita, setBerita] = useState<Berita[]>([])
   const [laporan, setLaporan] = useState<Laporan[]>([])
+  const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState('beranda')
   const [currentSlide, setCurrentSlide] = useState(0)
   const [touchStart, setTouchStart] = useState(0)
@@ -67,12 +75,21 @@ export default function HomePage() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState(0)
 
+  // Handle client-side mounting
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const handleTabChange = (index: number | null) => {
     if (index !== null) {
-      const tabMap = ['beranda', 'berita', 'laporan', null, 'profile'];
+      const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
       const tabName = tabMap[index];
       if (tabName) {
-        setActiveTab(tabName);
+        if (tabName === 'layanan') {
+          window.location.href = '/layanan';
+        } else {
+          setActiveTab(tabName);
+        }
       }
     }
   };
@@ -81,8 +98,21 @@ export default function HomePage() {
   const { isConnected, connectionError, isOfflineMode } = useSocket('user')
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (mounted) {
+      fetchData()
+    }
+  }, [mounted])
+
+  // Set loading to false after initial fetch
+  useEffect(() => {
+    if (mounted) {
+      const timer = setTimeout(() => {
+        setLoading(false)
+      }, 2000) // Force loading to false after 2 seconds
+      
+      return () => clearTimeout(timer)
+    }
+  }, [mounted])
 
   useEffect(() => {
     // Auto-rotate slider every 3 seconds
@@ -119,22 +149,44 @@ export default function HomePage() {
   }, [isDragging, touchStart])
 
   const fetchData = async () => {
+    // Skip data fetching during build time
+    if (typeof window === 'undefined') {
+      return
+    }
+    
     try {
+      setLoading(true)
+      console.log('Fetching data...')
+      
       const [beritaRes, laporanRes] = await Promise.all([
         fetch('/api/berita?published=true'),
         fetch('/api/laporan')
       ])
 
+      console.log('Berita response status:', beritaRes.status)
+      console.log('Laporan response status:', laporanRes.status)
+
       if (beritaRes.ok) {
         const beritaData = await beritaRes.json()
+        console.log('Berita data received:', beritaData.length, 'items')
         setBerita(beritaData)
+      } else {
+        console.error('Berita API error:', beritaRes.status)
       }
+      
       if (laporanRes.ok) {
-        setLaporan(await laporanRes.json())
+        const laporanData = await laporanRes.json()
+        console.log('Laporan data received:', laporanData.length, 'items')
+        setLaporan(laporanData)
+      } else {
+        console.error('Laporan API error:', laporanRes.status)
       }
     } catch (error) {
       console.error('Error fetching data:', error)
       toast.error('Gagal memuat data')
+    } finally {
+      setLoading(false)
+      console.log('Fetch completed, loading set to false')
     }
   }
 
@@ -233,13 +285,13 @@ export default function HomePage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      BARU: 'bg-blue-100 text-blue-800 border-blue-200',
-      DIPROSES: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      DITAMPAH: 'bg-orange-100 text-orange-800 border-orange-200',
-      DIKERJAKAN: 'bg-purple-100 text-purple-800 border-purple-200',
-      SELESAI: 'bg-green-100 text-green-800 border-green-200',
+      BARU: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+      DIPROSES: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
+      DITAMPAH: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800',
+      DIKERJAKAN: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800',
+      SELESAI: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
     }
-    return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200'
+    return colors[status] || 'bg-muted text-muted-foreground border-border'
   }
 
   const getStatusIcon = (status: string) => {
@@ -267,6 +319,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <button className="inline-flex items-center justify-center rounded-md hover:bg-primary-foreground/20 h-8 w-8 p-0 text-primary-foreground">
                 <Bell size={18} />
               </button>
@@ -305,23 +358,26 @@ export default function HomePage() {
             {/* Tab Beranda */}
             <TabsContent value="beranda" className="px-4 pb-6 mt-4">
               {/* Image Slider */}
-            <div className="mb-6">
-              <div className={`relative overflow-hidden rounded-xl shadow-sm ${isDragging ? 'shadow-lg' : ''} transition-shadow duration-200`}>
-                <div 
-                  className={`relative h-48 bg-muted ${isDragging ? 'select-none' : ''}`}
-                  onTouchStart={onTouchStart}
-                  onTouchMove={onTouchMove}
-                  onTouchEnd={onTouchEnd}
-                  onMouseDown={onMouseDown}
-                  onMouseMove={onMouseMove}
-                  onMouseUp={onMouseUp}
-                  onMouseLeave={onMouseUp}
-                  style={{ 
-                    touchAction: 'none',
-                    WebkitUserSelect: 'none',
-                    userSelect: 'none'
-                  }}
-                >
+              <div className="mb-6">
+                {loading ? (
+                  <SliderSkeleton />
+                ) : (
+                  <div className={`relative overflow-hidden rounded-xl shadow-sm ${isDragging ? 'shadow-lg' : ''} transition-shadow duration-200`}>
+                    <div 
+                      className={`relative h-48 bg-muted ${isDragging ? 'select-none' : ''}`}
+                      onTouchStart={onTouchStart}
+                      onTouchMove={onTouchMove}
+                      onTouchEnd={onTouchEnd}
+                      onMouseDown={onMouseDown}
+                      onMouseMove={onMouseMove}
+                      onMouseUp={onMouseUp}
+                      onMouseLeave={onMouseUp}
+                      style={{ 
+                        touchAction: 'none',
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none'
+                      }}
+                    >
                   {/* Slides */}
                   <div 
                     className={`flex h-full ${isDragging ? '' : 'transition-transform duration-500 ease-in-out'}`}
@@ -331,39 +387,48 @@ export default function HomePage() {
                     }}
                   >
                     <div className="min-w-full h-full relative">
-                      <img
+                      <Image
                         src="/pic1.jpg"
                         alt="Government Services Advertisement 1"
-                        className={`w-full h-full object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
+                        fill
+                        className={`object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
+                        sizes="(max-width: 768px) 100vw, 768px"
+                        priority={currentSlide === 0}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
-                        <div className="text-white">
+                        <div className="text-primary-foreground">
                           <h3 className="text-lg font-semibold">Layanan Digital Pemerintah</h3>
                           <p className="text-sm opacity-90">Akses layanan publik dengan mudah dan cepat</p>
                         </div>
                       </div>
                     </div>
                     <div className="min-w-full h-full relative">
-                      <img
+                      <Image
                         src="/pic2.jpg"
                         alt="Government Services Advertisement 2"
-                        className={`w-full h-full object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
+                        fill
+                        className={`object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
+                        sizes="(max-width: 768px) 100vw, 768px"
+                        priority={currentSlide === 1}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
-                        <div className="text-white">
+                        <div className="text-primary-foreground">
                           <h3 className="text-lg font-semibold">Smart City Portal</h3>
                           <p className="text-sm opacity-90">Solusi modern untuk kebutuhan administrasi</p>
                         </div>
                       </div>
                     </div>
                     <div className="min-w-full h-full relative">
-                      <img
+                      <Image
                         src="/pic3.jpg"
                         alt="Government Services Advertisement 3"
-                        className={`w-full h-full object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
+                        fill
+                        className={`object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
+                        sizes="(max-width: 768px) 100vw, 768px"
+                        priority={currentSlide === 2}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
-                        <div className="text-white">
+                        <div className="text-primary-foreground">
                           <h3 className="text-lg font-semibold">E-Government Services</h3>
                           <p className="text-sm opacity-90">Pengelolaan dokumen online yang aman</p>
                         </div>
@@ -380,60 +445,75 @@ export default function HomePage() {
                       onClick={() => setCurrentSlide(index)}
                       className={`w-2 h-2 rounded-full transition-all duration-300 ${
                         currentSlide === index 
-                          ? 'bg-white w-6' 
-                          : 'bg-white/50 hover:bg-white/75'
+                          ? 'bg-primary-foreground w-6' 
+                          : 'bg-primary-foreground/50 hover:bg-primary-foreground/75'
                       }`}
                     />
                   ))}
                 </div>
               </div>
+                )}
             </div>
 
               {/* Stats Cards */}
               <div className="grid grid-cols-2 gap-3 mb-6">
-                <Card className="p-4 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                      <FileText size={20} />
-                    </div>
-                    <span className="text-sm text-muted-foreground font-medium">Berita</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{berita.length}</p>
-                  <p className="text-xs text-muted-foreground">Tersedia</p>
-                </Card>
-                
-                <Card className="p-4 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                      <MessageSquare size={20} />
-                    </div>
-                    <span className="text-sm text-muted-foreground font-medium">Laporan</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{laporan.length}</p>
-                  <p className="text-xs text-muted-foreground">Diterima</p>
-                </Card>
+                {loading ? (
+                  <>
+                    <StatsCardSkeleton />
+                    <StatsCardSkeleton />
+                  </>
+                ) : (
+                  <>
+                    <Card className="p-4 shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                          <FileText size={20} />
+                        </div>
+                        <span className="text-sm text-muted-foreground font-medium">Berita</span>
+                      </div>
+                      <p className="text-2xl font-bold text-foreground">{!mounted || loading ? '...' : berita.length}</p>
+                      <p className="text-xs text-muted-foreground">Tersedia</p>
+                    </Card>
+                    
+                    <Card className="p-4 shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                          <MessageSquare size={20} />
+                        </div>
+                        <span className="text-sm text-muted-foreground font-medium">Laporan</span>
+                      </div>
+                      <p className="text-2xl font-bold text-foreground">{laporan.length}</p>
+                      <p className="text-xs text-muted-foreground">Diterima</p>
+                    </Card>
+                  </>
+                )}
               </div>
 
               {/* Quick Actions */}
-              <Card className="mb-6 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+              <Card className="mb-6 shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base font-semibold text-foreground">Layanan Cepat</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Button
-                    className="w-full justify-start h-12 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 active:shadow-none active:scale-[0.98] transition-all duration-200"
+                    className="w-full justify-start h-12 bg-primary/10 text-primary border border-primary/20 active:shadow-none transition-all duration-200"
                     onClick={() => window.location.href = '/buat-laporan'}
                   >
                     <Camera className="mr-3" size={20} />
                     Buat Laporan
                     <ChevronRight className="ml-auto" size={16} />
                   </Button>
-                  <Button className="w-full justify-start h-12 bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border active:shadow-none active:scale-[0.98] transition-all duration-200">
+                  <Button className="w-full justify-start h-12 bg-secondary text-secondary-foreground border border-border active:shadow-none transition-all duration-200" onClick={() => window.location.href = '/layanan'}>
+                    <FileText className="mr-3" size={20} />
+                    Ajukan Layanan
+                    <ChevronRight className="ml-auto" size={16} />
+                  </Button>
+                  <Button className="w-full justify-start h-12 bg-secondary text-secondary-foreground border border-border active:shadow-none transition-all duration-200">
                     <MapPin className="mr-3" size={20} />
                     Lihat Peta Lokasi
                     <ChevronRight className="ml-auto" size={16} />
                   </Button>
-                  <Button className="w-full justify-start h-12 bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border active:shadow-none active:scale-[0.98] transition-all duration-200">
+                  <Button className="w-full justify-start h-12 bg-secondary text-secondary-foreground border border-border active:shadow-none transition-all duration-200">
                     <BarChart3 className="mr-3" size={20} />
                     Lihat Statistik
                     <ChevronRight className="ml-auto" size={16} />
@@ -442,28 +522,36 @@ export default function HomePage() {
               </Card>
 
               {/* Recent Activity */}
-              <Card className="shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+              <Card className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base font-semibold text-foreground">Aktivitas Terkini</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {berita.slice(0, 3).map((item) => (
-                      <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                        <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-foreground line-clamp-1">{item.judul}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
+                    {loading ? (
+                      <>
+                        <BeritaSkeleton />
+                        <BeritaSkeleton />
+                        <BeritaSkeleton />
+                      </>
+                    ) : (
+                      berita.slice(0, 3).map((item) => (
+                        <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                          <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-foreground line-clamp-1">{item.judul}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(item.createdAt).toLocaleDateString('id-ID', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
                           </p>
                         </div>
                       </div>
-                    ))}
-                    {berita.length === 0 && (
+                      ))
+                    )}
+                    {berita.length === 0 && !loading && (
                       <div className="text-center py-8">
                         <FileText size={48} />
                         <p className="text-sm text-muted-foreground">Belum ada berita</p>
@@ -477,37 +565,45 @@ export default function HomePage() {
             {/* Tab Berita */}
             <TabsContent value="berita" className="px-4 pb-6 mt-4">
               <div className="space-y-4">
-                {berita.map((item) => (
-                  <Card key={item.id} className="shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer" onClick={() => window.location.href = `/berita/${item.id}`}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-base font-semibold text-foreground line-clamp-2">{item.judul}</CardTitle>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="secondary" className="text-xs">
-                              {item.kategori.nama}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                              })}
-                            </span>
+                {loading ? (
+                  <>
+                    <BeritaSkeleton />
+                    <BeritaSkeleton />
+                    <BeritaSkeleton />
+                  </>
+                ) : (
+                  berita.map((item) => (
+                    <Card key={item.id} className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer" onClick={() => window.location.href = `/berita/${item.id}`}>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-base font-semibold text-foreground line-clamp-2">{item.judul}</CardTitle>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {item.kategori.nama}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(item.createdAt).toLocaleDateString('id-ID', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{item.isi}</p>
-                      <Button variant="outline" size="sm" className="w-full active:shadow-none active:scale-[0.98] transition-all duration-200" onClick={() => window.location.href = `/berita/${item.id}`}>
-                        Baca Selengkapnya
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-                {berita.length === 0 && (
-                  <Card className="shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{item.isi}</p>
+                        <Button variant="outline" size="sm" className="w-full active:shadow-none active:scale-[0.98] transition-all duration-200" onClick={() => window.location.href = `/berita/${item.id}`}>
+                          Baca Selengkapnya
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+                {berita.length === 0 && !loading && (
+                  <Card className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
                     <CardContent className="text-center py-12">
                       <FileText size={64} />
                       <p className="text-base text-muted-foreground font-medium">Belum ada berita tersedia</p>
@@ -521,38 +617,47 @@ export default function HomePage() {
             {/* Tab Laporan */}
             <TabsContent value="laporan" className="px-4 pb-6 mt-4">
               <div className="space-y-4">
-                {laporan.map((item) => (
-                  <Card key={item.id} className="shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-base font-semibold text-foreground line-clamp-1">{item.judul}</CardTitle>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge className={`text-xs border ${getStatusColor(item.status)}`}>
-                              <div className="flex items-center gap-1">
-                                {getStatusIcon(item.status)}
-                                {item.status}
-                              </div>
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                              })}
-                            </span>
+                {loading ? (
+                  <>
+                    <LaporanSkeleton />
+                    <LaporanSkeleton />
+                    <LaporanSkeleton />
+                  </>
+                ) : (
+                  laporan.map((item) => (
+                    <Card key={item.id} className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-base font-semibold text-foreground line-clamp-1">{item.judul}</CardTitle>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge className={`text-xs border ${getStatusColor(item.status)}`}>
+                                <div className="flex items-center gap-1">
+                                  {getStatusIcon(item.status)}
+                                  {item.status}
+                                </div>
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(item.createdAt).toLocaleDateString('id-ID', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{item.keterangan}</p>
-                      {item.foto && (
-                        <div className="w-full h-32 bg-muted rounded-xl mb-3 overflow-hidden">
-                          <img
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{item.keterangan}</p>
+                        {item.foto && (
+                          <div className="w-full h-32 bg-muted rounded-xl mb-3 overflow-hidden">
+                          <Image
                             src={item.foto}
                             alt={item.judul}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, 768px"
                             onError={(e) => {
                               // Fallback jika gambar gagal dimuat
                               const target = e.target as HTMLImageElement;
@@ -578,16 +683,17 @@ export default function HomePage() {
                         Lihat Detail
                       </Button>
                     </CardContent>
-                  </Card>
-                ))}
-                {laporan.length === 0 && (
-                  <Card className="shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+                    </Card>
+                  ))
+                )}
+                {laporan.length === 0 && !loading && (
+                  <Card className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
                     <CardContent className="text-center py-12">
                       <MessageSquare size={64} />
                       <p className="text-base text-muted-foreground font-medium">Belum ada laporan</p>
                       <p className="text-sm text-muted-foreground mt-1">Buat laporan pertama Anda</p>
                       <Button
-                        className="mt-4 bg-primary hover:bg-primary/90"
+                        className="mt-4 bg-primary text-primary-foreground"
                         onClick={() => window.location.href = '/buat-laporan'}
                       >
                         <Camera className="mr-2" size={16} />
@@ -604,7 +710,7 @@ export default function HomePage() {
           <div className="fixed bottom-24 right-4 z-40">
             <Button
               size="lg"
-              className="w-14 h-14 rounded-full shadow-lg bg-primary hover:bg-primary/90"
+              className="w-14 h-14 rounded-full shadow-lg bg-primary text-primary-foreground"
               onClick={() => window.location.href = '/buat-laporan'}
             >
               <Camera size={24} />

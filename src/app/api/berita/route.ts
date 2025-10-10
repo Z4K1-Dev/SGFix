@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 import { withCache, generateCacheKey, invalidateCachePattern } from '@/lib/cache'
 
 /**
@@ -14,31 +17,27 @@ export async function GET(request: NextRequest) {
     const published = searchParams.get('published')
     const kategoriId = searchParams.get('kategoriId')
 
-    const cacheKey = generateCacheKey('/api/berita', { published, kategoriId })
+    const where: any = {}
     
-    return withCache(cacheKey, async () => {
-      const where: any = {}
-      
-      if (published === 'true') {
-        where.published = true
-      }
-      
-      if (kategoriId && kategoriId !== 'semua') {
-        where.kategoriId = kategoriId
-      }
+    if (published === 'true') {
+      where.published = true
+    }
+    
+    if (kategoriId && kategoriId !== 'semua') {
+      where.kategoriId = kategoriId
+    }
 
-      const berita = await db.berita.findMany({
-        where,
-        include: {
-          kategori: true
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      })
+    const berita = await db.berita.findMany({
+      where,
+      include: {
+        kategori: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
 
-      return NextResponse.json(berita)
-    }, 2 * 60 * 1000) // 2 minutes cache for news
+    return NextResponse.json(berita)
   } catch (error) {
     console.error('Error fetching berita:', error)
     return NextResponse.json(

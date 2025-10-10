@@ -1,0 +1,297 @@
+'use client'
+
+import React from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { 
+  CheckCircle2, 
+  Clock, 
+  XCircle, 
+  AlertCircle, 
+  FileText,
+  Calendar,
+  User,
+  MessageSquare,
+  Download,
+  Eye
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+// Types
+interface StatusLayanan {
+  id: string
+  judul: string
+  jenisLayanan: string
+  status: 'BARU' | 'DIPROSES' | 'DIVERIFIKASI' | 'DISETUJUI' | 'SELESAI' | 'DITOLAK'
+  createdAt: string
+  updatedAt: string
+  catatan?: string
+  alasanPenolakan?: string
+  estimasiSelesai?: string
+}
+
+interface StatusTrackerProps {
+  layanan: StatusLayanan
+  onDetail?: () => void
+  onBalas?: () => void
+  showActions?: boolean
+}
+
+const statusConfig = {
+  BARU: {
+    label: 'Pengajuan Baru',
+    color: 'bg-gray-100 text-gray-800 border-gray-200',
+    icon: <Clock className="h-4 w-4" />,
+    description: 'Pengajuan telah diterima dan menunggu proses awal'
+  },
+  DIPROSES: {
+    label: 'Diproses',
+    color: 'bg-blue-100 text-blue-800 border-blue-200',
+    icon: <AlertCircle className="h-4 w-4" />,
+    description: 'Pengajuan sedang dalam proses verifikasi'
+  },
+  DIVERIFIKASI: {
+    label: 'Diverifikasi',
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    icon: <Eye className="h-4 w-4" />,
+    description: 'Data sedang diverifikasi oleh petugas'
+  },
+  DISETUJUI: {
+    label: 'Disetujui',
+    color: 'bg-green-100 text-green-800 border-green-200',
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    description: 'Pengajuan telah disetujui'
+  },
+  SELESAI: {
+    label: 'Selesai',
+    color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    description: 'Layanan telah selesai diproses'
+  },
+  DITOLAK: {
+    label: 'Ditolak',
+    color: 'bg-red-100 text-red-800 border-red-200',
+    icon: <XCircle className="h-4 w-4" />,
+    description: 'Pengajuan ditolak'
+  }
+}
+
+const timelineSteps = [
+  { key: 'BARU', label: 'Pengajuan Diterima' },
+  { key: 'DIPROSES', label: 'Sedang Diproses' },
+  { key: 'DIVERIFIKASI', label: 'Verifikasi' },
+  { key: 'DISETUJUI', label: 'Disetujui' },
+  { key: 'SELESAI', label: 'Selesai' }
+]
+
+export function StatusTracker({ layanan, onDetail, onBalas, showActions = true }: StatusTrackerProps) {
+  const currentStatus = statusConfig[layanan.status]
+  const isRejected = layanan.status === 'DITOLAK'
+  
+  // Find current step index for timeline
+  const currentStepIndex = timelineSteps.findIndex(step => step.key === layanan.status)
+  
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const getJenisLayananLabel = (jenis: string) => {
+    const labels: Record<string, string> = {
+      'KTP_BARU': 'KTP Baru',
+      'KTP_HILANG': 'KTP Hilang',
+      'KTP_RUSAK': 'KTP Rusak',
+      'AKTA_KELAHIRAN': 'Akta Kelahiran',
+      'AKTA_KEMATIAN': 'Akta Kematian',
+      'AKTA_PERKAWINAN': 'Akta Perkawinan',
+      'AKTA_CERAI': 'Akta Perceraian',
+      'SURAT_PINDAH': 'Surat Pindah',
+      'SURAT_KEHILANGAN': 'Surat Kehilangan',
+      'SURAT_KETERANGAN': 'Surat Keterangan',
+      'KK_BARU': 'KK Baru',
+      'KK_PERUBAHAN': 'Perubahan KK',
+      'KK_HILANG': 'KK Hilang'
+    }
+    return labels[jenis] || jenis
+  }
+
+  return (
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <CardTitle className="text-xl">{layanan.judul}</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Badge variant="outline">
+                {getJenisLayananLabel(layanan.jenisLayanan)}
+              </Badge>
+              <Badge className={currentStatus.color}>
+                <div className="flex items-center space-x-1">
+                  {currentStatus.icon}
+                  <span>{currentStatus.label}</span>
+                </div>
+              </Badge>
+            </div>
+          </div>
+          {showActions && (
+            <div className="flex space-x-2">
+              <Button variant="outline" size="sm" onClick={onDetail}>
+                <Eye className="h-4 w-4 mr-2" />
+                Detail
+              </Button>
+              <Button variant="outline" size="sm" onClick={onBalas}>
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Balas
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-6">
+        {/* Status Timeline */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg">Status Proses</h3>
+          
+          {!isRejected ? (
+            <div className="relative">
+              {/* Timeline Line */}
+              <div className="absolute left-4 top-8 bottom-0 w-0.5 bg-border" />
+              
+              {/* Timeline Steps */}
+              <div className="space-y-6">
+                {timelineSteps.map((step, index) => {
+                  const isActive = index <= currentStepIndex
+                  const isCurrent = index === currentStepIndex
+                  const isCompleted = index < currentStepIndex
+                  
+                  return (
+                    <div key={step.key} className="flex items-start space-x-4 relative">
+                      {/* Step Circle */}
+                      <div className={cn(
+                        "flex items-center justify-center w-8 h-8 rounded-full border-2 z-10",
+                        isActive 
+                          ? isCompleted 
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-primary text-primary-foreground border-primary"
+                          : "bg-background border-muted-foreground text-muted-foreground"
+                      )}>
+                        {isCompleted ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : (
+                          <span className="text-xs font-bold">{index + 1}</span>
+                        )}
+                      </div>
+                      
+                      {/* Step Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2">
+                          <h4 className={cn(
+                            "font-medium",
+                            isActive ? "text-foreground" : "text-muted-foreground"
+                          )}>
+                            {step.label}
+                          </h4>
+                          {isCurrent && (
+                            <Badge variant="secondary" className="text-xs">
+                              Saat ini
+                            </Badge>
+                          )}
+                        </div>
+                        {isCurrent && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {currentStatus.description}
+                          </p>
+                        )}
+                        {isCompleted && (
+                          <p className="text-sm text-green-600 mt-1">
+                            ✓ Selesai
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ) : (
+            // Rejected Status
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                <div className="space-y-2">
+                  <h4 className="font-medium text-red-800">Pengajuan Ditolak</h4>
+                  {layanan.alasanPenolakan && (
+                    <p className="text-sm text-red-700">
+                      <span className="font-medium">Alasan:</span> {layanan.alasanPenolakan}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Separator />
+
+        {/* Informasi Tambahan */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2 text-sm">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Diajukan:</span>
+              <span className="font-medium">{formatDate(layanan.createdAt)}</span>
+            </div>
+            
+            <div className="flex items-center space-x-2 text-sm">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Terakhir update:</span>
+              <span className="font-medium">{formatDate(layanan.updatedAt)}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            {layanan.estimasiSelesai && layanan.status !== 'SELESAI' && layanan.status !== 'DITOLAK' && (
+              <div className="flex items-center space-x-2 text-sm">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Estimasi selesai:</span>
+                <span className="font-medium">{layanan.estimasiSelesai}</span>
+              </div>
+            )}
+            
+            {layanan.catatan && (
+              <div className="flex items-start space-x-2 text-sm">
+                <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <span className="text-muted-foreground">Catatan:</span>
+                  <p className="font-medium mt-1">{layanan.catatan}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons for Completed Status */}
+        {layanan.status === 'SELESAI' && showActions && (
+          <div className="flex justify-center space-x-4 pt-4">
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Download Dokumen
+            </Button>
+            <Button>
+              <FileText className="h-4 w-4 mr-2" />
+              Cetak Bukti
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}

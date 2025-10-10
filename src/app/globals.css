@@ -174,3 +174,16 @@
 body {
   letter-spacing: var(--tracking-normal);
 }
+
+/* Table borders - follow theme colors */
+[data-slot="table-row"] {
+  border-bottom-color: var(--border);
+}
+
+[data-slot="table-header"] tr {
+  border-bottom-color: var(--border);
+}
+
+[data-slot="table-footer"] {
+  border-top-color: var(--border);
+}

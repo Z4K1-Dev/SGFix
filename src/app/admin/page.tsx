@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,6 +44,9 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { toast } from 'sonner'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 
 interface Berita {
   id: string
@@ -90,6 +94,29 @@ interface Notifikasi {
   createdAt: string
 }
 
+interface Layanan {
+  id: string
+  judul: string
+  jenisLayanan: string
+  status: string
+  namaLengkap: string
+  nik: string
+  createdAt: string
+  updatedAt: string
+  user: {
+    id: string
+    nama: string
+    email: string
+  }
+  balasan: Array<{
+    id: string
+    pesan: string
+    isFromAdmin: boolean
+    createdAt: string
+  }>
+  unreadUserReplies?: number
+}
+
 interface Aktivitas {
   id: string
   judul: string
@@ -108,6 +135,7 @@ export default function AdminPage() {
   const [berita, setBerita] = useState<Berita[]>([])
   const [kategori, setKategori] = useState<Kategori[]>([])
   const [laporan, setLaporan] = useState<Laporan[]>([])
+  const [layanan, setLayanan] = useState<Layanan[]>([])
   const [notifikasi, setNotifikasi] = useState<Notifikasi[]>([])
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -129,6 +157,26 @@ export default function AdminPage() {
   })
   const [balasanForm, setBalasanForm] = useState('')
   const [selectedLaporan, setSelectedLaporan] = useState<string | null>(null)
+  const [selectedLayanan, setSelectedLayanan] = useState<string | null>(null)
+  const [layananBalasanForm, setLayananBalasanForm] = useState('')
+  const [layananStatusForm, setLayananStatusForm] = useState({
+    status: '',
+    catatan: '',
+    alasanPenolakan: '',
+    estimasiSelesai: ''
+  })
+
+  // Memoized data for charts
+  const laporanStatusData = useMemo(() => {
+    const data = [
+      { name: 'Status Laporan', BARU: laporan.filter(l => l.status === 'BARU').length || Math.floor(Math.random() * 10 + 5) },
+      { name: 'Status Laporan', DIPROSES: laporan.filter(l => l.status === 'DIPROSES').length || Math.floor(Math.random() * 8 + 3) },
+      { name: 'Status Laporan', DITAMPAH: laporan.filter(l => l.status === 'DITAMPAH').length || Math.floor(Math.random() * 6 + 2) },
+      { name: 'Status Laporan', DIKERJAKAN: laporan.filter(l => l.status === 'DIKERJAKAN').length || Math.floor(Math.random() * 7 + 3) },
+      { name: 'Status Laporan', SELESAI: laporan.filter(l => l.status === 'SELESAI').length || Math.floor(Math.random() * 15 + 8) }
+    ]
+    return data
+  }, [laporan])
 
   useEffect(() => {
     fetchData()
@@ -143,21 +191,87 @@ export default function AdminPage() {
     }
   }, [darkMode])
 
+  // Add error boundary for debugging
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('Admin: JavaScript error:', event.error)
+    }
+    
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Admin: Unhandled promise rejection:', event.reason)
+    }
+    
+    window.addEventListener('error', handleError)
+    window.addEventListener('unhandledrejection', handleUnhandledRejection)
+    
+    return () => {
+      window.removeEventListener('error', handleError)
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection)
+    }
+  }, [])
+
   const fetchData = async () => {
+    // Skip data fetching during build time
+    if (typeof window === 'undefined') {
+      return
+    }
+    
     try {
-      const [beritaRes, kategoriRes, laporanRes, notifRes] = await Promise.all([
+      console.log('Admin: Fetching data...')
+      const [beritaRes, kategoriRes, laporanRes, layananRes, notifRes] = await Promise.all([
         fetch('/api/berita'),
         fetch('/api/kategori'),
         fetch('/api/laporan'),
+        fetch('/api/admin/layanan'),
         fetch('/api/notifikasi')
       ])
 
-      if (beritaRes.ok) setBerita(await beritaRes.json())
-      if (kategoriRes.ok) setKategori(await kategoriRes.json())
-      if (laporanRes.ok) setLaporan(await laporanRes.json())
-      if (notifRes.ok) setNotifikasi(await notifRes.json())
+      console.log('Admin: API responses received')
+      console.log('Admin: Berita response status:', beritaRes.status)
+      
+      if (beritaRes.ok) {
+        const beritaData = await beritaRes.json()
+        console.log('Admin: Berita data received:', beritaData.length, 'items')
+        setBerita(beritaData)
+      } else {
+        console.error('Admin: Berita API error:', beritaRes.status)
+      }
+      
+      if (kategoriRes.ok) {
+        const kategoriData = await kategoriRes.json()
+        console.log('Admin: Kategori data received:', kategoriData.length, 'items')
+        setKategori(kategoriData)
+      } else {
+        console.error('Admin: Kategori API error:', kategoriRes.status)
+      }
+      
+      if (laporanRes.ok) {
+        const laporanData = await laporanRes.json()
+        console.log('Admin: Laporan data received:', laporanData.length, 'items')
+        setLaporan(laporanData)
+      } else {
+        console.error('Admin: Laporan API error:', laporanRes.status)
+      }
+
+      if (layananRes.ok) {
+        const layananData = await layananRes.json()
+        console.log('Admin: Layanan data received:', layananData.data?.length || 0, 'items')
+        setLayanan(layananData.data || [])
+      } else {
+        console.error('Admin: Layanan API error:', layananRes.status)
+      }
+      
+      if (notifRes.ok) {
+        const notifData = await notifRes.json()
+        console.log('Admin: Notifikasi data received:', notifData.length, 'items')
+        setNotifikasi(notifData)
+      } else {
+        console.error('Admin: Notifikasi API error:', notifRes.status)
+      }
+      
+      console.log('Admin: Data fetching completed')
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('Admin: Error fetching data:', error)
     }
   }
 
@@ -213,6 +327,50 @@ export default function AdminPage() {
       if (response.ok) {
         toast.success('Balasan berhasil dikirim!')
         setBalasanForm('')
+        fetchData()
+      } else {
+        toast.error('Gagal mengirim balasan')
+      }
+    } catch (error) {
+      toast.error('Terjadi kesalahan')
+    }
+  }
+
+  const handleUpdateStatusLayanan = async (layananId: string) => {
+    try {
+      const response = await fetch(`/api/admin/layanan/${layananId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(layananStatusForm)
+      })
+
+      if (response.ok) {
+        toast.success('Status layanan berhasil diperbarui!')
+        setLayananStatusForm({ status: '', catatan: '', alasanPenolakan: '', estimasiSelesai: '' })
+        setSelectedLayanan(null)
+        fetchData()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Gagal memperbarui status')
+      }
+    } catch (error) {
+      toast.error('Terjadi kesalahan')
+    }
+  }
+
+  const handleBalasLayanan = async (layananId: string) => {
+    if (!layananBalasanForm.trim()) return
+
+    try {
+      const response = await fetch(`/api/admin/layanan/${layananId}/balasan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pesan: layananBalasanForm })
+      })
+
+      if (response.ok) {
+        toast.success('Balasan berhasil dikirim!')
+        setLayananBalasanForm('')
         fetchData()
       } else {
         toast.error('Gagal mengirim balasan')
@@ -340,8 +498,14 @@ export default function AdminPage() {
     { id: 'berita', label: 'Berita', icon: FileText },
     { id: 'kategori', label: 'Kategori', icon: Settings },
     { id: 'laporan', label: 'Laporan', icon: MessageSquare },
+    { id: 'layanan', label: 'Layanan', icon: FileText },
     { id: 'notifikasi', label: 'Notifikasi', icon: Bell },
   ]
+
+  const handleTabChange = (tabId: string) => {
+    console.log('Admin: Switching to tab:', tabId)
+    setActiveTab(tabId)
+  }
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -379,8 +543,8 @@ export default function AdminPage() {
                   <Button
                     variant={activeTab === item.id ? "default" : "ghost"}
                     size="default"
-                    className={`w-full justify-start h-10 ${!sidebarOpen && 'px-2'} hover:bg-sidebar-accent active:shadow-none active:scale-[0.98] transition-all duration-200`}
-                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full justify-start h-10 ${!sidebarOpen && 'px-2'} active:shadow-none active:scale-[0.98] transition-all duration-200`}
+                    onClick={() => handleTabChange(item.id)}
                   >
                     {sidebarOpen && <span className="ml-8 text-sidebar-foreground">{item.label}</span>}
                   </Button>
@@ -403,7 +567,7 @@ export default function AdminPage() {
               <Button
                 variant="ghost"
                 size="default"
-                className={`w-full justify-between h-10 ${!sidebarOpen && 'px-2'} hover:bg-sidebar-accent active:shadow-none active:scale-[0.98] transition-all duration-200`}
+                className={`w-full justify-between h-10 ${!sidebarOpen && 'px-2'} active:shadow-none active:scale-[0.98] transition-all duration-200`}
                 onClick={() => setSettingsOpen(!settingsOpen)}
               >
                 <div className="flex items-center">
@@ -423,7 +587,7 @@ export default function AdminPage() {
             
             {settingsOpen && sidebarOpen && (
               <div className="ml-6 space-y-2">
-                <Button variant="ghost" size="default" className="w-full justify-start h-10 hover:bg-sidebar-accent active:shadow-none active:scale-[0.98] transition-all duration-200">
+                <Button variant="ghost" size="default" className="w-full justify-start h-10 active:shadow-none active:scale-[0.98] transition-all duration-200">
                   {/* eslint-disable-next-line jsx-a11y/alt-text */}
                   <Image className="text-sidebar-foreground mr-2" size={28} />
                   <span className="text-sidebar-foreground">Image</span>
@@ -431,7 +595,7 @@ export default function AdminPage() {
                 <Button
                   variant="ghost"
                   size="default"
-                  className="w-full justify-start h-10 hover:bg-sidebar-accent active:shadow-none active:scale-[0.98] transition-all duration-200"
+                  className="w-full justify-start h-10 active:shadow-none active:scale-[0.98] transition-all duration-200"
                   onClick={() => setDarkMode(!darkMode)}
                 >
                   {darkMode ? <Sun className="text-sidebar-foreground mr-2" size={28} /> : <Moon className="text-sidebar-foreground mr-2" size={28} />}
@@ -458,7 +622,7 @@ export default function AdminPage() {
               </div>
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <Button variant="outline" size="sm" className="hover:bg-primary/10 hover:border-primary/20 transition-all duration-200 active:shadow-none active:scale-[0.98]">
+                  <Button variant="outline" size="sm" className="transition-all duration-200 active:shadow-none active:scale-[0.98]">
                     <Bell className="text-foreground mr-2" size={18} />
                     <span className="text-foreground">Notifikasi</span>
                     {unreadCount > 0 && (
@@ -493,9 +657,9 @@ export default function AdminPage() {
               <div className="@container/main flex flex-1 flex-col gap-2">
                 <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
                   {/* Stats Cards */}
-                  <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
                     {/* Total Berita Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Total Berita</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{berita.length}</CardTitle>
@@ -515,7 +679,7 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Total Laporan Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Laporan Masuk</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{laporan.length}</CardTitle>
@@ -535,7 +699,7 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Active Kategori Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Kategori Aktif</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{kategori.length}</CardTitle>
@@ -555,7 +719,7 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Notifikasi Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Notifikasi Aktif</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{unreadCount}</CardTitle>
@@ -578,7 +742,7 @@ export default function AdminPage() {
                   {/* Charts Section */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 lg:px-6">
                     {/* Visitor Analytics Chart */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <CardTitle className="leading-none font-semibold">Total Visitors</CardTitle>
                         <CardDescription className="text-muted-foreground text-sm">
@@ -594,7 +758,7 @@ export default function AdminPage() {
                               className={`inline-flex items-center justify-center gap-2 text-sm font-medium h-9 px-4 min-w-0 flex-1 shrink-0 rounded-none shadow-none first:rounded-l-md last:rounded-r-md border-l-0 first:border-l transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring ${
                                 chartPeriod === '3months' 
                                   ? 'bg-accent text-accent-foreground' 
-                                  : 'bg-transparent hover:bg-accent hover:text-accent-foreground border-input text-foreground'
+                                  : 'bg-transparent border-input text-foreground'
                               }`}
                             >
                               Last 3 months
@@ -605,7 +769,7 @@ export default function AdminPage() {
                               className={`inline-flex items-center justify-center gap-2 text-sm font-medium h-9 px-4 min-w-0 flex-1 shrink-0 rounded-none shadow-none first:rounded-l-md last:rounded-r-md border-l-0 first:border-l transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring ${
                                 chartPeriod === '30days' 
                                   ? 'bg-accent text-accent-foreground' 
-                                  : 'bg-transparent hover:bg-accent hover:text-accent-foreground border-input text-foreground'
+                                  : 'bg-transparent border-input text-foreground'
                               }`}
                             >
                               Last 30 days
@@ -616,7 +780,7 @@ export default function AdminPage() {
                               className={`inline-flex items-center justify-center gap-2 text-sm font-medium h-9 px-4 min-w-0 flex-1 shrink-0 rounded-none shadow-none first:rounded-l-md last:rounded-r-md border-l-0 first:border-l transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring ${
                                 chartPeriod === '7days' 
                                   ? 'bg-accent text-accent-foreground' 
-                                  : 'bg-transparent hover:bg-accent hover:text-accent-foreground border-input text-foreground'
+                                  : 'bg-transparent border-input text-foreground'
                               }`}
                             >
                               Last 7 days
@@ -625,7 +789,7 @@ export default function AdminPage() {
                           
                           {/* Select for Mobile */}
                           <Select value={chartPeriod} onValueChange={setChartPeriod}>
-                            <SelectTrigger className="w-40 @[767px]/card:hidden border-input bg-transparent hover:bg-accent hover:text-accent-foreground px-3 py-2 text-sm h-8 flex items-center justify-between gap-2 rounded-md border shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring">
+                            <SelectTrigger className="w-40 @[767px]/card:hidden border-input bg-transparent px-3 py-2 text-sm h-8 flex items-center justify-between gap-2 rounded-md border shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -700,7 +864,7 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Laporan Status Chart */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer">
+                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div>
                           <CardTitle className="leading-none font-semibold">Statistik Laporan</CardTitle>
@@ -711,21 +875,24 @@ export default function AdminPage() {
                         </div>
                       </CardHeader>
                       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-                        <div className="h-[250px] w-full">
+                        <div 
+                          className="h-[250px] w-full"
+                          style={{
+                            '--color-baru': 'var(--chart-2)',
+                            '--color-diproses': 'var(--chart-3)',
+                            '--color-ditampah': 'var(--chart-4)',
+                            '--color-dikerjakan': 'var(--chart-5)',
+                            '--color-selesai': 'var(--chart-1)'
+                          } as React.CSSProperties}
+                        >
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart
-                              data={useMemo(() => [
-                                { status: 'BARU', jumlah: laporan.filter(l => l.status === 'BARU').length || Math.floor(Math.random() * 10 + 5) },
-                                { status: 'DIPROSES', jumlah: laporan.filter(l => l.status === 'DIPROSES').length || Math.floor(Math.random() * 8 + 3) },
-                                { status: 'DITAMPAH', jumlah: laporan.filter(l => l.status === 'DITAMPAH').length || Math.floor(Math.random() * 6 + 2) },
-                                { status: 'DIKERJAKAN', jumlah: laporan.filter(l => l.status === 'DIKERJAKAN').length || Math.floor(Math.random() * 7 + 3) },
-                                { status: 'SELESAI', jumlah: laporan.filter(l => l.status === 'SELESAI').length || Math.floor(Math.random() * 15 + 8) }
-                              ], [laporan])}
+                              data={laporanStatusData}
                               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                             >
                               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                               <XAxis 
-                                dataKey="status" 
+                                dataKey="name" 
                                 tick={{ fontSize: 11 }}
                                 className="text-muted-foreground"
                               />
@@ -742,17 +909,66 @@ export default function AdminPage() {
                                 labelStyle={{ color: 'hsl(var(--foreground))' }}
                               />
                               <Bar 
-                                dataKey="jumlah" 
-                                fill="#4DA3FF" 
-                                radius={[8, 8, 0, 0]}
-                                name="Jumlah Laporan"
+                                dataKey="BARU" 
+                                fill="var(--color-baru)" 
+                                radius={[4, 4, 0, 0]}
+                                name="BARU"
+                                stackId="a"
+                              />
+                              <Bar 
+                                dataKey="DIPROSES" 
+                                fill="var(--color-diproses)" 
+                                radius={[4, 4, 0, 0]}
+                                name="DIPROSES"
+                                stackId="a"
+                              />
+                              <Bar 
+                                dataKey="DITAMPAH" 
+                                fill="var(--color-ditampah)" 
+                                radius={[4, 4, 0, 0]}
+                                name="DITAMPAH"
+                                stackId="a"
+                              />
+                              <Bar 
+                                dataKey="DIKERJAKAN" 
+                                fill="var(--color-dikerjakan)" 
+                                radius={[4, 4, 0, 0]}
+                                name="DIKERJAKAN"
+                                stackId="a"
+                              />
+                              <Bar 
+                                dataKey="SELESAI" 
+                                fill="var(--color-selesai)" 
+                                radius={[4, 4, 0, 0]}
+                                name="SELESAI"
+                                stackId="a"
                               />
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
-                        <div className="flex justify-center gap-4 mt-4 text-xs text-muted-foreground">
+                        <div className="flex justify-center gap-4 mt-4 text-xs text-muted-foreground flex-wrap">
                           <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#4DA3FF' }}></div>
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-2))' }}></div>
+                            <span>BARU</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }}></div>
+                            <span>DIPROSES</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-4))' }}></div>
+                            <span>DITAMPAH</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-5))' }}></div>
+                            <span>DIKERJAKAN</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-1))' }}></div>
+                            <span>SELESAI</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--muted-foreground))' }}></div>
                             <span>Total: {laporan.length || Math.floor(Math.random() * 40 + 20)} laporan</span>
                           </div>
                         </div>
@@ -784,27 +1000,23 @@ export default function AdminPage() {
                           <div className="relative w-full overflow-y-auto overflow-x-hidden">
                             <Table className="w-full caption-bottom text-sm">
                               <TableHeader className="[&_tr]:border-b sticky top-0 z-10 bg-muted">
-                                <TableRow className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                <TableRow className="border-b transition-colors data-[state=selected]:bg-muted">
                                   <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}></TableHead>
                                   <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}>
                                     <div className="flex items-center justify-center">
-                                      <button
-                                        type="button"
-                                        role="checkbox"
-                                        aria-checked={selectAll}
-                                        data-state={selectAll ? "checked" : "unchecked"}
-                                        value="on"
-                                        className="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                                        aria-label="Select all"
-                                        onClick={() => {
-                                          if (selectAll) {
-                                            setSelectedItems([])
-                                          } else {
+                                      <Checkbox
+                                        checked={selectAll}
+                                        onCheckedChange={(checked) => {
+                                          const isChecked = checked === true
+                                          if (isChecked) {
                                             setSelectedItems(aktivitasData.map(item => item.id))
+                                          } else {
+                                            setSelectedItems([])
                                           }
-                                          setSelectAll(!selectAll)
+                                          setSelectAll(isChecked)
                                         }}
-                                      ></button>
+                                        aria-label="Select all"
+                                      />
                                     </div>
                                   </TableHead>
                                   <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0" colSpan={1}>Judul</TableHead>
@@ -823,9 +1035,9 @@ export default function AdminPage() {
                               <TableBody className="[&_tr:last-child]:border-0 **:data-[slot=table-cell]:first:w-8">
                                 {/* Aktivitas Data Rows */}
                                 {aktivitasData.map((item) => (
-                                  <TableRow key={item.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                  <TableRow key={item.id} className="border-b transition-colors data-[state=selected]:bg-muted">
                                     <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-                                      <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus:outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:text-accent-foreground size-7 text-muted-foreground hover:bg-transparent" role="button" tabIndex={0} aria-disabled="false" aria-roledescription="sortable">
+                                      <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus:outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 size-7 text-muted-foreground" role="button" tabIndex={0} aria-disabled="false" aria-roledescription="sortable">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-grip-vertical size-3 text-muted-foreground">
                                           <circle cx="9" cy="12" r="1"></circle>
                                           <circle cx="9" cy="5" r="1"></circle>
@@ -839,26 +1051,22 @@ export default function AdminPage() {
                                     </TableCell>
                                     <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
                                       <div className="flex items-center justify-center">
-                                        <button
-                                          type="button"
-                                          role="checkbox"
-                                          aria-checked={selectedItems.includes(item.id)}
-                                          data-state={selectedItems.includes(item.id) ? "checked" : "unchecked"}
-                                          value="on"
-                                          className="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                                          aria-label="Select row"
-                                          onClick={() => {
-                                            if (selectedItems.includes(item.id)) {
-                                              setSelectedItems(selectedItems.filter(id => id !== item.id))
-                                            } else {
+                                        <Checkbox
+                                          checked={selectedItems.includes(item.id)}
+                                          onCheckedChange={(checked) => {
+                                            const isChecked = checked === true
+                                            if (isChecked) {
                                               setSelectedItems([...selectedItems, item.id])
+                                            } else {
+                                              setSelectedItems(selectedItems.filter(id => id !== item.id))
                                             }
                                           }}
-                                        ></button>
+                                          aria-label="Select row"
+                                        />
                                       </div>
                                     </TableCell>
                                     <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-                                      <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus:outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 underline-offset-4 hover:underline h-9 py-2 w-fit px-0 text-left text-foreground" type="button">
+                                      <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus:outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 underline-offset-4 h-9 py-2 w-fit px-0 text-left text-foreground" type="button">
                                         {item.judul}
                                       </button>
                                     </TableCell>
@@ -877,13 +1085,13 @@ export default function AdminPage() {
                                     <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
                                       <form>
                                         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 sr-only" htmlFor={`${item.id}-target`}>Target</label>
-                                        <input className="flex rounded-md border px-3 py-1 text-base transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-8 w-16 border-transparent bg-transparent text-right shadow-none hover:bg-input/30 focus-visible:border focus-visible:bg-background" id={`${item.id}-target`} value={item.target} readOnly />
+                                        <input className="flex rounded-md border px-3 py-1 text-base transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border focus-visible:bg-background" id={`${item.id}-target`} value={item.target} readOnly />
                                       </form>
                                     </TableCell>
                                     <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
                                       <form>
                                         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 sr-only" htmlFor={`${item.id}-limit`}>Limit</label>
-                                        <input className="flex rounded-md border px-3 py-1 text-base transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-8 w-16 border-transparent bg-transparent text-right shadow-none hover:bg-input/30 focus-visible:border focus-visible:bg-background" id={`${item.id}-limit`} value={item.limit} readOnly />
+                                        <input className="flex rounded-md border px-3 py-1 text-base transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border focus-visible:bg-background" id={`${item.id}-limit`} value={item.limit} readOnly />
                                       </form>
                                     </TableCell>
                                     <TableCell className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
@@ -951,7 +1159,7 @@ export default function AdminPage() {
               </div>
             </div>
           ) : (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
               {/* Tab contents for non-dashboard tabs */}
             {/* Tab Dashboard */}
             <TabsContent value="dashboard" className="space-y-6">
@@ -960,51 +1168,76 @@ export default function AdminPage() {
 
             {/* Tab Berita */}
             <TabsContent value="berita" className="space-y-6 px-6">
+              {(() => {
+                console.log('Admin: Rendering berita tab, berita count:', berita.length)
+                return null
+              })()}
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Berita</h2>
-                <Button onClick={() => window.location.href = '/tambah-berita'}>
+                <Button onClick={() => {
+                  console.log('Admin: Navigate to tambah-berita')
+                  window.location.href = '/tambah-berita'
+                }}>
                   <Plus className="mr-2" size={18} />
                   Tambah Berita
                 </Button>
               </div>
 
               <div className="grid gap-4">
-                {berita.map((item) => (
-                  <Card key={item.id} className="cursor-pointer">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold">{item.judul}</h3>
-                          <p className="text-muted-foreground mt-2">{item.isi.substring(0, 100)}...</p>
-                          <div className="flex items-center gap-2 mt-4">
-                            <Badge variant="secondary">{item.kategori.nama}</Badge>
-                            <Badge variant={item.published ? "default" : "outline"}>
-                              {item.published ? "Published" : "Draft"}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              // Edit functionality here
-                            }}
-                            className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
-                          >
-                            <Edit size={20} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              // Delete functionality here
-                            }}
-                            className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
-                          >
-                            <Trash2 size={20} />
-                          </button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                {berita.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Belum ada berita</p>
+                  </div>
+                ) : (
+                  <>
+                    {console.log('Admin: Rendering berita list')}
+                    {berita.map((item) => {
+                      console.log('Admin: Rendering berita item:', item.id, item.judul)
+                      return (
+                        <Card key={item.id} className="cursor-pointer">
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h3 className="text-lg font-semibold">{item.judul}</h3>
+                                <p className="text-muted-foreground mt-2">{item.isi.substring(0, 100)}...</p>
+                                <div className="flex items-center gap-2 mt-4">
+                                  <Badge variant="secondary">{item.kategori?.nama || 'No Category'}</Badge>
+                                  <Badge variant={item.published ? "default" : "outline"}>
+                                    {item.published ? "Published" : "Draft"}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    console.log('Admin: Edit berita:', item.id)
+                                    // Edit functionality here
+                                  }}
+                                  className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                                >
+                                  <Edit size={20} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    console.log('Admin: Delete berita:', item.id)
+                                    // Delete functionality here
+                                  }}
+                                  className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                                >
+                                  <Trash2 size={20} />
+                                </button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
+                  </>
+                )}
               </div>
             </TabsContent>
 
@@ -1176,6 +1409,188 @@ export default function AdminPage() {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            </TabsContent>
+
+            {/* Tab Layanan */}
+            <TabsContent value="layanan" className="space-y-6 px-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Kelola Layanan</h2>
+                <Button variant="outline" onClick={fetchData}>
+                  <RefreshCw className="mr-2" size={18} />
+                  Refresh
+                </Button>
+              </div>
+
+              <div className="grid gap-4">
+                {layanan.map((item) => (
+                  <Card key={item.id} className="relative">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2">
+                          <CardTitle className="text-lg">{item.judul}</CardTitle>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">{item.jenisLayanan}</Badge>
+                            <Badge className={getStatusColor(item.status)}>
+                              <div className="flex items-center gap-1">
+                                {getStatusIcon(item.status)}
+                                {item.status}
+                              </div>
+                            </Badge>
+                            {item.unreadUserReplies && item.unreadUserReplies > 0 && (
+                              <Badge variant="destructive">
+                                {item.unreadUserReplies} balasan baru
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>{new Date(item.createdAt).toLocaleDateString('id-ID')}</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium">Nama:</span> {item.namaLengkap}
+                          </div>
+                          <div>
+                            <span className="font-medium">NIK:</span> {item.nik}
+                          </div>
+                          <div>
+                            <span className="font-medium">Email:</span> {item.user.email}
+                          </div>
+                          <div>
+                            <span className="font-medium">User:</span> {item.user.nama}
+                          </div>
+                        </div>
+
+                        {/* Status Update Form */}
+                        {selectedLayanan === item.id && (
+                          <div className="border rounded-lg p-4 space-y-4 bg-muted/50">
+                            <h4 className="font-medium">Update Status Layanan</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label>Status</Label>
+                                <Select value={layananStatusForm.status} onValueChange={(value) => setLayananStatusForm(prev => ({ ...prev, status: value }))}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Pilih status" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="BARU">Baru</SelectItem>
+                                    <SelectItem value="DIPROSES">Diproses</SelectItem>
+                                    <SelectItem value="DIVERIFIKASI">Diverifikasi</SelectItem>
+                                    <SelectItem value="DISETUJUI">Disetujui</SelectItem>
+                                    <SelectItem value="SELESAI">Selesai</SelectItem>
+                                    <SelectItem value="DITOLAK">Ditolak</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label>Estimasi Selesai</Label>
+                                <Input
+                                  placeholder="Contoh: 2-3 hari kerja"
+                                  value={layananStatusForm.estimasiSelesai}
+                                  onChange={(e) => setLayananStatusForm(prev => ({ ...prev, estimasiSelesai: e.target.value }))}
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <Label>Catatan</Label>
+                              <Textarea
+                                placeholder="Catatan untuk pengguna"
+                                value={layananStatusForm.catatan}
+                                onChange={(e) => setLayananStatusForm(prev => ({ ...prev, catatan: e.target.value }))}
+                              />
+                            </div>
+                            {layananStatusForm.status === 'DITOLAK' && (
+                              <div>
+                                <Label>Alasan Penolakan *</Label>
+                                <Textarea
+                                  placeholder="Alasan penolakan wajib diisi"
+                                  value={layananStatusForm.alasanPenolakan}
+                                  onChange={(e) => setLayananStatusForm(prev => ({ ...prev, alasanPenolakan: e.target.value }))}
+                                  required
+                                />
+                              </div>
+                            )}
+                            <div className="flex gap-2">
+                              <Button onClick={() => handleUpdateStatusLayanan(item.id)} disabled={!layananStatusForm.status}>
+                                Update Status
+                              </Button>
+                              <Button variant="outline" onClick={() => {
+                                setSelectedLayanan(null)
+                                setLayananStatusForm({ status: '', catatan: '', alasanPenolakan: '', estimasiSelesai: '' })
+                              }}>
+                                Batal
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Balasan */}
+                        <div className="space-y-3">
+                          <h4 className="font-medium">Balasan</h4>
+                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                            {item.balasan.map((balasan) => (
+                              <div key={balasan.id} className={`p-2 rounded-lg text-sm ${balasan.isFromAdmin ? 'bg-blue-50 ml-4' : 'bg-gray-50'}`}>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-medium">{balasan.isFromAdmin ? 'Admin' : 'User'}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(balasan.createdAt).toLocaleString('id-ID')}
+                                  </span>
+                                </div>
+                                <p>{balasan.pesan}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Kirim balasan..."
+                              value={layananBalasanForm}
+                              onChange={(e) => setLayananBalasanForm(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault()
+                                  handleBalasLayanan(item.id)
+                                }
+                              }}
+                            />
+                            <Button 
+                              onClick={() => handleBalasLayanan(item.id)} 
+                              disabled={!layananBalasanForm.trim()}
+                              size="sm"
+                            >
+                              <Send size={18} />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 pt-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setSelectedLayanan(selectedLayanan === item.id ? null : item.id)}
+                          >
+                            <Edit size={16} className="mr-1" />
+                            {selectedLayanan === item.id ? 'Tutup' : 'Update Status'}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {layanan.length === 0 && (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <FileText size={64} className="mx-auto text-muted-foreground mb-4" />
+                      <p className="text-lg font-medium text-muted-foreground">Belum ada layanan</p>
+                      <p className="text-sm text-muted-foreground">Belum ada pengajuan layanan dari pengguna</p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </TabsContent>
 

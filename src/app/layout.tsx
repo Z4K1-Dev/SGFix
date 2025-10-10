@@ -1,10 +1,48 @@
 import { Metadata } from 'next'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
+import { ThemeProvider } from '@/components/theme-provider'
 
 export const metadata: Metadata = {
-  title: 'Portal SmartGov',
-  description: 'Portal pemerintahan digital dengan notifikasi realtime',
+  title: 'Portal SmartGov - Sistem Informasi Pemerintahan',
+  description: 'Portal pemerintahan digital dengan notifikasi realtime, pengelolaan berita, dan sistem laporan masyarakat',
+  keywords: 'pemerintahan, smart city, berita, laporan masyarakat, notifikasi realtime',
+  authors: [{ name: 'SmartGov Team' }],
+  creator: 'SmartGov',
+  publisher: 'SmartGov',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'Portal SmartGov - Sistem Informasi Pemerintahan',
+    description: 'Portal pemerintahan digital dengan notifikasi realtime, pengelolaan berita, dan sistem laporan masyarakat',
+    url: '/',
+    siteName: 'Portal SmartGov',
+    locale: 'id_ID',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Portal SmartGov - Sistem Informasi Pemerintahan',
+    description: 'Portal pemerintahan digital dengan notifikasi realtime, pengelolaan berita, dan sistem laporan masyarakat',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
@@ -29,7 +67,14 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
       </head>
       <body className="antialiased">
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
         <Toaster />
       </body>
     </html>

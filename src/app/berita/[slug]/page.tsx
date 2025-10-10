@@ -294,7 +294,7 @@ export default function BeritaDetailPage() {
                   {relatedBerita.map((item) => (
                     <Card
                       key={item.id}
-                      className="hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer"
+                      className="active:shadow-none transition-all duration-200 cursor-pointer"
                       onClick={() => router.push(`/berita/${item.id}`)}
                     >
                       <CardContent className="p-3">

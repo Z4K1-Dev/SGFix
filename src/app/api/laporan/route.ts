@@ -1,31 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { notifyAdmin } from '@/lib/socket-utils'
-import { withCache, generateCacheKey, invalidateCachePattern } from '@/lib/cache'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+import { cache, generateCacheKey, invalidateCachePattern } from '@/lib/cache'
 
 /**
  * Mendapatkan daftar laporan
  */
 export async function GET() {
   try {
-    const cacheKey = generateCacheKey('/api/laporan')
-    
-    return withCache(cacheKey, async () => {
-      const laporan = await db.laporan.findMany({
-        include: {
-          balasan: {
-            orderBy: {
-              createdAt: 'asc'
-            }
+    const laporan = await db.laporan.findMany({
+      include: {
+        balasan: {
+          orderBy: {
+            createdAt: 'asc'
           }
-        },
-        orderBy: {
-          createdAt: 'desc'
         }
-      })
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
 
-      return NextResponse.json(laporan)
-    }, 1 * 60 * 1000) // 1 minute cache for reports
+    return NextResponse.json(laporan)
   } catch (error) {
     console.error('Error fetching laporan:', error)
     return NextResponse.json(

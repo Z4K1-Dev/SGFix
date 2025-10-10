@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NEXT_WEBPACK_USEPOLLING=false FAST_REFRESH=false NODE_ENV=development TURBOPACK=0 WEBPACK_DEV_SERVER=0 REACT_REFRESH=false REACT_FAST_REFRESH=false NEXT_REACT_REFRESH=false nodemon --exec \"npx tsx server.ts\" --watch server.ts --watch src --ext ts,tsx,js,jsx",
+    "dev": "nodemon --exec \"npx tsx server.ts\" --watch server.ts --watch src --ext ts,tsx,js,jsx 2>&1 | tee dev.log",
     "build": "next build",
-    "start": "NODE_ENV=production tsx server.ts",
+    "start": "NODE_ENV=production tsx server.ts 2>&1 | tee server.log",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",

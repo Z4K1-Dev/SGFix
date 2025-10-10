@@ -189,7 +189,7 @@ export default function BuatLaporanPage() {
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Judul Laporan *
               </label>
               <Input
@@ -200,7 +200,7 @@ export default function BuatLaporanPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Keterangan *
               </label>
               <Textarea
@@ -217,10 +217,10 @@ export default function BuatLaporanPage() {
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Upload Foto (Opsional)
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                 {formData.foto ? (
                   <div className="space-y-4">
                     <img 
@@ -239,10 +239,10 @@ export default function BuatLaporanPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <Camera className="w-12 h-12 mx-auto text-gray-400" />
+                    <Camera className="w-12 h-12 mx-auto text-muted-foreground" />
                     <div>
-                      <p className="text-gray-600">Klik untuk upload foto</p>
-                      <p className="text-sm text-gray-500">Maksimal 5MB</p>
+                      <p className="text-muted-foreground">Klik untuk upload foto</p>
+                      <p className="text-sm text-muted-foreground/70">Maksimal 5MB</p>
                     </div>
                     <Button
                       variant="outline"
@@ -269,13 +269,13 @@ export default function BuatLaporanPage() {
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Lokasi (Opsional)
               </label>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Latitude</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Latitude</label>
                     <Input
                       type="number"
                       step="any"
@@ -285,7 +285,7 @@ export default function BuatLaporanPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Longitude</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Longitude</label>
                     <Input
                       type="number"
                       step="any"
@@ -305,8 +305,8 @@ export default function BuatLaporanPage() {
                   {locationLoading ? 'Mendapatkan Lokasi...' : 'Gunakan Lokasi Saat Ini'}
                 </Button>
                 {formData.latitude && formData.longitude && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm text-green-800">
+                  <div className="p-3 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <p className="text-sm text-green-800 dark:text-green-200">
                       <MapPin className="w-4 h-4 inline mr-1" />
                       Lokasi tersimpan: {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
                     </p>
@@ -328,7 +328,7 @@ export default function BuatLaporanPage() {
               <CardContent className="space-y-4">
                 <div>
                   <h4 className="font-medium mb-2">Keterangan:</h4>
-                  <p className="text-gray-700">{formData.keterangan || 'Tidak ada keterangan'}</p>
+                  <p className="text-foreground">{formData.keterangan || 'Tidak ada keterangan'}</p>
                 </div>
                 
                 {formData.foto && (
@@ -345,7 +345,7 @@ export default function BuatLaporanPage() {
                 {formData.latitude && formData.longitude && (
                   <div>
                     <h4 className="font-medium mb-2">Lokasi:</h4>
-                    <p className="text-gray-700">
+                    <p className="text-foreground">
                       <MapPin className="w-4 h-4 inline mr-1" />
                       {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
                     </p>
@@ -361,7 +361,7 @@ export default function BuatLaporanPage() {
           <div className="space-y-6 text-center">
             <CheckCircle className="w-16 h-16 mx-auto text-green-500" />
             <h3 className="text-xl font-semibold">Siap Dikirim!</h3>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Laporan Anda sudah siap untuk dikirim. Pastikan semua data sudah benar.
             </p>
             <div className="space-y-2">
@@ -387,7 +387,7 @@ export default function BuatLaporanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-[412px] mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
@@ -399,8 +399,8 @@ export default function BuatLaporanPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Kembali
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">Buat Laporan</h1>
-          <p className="text-gray-600 mt-2">Laporkan masalah atau aspirasi Anda</p>
+          <h1 className="text-3xl font-bold text-foreground">Buat Laporan</h1>
+          <p className="text-muted-foreground mt-2">Laporkan masalah atau aspirasi Anda</p>
         </div>
 
         {/* Progress */}
@@ -416,9 +416,9 @@ export default function BuatLaporanPage() {
                   <div className="flex flex-col items-center">
                     <div className={`
                       w-10 h-10 rounded-full flex items-center justify-center
-                      ${isActive ? 'bg-blue-600 text-white' : 
-                        isCompleted ? 'bg-green-600 text-white' : 
-                        'bg-gray-200 text-gray-600'}
+                      ${isActive ? 'bg-primary text-primary-foreground' : 
+                        isCompleted ? 'bg-green-600 text-primary-foreground' : 
+                        'bg-muted text-muted-foreground'}
                     `}>
                       <Icon className="w-5 h-5" />
                     </div>
@@ -429,7 +429,7 @@ export default function BuatLaporanPage() {
                   {index < steps.length - 1 && (
                     <div className={`
                       w-full h-1 mx-2
-                      ${isCompleted ? 'bg-green-600' : 'bg-gray-200'}
+                      ${isCompleted ? 'bg-green-600' : 'bg-muted'}
                     `} />
                   )}
                 </div>
@@ -487,10 +487,10 @@ export default function BuatLaporanPage() {
         </Card>
 
         {/* Help Text */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mt-6 p-4 bg-blue-100 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-            <div className="text-sm text-blue-800">
+            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+            <div className="text-sm text-blue-800 dark:text-blue-200">
               <p className="font-medium mb-1">Tips:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>Judul dan keterangan wajib diisi</li>

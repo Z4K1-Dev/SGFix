@@ -46,7 +46,7 @@ const BeritaCardSkeleton = () => (
 
 function BeritaCardContent({ item, onClick }: BeritaCardProps) {
   return (
-    <Card className="border-0 shadow-sm bg-card hover:shadow-md transition-all duration-200 hover:scale-[1.02] active:shadow-none active:scale-[0.98] cursor-pointer">
+    <Card className="border-0 shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -71,7 +71,7 @@ function BeritaCardContent({ item, onClick }: BeritaCardProps) {
         <Button 
           variant="outline" 
           size="sm" 
-          className="w-full active:shadow-none active:scale-[0.98] transition-all duration-200" 
+          className="w-full active:shadow-none transition-all duration-200" 
           onClick={() => onClick(item.id)}
         >
           Baca Selengkapnya

@@ -89,6 +89,26 @@ const Laporan = ({ className = "w-5 h-5" }) => (
     <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/>
   </svg>
 );
+const LayananIcon = ({ className = "w-5 h-5" }) => (
+<svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="32" 
+    height="32" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    stroke-width="1.75" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+    className={className}
+  >
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14,2 14,8 20,8"/>
+    <line x1="16" y1="13" x2="8" y2="13"/>
+    <line x1="16" y1="17" x2="8" y2="17"/>
+    <polyline points="10,9 9,9 8,9"/>
+  </svg>
+);
 interface Tab {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -145,7 +165,7 @@ function ExpandedTabs({ tabs, className, onChange }: ExpandedTabsProps) {
 
   const SeparatorComponent = () => (
     <div
-      className="h-6 w-px bg-slate-200 dark:bg-slate-700 flex-shrink-0 sm:h-8"
+      className="h-6 w-px bg-border flex-shrink-0 sm:h-8"
       aria-hidden="true"
     />
   );
@@ -153,7 +173,7 @@ function ExpandedTabs({ tabs, className, onChange }: ExpandedTabsProps) {
   return (
     <div
       ref={containerRef}
-      className={`flex items-center gap-1 rounded-full border border-slate-200 bg-white/70 dark:bg-black dark:border-slate-700 p-1 shadow-md backdrop-blur-sm w-[412px] max-w-[90vw] sm:max-w-none ${className || ""}`}
+      className={`flex items-center gap-1 rounded-full border border-border bg-background/70 backdrop-blur-sm p-1 shadow-md w-[412px] max-w-[90vw] sm:max-w-none ${className || ""}`}
     >
       {tabs.map((tab, index) => {
         if (tab.type === "separator") {
@@ -170,15 +190,15 @@ function ExpandedTabs({ tabs, className, onChange }: ExpandedTabsProps) {
             className={`relative z-10 flex items-center rounded-full px-2 py-2 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium transition-colors focus:outline-none flex-1
               ${
                 isSelected
-                  ? "text-slate-900 dark:text-[#007bff]"
-                  : "text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-100"
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }
             `}
           >
             {isSelected && (
               <motion.div
                 layoutId="pill"
-                className="absolute inset-0 z-0 rounded-full bg-white dark:bg-[#007bff]/20 backdrop-blur-sm border border-[#007bff]/50 shadow-sm"
+                className="absolute inset-0 z-0 rounded-full bg-background backdrop-blur-sm border border-primary/50 shadow-sm"
                 transition={{ type: "spring", stiffness: 500, damping: 40 }}
               />
             )}
@@ -211,6 +231,7 @@ export default function Tabs2({ onChange }: { onChange?: (index: number | null) 
     { title: "Home", icon: HomeIcon },
     { title: "Berita", icon: FileText },
     { title: "Laporan", icon: Laporan },
+    { title: "Layanan", icon: LayananIcon },
     { type: "separator" },
     { title: "Profile", icon: UserIcon },
 //    { title: "Settings", icon: SettingsIcon },
