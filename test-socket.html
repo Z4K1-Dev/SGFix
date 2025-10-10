@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Test</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Socket.IO Connection Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="logs"></div>
+    
+    <script>
+        const logs = document.getElementById('logs');
+        const status = document.getElementById('status');
+        
+        function log(message) {
+            console.log(message);
+            const div = document.createElement('div');
+            div.textContent = new Date().toISOString() + ' - ' + message;
+            logs.appendChild(div);
+        }
+        
+        log('Starting connection test...');
+        
+        const socket = io('http://localhost:3000', {
+            path: '/api/socket',
+            transports: ['websocket', 'polling']
+        });
+        
+        socket.on('connect', () => {
+            log('Connected to Socket.IO server with ID: ' + socket.id);
+            status.textContent = 'Connected';
+            status.style.color = 'green';
+            
+            // Test joining rooms
+            socket.emit('join-room', 'public');
+            socket.emit('join-room', 'admin');
+            log('Joined rooms: public, admin');
+            
+            // Test heartbeat
+            socket.emit('heartbeat');
+            log('Sent heartbeat');
+        });
+        
+        socket.on('connect_error', (error) => {
+            log('Connection error: ' + error.message);
+            status.textContent = 'Connection Error';
+            status.style.color = 'red';
+        });
+        
+        socket.on('disconnect', (reason) => {
+            log('Disconnected: ' + reason);
+            status.textContent = 'Disconnected';
+            status.style.color = 'orange';
+        });
+        
+        socket.on('heartbeat-response', (data) => {
+            log('Heartbeat response: ' + JSON.stringify(data));
+        });
+        
+        socket.on('notification', (data) => {
+            log('Notification received: ' + JSON.stringify(data));
+        });
+    </script>
+</body>
+</html>

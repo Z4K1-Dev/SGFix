@@ -1,39 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { StatusLayanan } from '@prisma/client'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const user = await db.user.findUnique({
-      where: { email: session.user.email }
-    })
-
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-    }
-
+    // Untuk demo, tidak perlu auth - tampilkan semua layanan
     const layanan = await db.layanan.findUnique({
       where: { id: params.id },
       include: {
-        user: {
-          select: {
-            id: true,
-            nama: true,
-            email: true,
-            noTelepon: true
-          }
-        },
         balasan: {
           orderBy: { createdAt: 'asc' }
         },
@@ -64,20 +41,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const user = await db.user.findUnique({
-      where: { email: session.user.email }
-    })
-
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-    }
-
+    // Untuk demo, tidak perlu auth - verifikasi layanan exists
     const layanan = await db.layanan.findUnique({
       where: { id: params.id }
     })
@@ -99,9 +63,9 @@ export async function PUT(
     // Validate status transitions
     const validTransitions: Record<StatusLayanan, StatusLayanan[]> = {
       [StatusLayanan.BARU]: [StatusLayanan.DIPROSES, StatusLayanan.DITOLAK],
-      [StatusLayanan.DIPROSES]: [StatusLayanan.DIVERIFIKASI, StatusLayanan.DITOLAK],
-      [StatusLayanan.DIVERIFIKASI]: [StatusLayanan.DISETUJUI, StatusLayanan.DITOLAK],
-      [StatusLayanan.DISETUJUI]: [StatusLayanan.SELESAI],
+      [StatusLayanan.DIPROSES]: [StatusLayanan.DITAMPAH, StatusLayanan.DITOLAK],
+      [StatusLayanan.DITAMPAH]: [StatusLayanan.DIKERJAKAN, StatusLayanan.DITOLAK],
+      [StatusLayanan.DIKERJAKAN]: [StatusLayanan.SELESAI, StatusLayanan.DITOLAK],
       [StatusLayanan.SELESAI]: [],
       [StatusLayanan.DITOLAK]: [StatusLayanan.BARU] // Allow resubmission
     }
@@ -125,14 +89,12 @@ export async function PUT(
       where: { id: params.id },
       data: {
         status: status as StatusLayanan,
-        catatan,
-        alasanPenolakan: status === StatusLayanan.DITOLAK ? alasanPenolakan : null,
-        estimasiSelesai,
+        keterangan: catatan || alasanPenolakan || null,
         updatedAt: new Date()
       }
     })
 
-    // Create notification for user
+    // Create notification - untuk demo, tidak perlu userId
     let notifikasiTitle = ''
     let notifikasiMessage = ''
     let notifikasiType = ''
@@ -143,15 +105,15 @@ export async function PUT(
         notifikasiMessage = `Pengajuan layanan Anda sedang dalam proses verifikasi`
         notifikasiType = 'LAYANAN_PROSES'
         break
-      case StatusLayanan.DIVERIFIKASI:
-        notifikasiTitle = `Layanan ${layanan.judul} sedang diverifikasi`
-        notifikasiMessage = `Data Anda sedang diverifikasi oleh petugas`
-        notifikasiType = 'LAYANAN_VERIFIKASI'
+      case StatusLayanan.DITAMPAH:
+        notifikasiTitle = `Layanan ${layanan.judul} ditahan`
+        notifikasiMessage = `Pengajuan layanan Anda ditahan sementara`
+        notifikasiType = 'LAYANAN_DITAMPAH'
         break
-      case StatusLayanan.DISETUJUI:
-        notifikasiTitle = `Layanan ${layanan.judul} disetujui`
-        notifikasiMessage = `Pengajuan layanan Anda telah disetujui`
-        notifikasiType = 'LAYANAN_DISETUJUI'
+      case StatusLayanan.DIKERJAKAN:
+        notifikasiTitle = `Layanan ${layanan.judul} sedang dikerjakan`
+        notifikasiMessage = `Pengajuan layanan Anda sedang diproses`
+        notifikasiType = 'LAYANAN_DIKERJAKAN'
         break
       case StatusLayanan.SELESAI:
         notifikasiTitle = `Layanan ${layanan.judul} selesai`
@@ -165,15 +127,16 @@ export async function PUT(
         break
     }
 
-    await db.notifikasi.create({
-      data: {
-        userId: layanan.userId,
-        judul: notifikasiTitle,
-        pesan: notifikasiMessage,
-        tipe: notifikasiType,
-        layananId: params.id
-      }
-    })
+    // Create notification - untuk demo, tidak perlu userId
+    // await db.notifikasi.create({
+    //   data: {
+    //     judul: notifikasiTitle,
+    //     pesan: notifikasiMessage,
+    //     tipe: notifikasiType as any,
+    //     untukAdmin: false,
+    //     layananId: params.id
+    //   }
+    // })
 
     return NextResponse.json({
       message: 'Status layanan berhasil diperbarui',

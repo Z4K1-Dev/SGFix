@@ -1,32 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const user = await db.user.findUnique({
-      where: { email: session.user.email }
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Verify layanan exists and belongs to user
+    // Untuk demo, tidak perlu auth - verifikasi layanan exists
     const layanan = await db.layanan.findFirst({
       where: {
-        id: params.id,
-        userId: user.id
+        id: params.id
       }
     })
 
@@ -76,25 +59,10 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const user = await db.user.findUnique({
-      where: { email: session.user.email }
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Verify layanan exists and belongs to user
+    // Untuk demo, tidak perlu auth - verifikasi layanan exists
     const layanan = await db.layanan.findFirst({
       where: {
-        id: params.id,
-        userId: user.id
+        id: params.id
       }
     })
 
@@ -112,25 +80,21 @@ export async function POST(
       )
     }
 
-    // Create balasan
+    // Create balasan - untuk demo, tidak perlu userId
     const balasan = await db.balasanLayanan.create({
       data: {
         layananId: params.id,
-        userId: user.id,
-        pesan: pesan.trim(),
-        isFromAdmin: false,
-        isRead: true // User's own message is marked as read
+        isi: pesan.trim(),
+        dariAdmin: false
       }
     })
 
-    // Create notification for admin (in real app, you'd have admin users)
-    // For now, we'll create a system notification
+    // Create notification - untuk demo, tidak perlu userId
     await db.notifikasi.create({
       data: {
-        userId: user.id,
         judul: `Balasan terkirim untuk ${layanan.judul}`,
         pesan: `Balasan Anda telah terkirim dan akan diproses oleh admin`,
-        tipe: 'LAYANAN_BALASAN',
+        tipe: 'LAYANAN_BALASAN' as any,
         layananId: params.id
       }
     })

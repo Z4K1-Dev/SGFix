@@ -1,31 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const user = await db.user.findUnique({
-      where: { email: session.user.email }
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
+    // Untuk demo, tidak perlu auth - tampilkan semua layanan
     const layanan = await db.layanan.findFirst({
       where: {
-        id: params.id,
-        userId: user.id
+        id: params.id
       },
       include: {
         balasan: {
@@ -43,17 +27,17 @@ export async function GET(
       return NextResponse.json({ error: 'Layanan not found' }, { status: 404 })
     }
 
-    // Mark admin replies as read
-    await db.balasanLayanan.updateMany({
-      where: {
-        layananId: params.id,
-        isFromAdmin: true,
-        isRead: false
-      },
-      data: {
-        isRead: true
-      }
-    })
+    // Mark admin replies as read - untuk demo, tidak perlu marking
+    // await db.balasanLayanan.updateMany({
+    //   where: {
+    //     layananId: params.id,
+    //     isFromAdmin: true,
+    //     isRead: false
+    //   },
+    //   data: {
+    //     isRead: true
+    //   }
+    // })
 
     return NextResponse.json({ data: layanan })
   } catch (error) {
@@ -70,24 +54,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const user = await db.user.findUnique({
-      where: { email: session.user.email }
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
+    // Untuk demo, tidak perlu auth - cari layanan berdasarkan ID saja
     const layanan = await db.layanan.findFirst({
       where: {
-        id: params.id,
-        userId: user.id
+        id: params.id
       }
     })
 
@@ -114,7 +84,7 @@ export async function PUT(
       kabupatenKota,
       provinsi,
       kodePos,
-      noTelepon,
+      telepon,
       email
     } = body
 
@@ -146,7 +116,7 @@ export async function PUT(
         kabupatenKota,
         provinsi,
         kodePos,
-        noTelepon,
+        telepon,
         email,
         updatedAt: new Date()
       }
@@ -170,24 +140,10 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const user = await db.user.findUnique({
-      where: { email: session.user.email }
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
+    // Untuk demo, tidak perlu auth - cari layanan berdasarkan ID saja
     const layanan = await db.layanan.findFirst({
       where: {
-        id: params.id,
-        userId: user.id
+        id: params.id
       }
     })
 

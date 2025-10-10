@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { useSocket } from '@/hooks/useSocket'
+import SocketDebug from '@/components/socket-debug'
 import {
   AlertCircle,
   BarChart3,
@@ -1648,6 +1649,9 @@ export default function AdminPage() {
           </Tabs>
         )}
         </main>
+        
+        {/* Socket Debug Component */}
+        <SocketDebug />
       </div>
     </div>
   )

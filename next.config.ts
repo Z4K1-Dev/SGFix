@@ -11,21 +11,12 @@ const nextConfig: NextConfig = {
   // Allow cross-origin requests for preview environment
   allowedDevOrigins: [
     'preview-chat-46449324-1d9b-4b5b-bb3b-00fba80141ba.space.z.ai',
+    'preview-chat-63e78080-40b1-453f-b361-0564260db910.space.z.ai',
     '*.space.z.ai'
   ],
-  // Disable HMR to prevent WebSocket errors in remote access
+  // Configure webpack for both dev and production
   webpack: (config, { dev, isServer }) => {
-    if (dev && !isServer) {
-      // Completely disable HMR for remote access
-      config.watchOptions = {
-        poll: false,
-        aggregateTimeout: 300,
-      };
-      // Disable HMR plugin
-      config.plugins = config.plugins.filter(plugin => 
-        plugin.constructor.name !== 'HotModuleReplacementPlugin'
-      );
-    }
+    // Simplified webpack config to avoid HMR conflicts
     return config;
   },
   // Disable experimental features

@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import DocTabs from '@/components/doctabs'
 import { BeritaSkeleton, LaporanSkeleton, StatsCardSkeleton, SliderSkeleton } from '@/components/loading-skeleton'
 import { ThemeToggle } from '@/components/theme-toggle'
+import SocketDebug from '@/components/socket-debug'
 import { 
   Home,
   FileText,
@@ -722,6 +723,9 @@ export default function HomePage() {
         <footer className="fixed bottom-1 left-1/2 transform -translate-x-1/2 z-50">
           <DocTabs onChange={handleTabChange} />
         </footer>
+        
+        {/* Socket Debug Component */}
+        <SocketDebug />
       </div>
     </div>
   )

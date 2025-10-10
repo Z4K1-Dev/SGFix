@@ -1,99 +1,53 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react'
+import socketClient from '@/lib/socket-client'
 
 interface Notification {
-  judul: string;
-  pesan: string;
-  tipe: string;
-  timestamp: string;
-  beritaId?: string;
-  laporanId?: string;
+  id?: number
+  judul: string
+  pesan: string
+  tipe: string
+  timestamp: string
+  beritaId?: string
+  laporanId?: string
+  layananId?: string
+  data?: any
 }
 
-export const useSocket = (role: 'admin' | 'user') => {
+export const useSocket = (role: 'admin' | 'user' = 'user') => {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isConnected, setIsConnected] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
 
+  // Set initialization complete after mount
   useEffect(() => {
-    // Only import socket.io-client on the client side
-    if (typeof window === 'undefined') return
+    setIsInitialized(true)
+  }, [])
 
-    let socketInstance: any = null
+  // Initialize socket connection after initialization
+  useEffect(() => {
+    // Only run on client side and after initialization
+    if (typeof window === 'undefined' || !isInitialized) return
+    
+    let mounted = true
 
-    const initializeSocket = () => {
+    const initializeSocket = async () => {
       try {
-        // Dynamic import to avoid build-time issues
-        import('socket.io-client').then(({ io }) => {
+        console.log('Initializing socket connection...')
+        
+        // Add a small delay to ensure HMR is ready
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        const socket = await socketClient.connect()
+        
+        if (!mounted) return
 
-        // Detect if we're in remote access environment
-        const isRemoteAccess =
-          (window.location.hostname.includes('space.z.ai') ||
-           window.location.hostname.includes('preview-chat') ||
-           window.location.protocol === 'https:')
+        console.log('Socket connected successfully:', socket.id)
 
-        // Socket.io configuration
-        let socketUrl: string
-        let socketOptions: any = {
-          forceNew: true,
-          reconnection: false, // Disable auto reconnection to reduce errors
-          timeout: 5000, // Shorter timeout
-          withCredentials: false
-        }
-
-        if (isRemoteAccess) {
-          // For remote access, use fallback mode immediately
-          console.log('Remote access detected, using offline mode')
-          setConnectionError('Offline mode - real-time features not available')
-          setIsConnected(false)
-          return
-        } else {
-          socketUrl = '/api/socketio'
-          socketOptions.transports = ['polling'] // Use polling only for better compatibility
-          socketOptions.upgrade = false
-          socketOptions.rememberUpgrade = false
-        }
-
-        socketInstance = io(socketUrl, socketOptions)
-
-        socketInstance.on('connect', () => {
-          console.log('Connected to server with socket ID:', socketInstance.id)
-          setIsConnected(true)
-          setConnectionError(null)
-          
-          // Join room berdasarkan role
-          if (role === 'admin') {
-            socketInstance.emit('join-admin')
-            console.log('Joined admin room')
-          } else {
-            socketInstance.emit('join-user')
-            console.log('Joined user room')
-          }
-        })
-
-        socketInstance.on('disconnect', (reason: any) => {
-          console.log('Disconnected from server. Reason:', reason)
-          setIsConnected(false)
-        })
-
-        socketInstance.on('connect_error', (error: any) => {
-          console.log('Socket connection failed, using fallback mode')
-          setConnectionError('Connection failed - using offline mode')
-          setIsConnected(false)
-          
-          // Don't log full error to reduce console noise
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Socket connection details:', {
-              url: socketUrl,
-              error: error.message
-            })
-          }
-        })
-
-        // Listen for notifications
-        socketInstance.on('notification', (data: Notification) => {
+        // Listen untuk notifikasi
+        socket.on('notification', (data: Notification) => {
           console.log('Received notification:', data)
           setNotifications(prev => [data, ...prev])
           
@@ -106,52 +60,168 @@ export const useSocket = (role: 'admin' | 'user') => {
           }
         })
 
+        // Listen untuk update status layanan
+        socket.on('layanan-status-updated', (data: any) => {
+          console.log('Layanan status updated:', data)
+        })
+
+        // Listen untuk update status laporan
+        socket.on('laporan-status-updated', (data: any) => {
+          console.log('Laporan status updated:', data)
+        })
+
+        // Listen untuk balasan baru
+        socket.on('balasan-added', (data: any) => {
+          console.log('Balasan added:', data)
+        })
+
+        // Listen untuk heartbeat response
+        socket.on('heartbeat-response', (data: any) => {
+          console.log('Heartbeat response:', data)
+        })
+
+        // Listen untuk connect/disconnect events
+        socket.on('connect', () => {
+          console.log('Socket connected:', socket.id)
+          setIsConnected(true)
+          setConnectionError(null)
+        })
+
+        socket.on('disconnect', (reason) => {
+          console.log('Socket disconnected:', reason)
+          setIsConnected(false)
+          setConnectionError(`Disconnected: ${reason}`)
+        })
+
+        socket.on('connect_error', (error) => {
+          console.error('Socket connect error:', error)
+          setConnectionError(`Connection error: ${error.message}`)
+          setIsConnected(false)
+        })
+
+        // Update connection status
+        setIsConnected(true)
+        setConnectionError(null)
+
         // Request notification permission
         if ('Notification' in window && Notification.permission === 'default') {
           Notification.requestPermission()
         }
 
-          }).catch((error) => {
-            console.error('Failed to load socket.io-client:', error)
-            setConnectionError('Failed to load socket.io-client')
-          })
-        } catch (error) {
-          console.error('Failed to initialize socket:', error)
-          setConnectionError('Failed to initialize socket connection')
+      } catch (error) {
+        console.error('Failed to initialize socket:', error)
+        if (mounted) {
+          setConnectionError(`Failed to connect: ${error instanceof Error ? error.message : 'Unknown error'}`)
+          setIsConnected(false)
         }
       }
+    }
 
     initializeSocket()
 
     return () => {
-      if (socketInstance) {
-        socketInstance.disconnect()
-      }
+      mounted = false
+      socketClient.disconnect()
     }
-  }, [role])
+  }, [])
 
   // Set initialization complete after mount
   useEffect(() => {
     setIsInitialized(true)
   }, [])
 
-  const clearNotifications = () => {
+  // Clear notifications
+  const clearNotifications = useCallback(() => {
     setNotifications([])
-  }
+  }, [])
+
+  // Send notification
+  const sendNotification = useCallback((data: {
+    type: string
+    message: string
+    room?: string
+    data?: any
+  }) => {
+    socketClient.sendNotification(data)
+  }, [])
+
+  // Update layanan status
+  const updateLayananStatus = useCallback((data: {
+    layananId: string
+    status: string
+    room?: string
+  }) => {
+    socketClient.updateLayananStatus(data)
+  }, [])
+
+  // Update laporan status
+  const updateLaporanStatus = useCallback((data: {
+    laporanId: string
+    status: string
+    room?: string
+  }) => {
+    socketClient.updateLaporanStatus(data)
+  }, [])
+
+  // Send balasan
+  const sendBalasan = useCallback((data: {
+    type: 'layanan' | 'laporan'
+    id: string
+    balasan: any
+    room?: string
+  }) => {
+    socketClient.sendBalasan(data)
+  }, [])
+
+  // Join room
+  const joinRoom = useCallback((room: string) => {
+    socketClient.joinRoom(room)
+  }, [])
+
+  // Leave room
+  const leaveRoom = useCallback((room: string) => {
+    socketClient.leaveRoom(room)
+  }, [])
+
+  // Send heartbeat
+  const sendHeartbeat = useCallback(() => {
+    socketClient.sendHeartbeat()
+  }, [])
 
   // If socket is not connected after initialization, set a friendly message
   useEffect(() => {
     if (isInitialized && !isConnected && !connectionError) {
+      console.log('Socket not connected after initialization, setting offline mode')
       setConnectionError('Offline mode - real-time features not available')
     }
   }, [isInitialized, isConnected, connectionError])
 
+  // Calculate offline mode
+  const isOfflineMode = isInitialized && !isConnected
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Socket status changed:', {
+      isInitialized,
+      isConnected,
+      connectionError,
+      isOfflineMode
+    })
+  }, [isInitialized, isConnected, connectionError, isOfflineMode])
+
   return {
-    socket: null,
+    socket: socketClient.getSocket(),
     isConnected,
     connectionError,
     notifications,
     clearNotifications,
+    sendNotification,
+    updateLayananStatus,
+    updateLaporanStatus,
+    sendBalasan,
+    joinRoom,
+    leaveRoom,
+    sendHeartbeat,
     isOfflineMode: isInitialized && !isConnected
   }
 }

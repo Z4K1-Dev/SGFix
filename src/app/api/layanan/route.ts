@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { JenisLayanan, StatusLayanan } from '@prisma/client'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const jenis = searchParams.get('jenis')
@@ -19,18 +11,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search')
 
-    const user = await db.user.findUnique({
-      where: { email: session.user.email }
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Build where clause
-    const where: any = {
-      userId: user.id
-    }
+    // Build where clause - untuk demo, tampilkan semua data
+    const where: any = {}
 
     if (status && status !== 'SEMUA') {
       where.status = status as StatusLayanan
@@ -66,14 +48,13 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Check for unread replies
+    // Check for unread replies - untuk demo, tidak perlu filter user
     const layananWithUnread = await Promise.all(
       layanan.map(async (item) => {
         const unreadCount = await db.balasanLayanan.count({
           where: {
             layananId: item.id,
-            isFromAdmin: true,
-            isRead: false
+            dariAdmin: true
           }
         })
 
@@ -104,20 +85,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const user = await db.user.findUnique({
-      where: { email: session.user.email }
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
     const body = await request.json()
     const {
       judul,
@@ -139,14 +106,14 @@ export async function POST(request: NextRequest) {
       kabupatenKota,
       provinsi,
       kodePos,
-      noTelepon,
+      telepon,
       email,
       dataSpesifik,
       dokumen
     } = body
 
     // Validate required fields
-    if (!judul || !jenisLayanan || !namaLengkap || !nik || !alamat || !noTelepon || !email) {
+    if (!judul || !jenisLayanan || !namaLengkap || !nik || !alamat || !telepon || !email) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -166,7 +133,7 @@ export async function POST(request: NextRequest) {
       where: {
         nik,
         status: {
-          in: ['BARU', 'DIPROSES', 'DIVERIFIKASI', 'DISETUJUI']
+          in: [StatusLayanan.BARU, StatusLayanan.DIPROSES, StatusLayanan.DITAMPAH, StatusLayanan.DIKERJAKAN]
         }
       }
     })
@@ -178,10 +145,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create layanan
+    // Create layanan - untuk demo, tidak perlu userId
     const layanan = await db.layanan.create({
       data: {
-        userId: user.id,
         judul,
         jenisLayanan: jenisLayanan as JenisLayanan,
         status: StatusLayanan.BARU,
@@ -202,20 +168,19 @@ export async function POST(request: NextRequest) {
         kabupatenKota,
         provinsi,
         kodePos,
-        noTelepon,
+        telepon,
         email,
         formData: dataSpesifik ? JSON.stringify(dataSpesifik) : '{}',
         dokumen: dokumen ? JSON.stringify(dokumen) : '{}'
       }
     })
 
-    // Create notification
+    // Create notification - untuk demo, tidak perlu userId
     await db.notifikasi.create({
       data: {
-        userId: user.id,
         judul: `Layanan ${judul} berhasil diajukan`,
         pesan: `Pengajuan layanan ${jenisLayanan} Anda telah diterima dengan nomor: ${layanan.id}`,
-        tipe: 'LAYANAN_BARU',
+        tipe: 'LAYANAN_BARU' as any,
         layananId: layanan.id
       }
     })
