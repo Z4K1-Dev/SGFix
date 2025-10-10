@@ -3,12 +3,14 @@ import { db } from '@/lib/db'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
+    
     // Untuk demo, tidak perlu auth - verifikasi layanan exists
     const layanan = await db.layanan.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!layanan) {
@@ -28,7 +30,7 @@ export async function POST(
     // Create admin balasan - untuk demo, tidak perlu userId
     const balasan = await db.balasanLayanan.create({
       data: {
-        layananId: params.id,
+        layananId: id,
         isi: pesan.trim(),
         dariAdmin: true
       }
@@ -40,7 +42,7 @@ export async function POST(
         judul: `Ada balasan baru untuk ${layanan.judul}`,
         pesan: `Admin telah membalas pengajuan layanan Anda`,
         tipe: 'LAYANAN_BALASAN' as any,
-        layananId: params.id
+        layananId: id
       }
     })
 

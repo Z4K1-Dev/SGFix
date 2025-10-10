@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { FormSkeleton } from '@/components/loading-skeleton'
 import { Upload, FileText, User, MapPin, Calendar, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -570,6 +571,8 @@ interface MultiStepFormProps {
 
 export function MultiStepForm({ jenisLayanan, onSubmit, onCancel, isLoading = false }: MultiStepFormProps) {
   const [currentStep, setCurrentStep] = useState(0)
+  const [isFormLoading, setIsFormLoading] = React.useState(false)
+  
   const [formData, setFormData] = useState<FormData>({
     // Data Pribadi
     namaLengkap: '',
@@ -601,6 +604,17 @@ export function MultiStepForm({ jenisLayanan, onSubmit, onCancel, isLoading = fa
   })
   
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  React.useEffect(() => {
+    // Simulate loading untuk demo
+    setIsFormLoading(true)
+    const timer = setTimeout(() => setIsFormLoading(false), 800)
+    return () => clearTimeout(timer)
+  }, [currentStep])
+
+  if (isFormLoading) {
+    return <FormSkeleton />
+  }
 
   const steps: StepConfig[] = [
     {

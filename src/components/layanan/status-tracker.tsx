@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { StatusTrackerSkeleton } from '@/components/loading-skeleton'
 import { 
   CheckCircle2, 
   Clock, 
@@ -87,6 +88,19 @@ const timelineSteps = [
 ]
 
 export function StatusTracker({ layanan, onDetail, onBalas, showActions = true }: StatusTrackerProps) {
+  const [isLoading, setIsLoading] = React.useState(false)
+
+  React.useEffect(() => {
+    // Simulate loading untuk demo
+    setIsLoading(true)
+    const timer = setTimeout(() => setIsLoading(false), 600)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (isLoading) {
+    return <StatusTrackerSkeleton />
+  }
+
   const currentStatus = statusConfig[layanan.status]
   const isRejected = layanan.status === 'DITOLAK'
   

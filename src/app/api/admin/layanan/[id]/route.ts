@@ -4,12 +4,13 @@ import { StatusLayanan } from '@prisma/client'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // Untuk demo, tidak perlu auth - tampilkan semua layanan
     const layanan = await db.layanan.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         balasan: {
           orderBy: { createdAt: 'asc' }
@@ -38,12 +39,13 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // Untuk demo, tidak perlu auth - verifikasi layanan exists
     const layanan = await db.layanan.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!layanan) {
@@ -86,7 +88,7 @@ export async function PUT(
     }
 
     const updatedLayanan = await db.layanan.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status: status as StatusLayanan,
         keterangan: catatan || alasanPenolakan || null,

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Connection Test</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .connecting { background-color: #fff3cd; color: #856404; }
+        #logs {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        .log-success { color: #28a745; }
+        .log-error { color: #dc3545; }
+        .log-info { color: #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .test-buttons {
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Socket.IO Connection Test</h1>
+        <div id="status" class="status connecting">Menghubungkan...</div>
+        
+        <div class="test-buttons">
+            <button id="connectBtn" disabled>🔌 Connect</button>
+            <button id="heartbeatBtn" disabled>💓 Kirim Heartbeat</button>
+            <button id="joinPublicBtn" disabled>👥 Join Room Public</button>
+            <button id="joinAdminBtn" disabled>👑 Join Room Admin</button>
+            <button id="testNotificationBtn" disabled>📢 Test Notification</button>
+            <button id="disconnectBtn" disabled>🔌 Disconnect</button>
+        </div>
+        
+        <h3>📋 Connection Logs:</h3>
+        <div id="logs"></div>
+        
+        <div style="margin-top: 20px; font-size: 14px; color: #666;">
+            <p><strong>Server Info:</strong></p>
+            <p>• URL: <code id="serverUrl">-</code></p>
+            <p>• Path: <code>/api/socket</code></p>
+            <p>• Transports: WebSocket, Polling</p>
+        </div>
+    </div>
+    
+    <script>
+        // Update server URL display
+        document.getElementById('serverUrl').textContent = window.location.origin;
+    
+        const logs = document.getElementById('logs');
+        const status = document.getElementById('status');
+        const connectBtn = document.getElementById('connectBtn');
+        const heartbeatBtn = document.getElementById('heartbeatBtn');
+        const joinPublicBtn = document.getElementById('joinPublicBtn');
+        const joinAdminBtn = document.getElementById('joinAdminBtn');
+        const testNotificationBtn = document.getElementById('testNotificationBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        
+        let socket = null;
+        
+        function log(message, type = 'info') {
+            console.log(message);
+            const div = document.createElement('div');
+            div.className = 'log-entry log-' + type;
+            div.textContent = new Date().toLocaleTimeString('id-ID') + ' - ' + message;
+            logs.appendChild(div);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function enableButtons() {
+            connectBtn.disabled = true;
+            heartbeatBtn.disabled = false;
+            joinPublicBtn.disabled = false;
+            joinAdminBtn.disabled = false;
+            testNotificationBtn.disabled = false;
+            disconnectBtn.disabled = false;
+        }
+        
+        function disableButtons() {
+            connectBtn.disabled = false;
+            heartbeatBtn.disabled = true;
+            joinPublicBtn.disabled = true;
+            joinAdminBtn.disabled = true;
+            testNotificationBtn.disabled = true;
+            disconnectBtn.disabled = true;
+        }
+        
+        function updateStatus(text, className) {
+            status.textContent = text;
+            status.className = 'status ' + className;
+        }
+        
+        function connect() {
+            if (socket && socket.connected) {
+                log('🔌 Sudah terhubung ke server', 'info');
+                return;
+            }
+            
+            log('Memulai tes koneksi Socket.IO...', 'info');
+            updateStatus('Menghubungkan...', 'connecting');
+            disableButtons();
+            
+            // Test koneksi ke server terlebih dahulu
+            const baseUrl = window.location.origin;
+            fetch(baseUrl + '/api/socket')
+                .then(response => {
+                    if (response.ok) {
+                        log('✅ Server socket endpoint reachable: ' + baseUrl, 'success');
+                    } else {
+                        log('⚠️ Server responded with status: ' + response.status, 'error');
+                    }
+                })
+                .catch(error => {
+                    log('❌ Server tidak reachable: ' + error.message, 'error');
+                });
+            
+            socket = io(baseUrl, {
+                path: '/api/socket',
+                transports: ['websocket'], // Coba websocket saja
+                forceNew: true,
+                reconnection: true,
+                reconnectionAttempts: 3,
+                reconnectionDelay: 2000,
+                timeout: 20000,
+                upgrade: false,
+                rememberUpgrade: false
+            });
+            
+            socket.on('connect', () => {
+                log('✅ Terhubung ke Socket.IO server dengan ID: ' + socket.id, 'success');
+                updateStatus('Terhubung', 'connected');
+                enableButtons();
+                
+                // Auto join rooms untuk testing
+                socket.emit('join-room', 'public');
+                socket.emit('join-room', 'admin');
+                log('👥 Otomatis bergabung ke room: public, admin', 'info');
+            });
+            
+            socket.on('connect_error', (error) => {
+                log('❌ Error koneksi: ' + error.message, 'error');
+                log('🔍 Detail error: ' + JSON.stringify(error), 'error');
+                updateStatus('Koneksi Gagal', 'disconnected');
+                disableButtons();
+                
+                // Coba fallback ke polling jika websocket gagal
+                if (socket.io.engine.transport.name === 'websocket') {
+                    log('🔄 Mencoba fallback ke polling...', 'info');
+                    setTimeout(() => {
+                        socket.io.opts.transports = ['polling'];
+                        socket.connect();
+                    }, 2000);
+                }
+            });
+            
+            socket.on('disconnect', (reason) => {
+                log('🔌 Terputus: ' + reason, 'error');
+                updateStatus('Terputus', 'disconnected');
+                disableButtons();
+            });
+            
+            socket.on('heartbeat-response', (data) => {
+                log('💓 Heartbeat response: ' + JSON.stringify(data), 'success');
+            });
+            
+            socket.on('notification', (data) => {
+                log('📢 Notifikasi diterima: ' + JSON.stringify(data), 'info');
+            });
+            
+            socket.on('room-joined', (data) => {
+                log('👥 Bergabung ke room: ' + JSON.stringify(data), 'success');
+            });
+        }
+        
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                log('🔌 Memutuskan koneksi manual...', 'info');
+            }
+        }
+        
+        // Button event handlers
+        connectBtn.addEventListener('click', connect);
+        disconnectBtn.addEventListener('click', disconnect);
+        
+        heartbeatBtn.addEventListener('click', () => {
+            if (socket && socket.connected) {
+                socket.emit('heartbeat');
+                log('💓 Mengirim heartbeat...', 'info');
+            } else {
+                log('❌ Tidak terhubung ke server', 'error');
+            }
+        });
+        
+        joinPublicBtn.addEventListener('click', () => {
+            if (socket && socket.connected) {
+                socket.emit('join-room', 'public');
+                log('👥 Bergabung ke room: public', 'info');
+            } else {
+                log('❌ Tidak terhubung ke server', 'error');
+            }
+        });
+        
+        joinAdminBtn.addEventListener('click', () => {
+            if (socket && socket.connected) {
+                socket.emit('join-room', 'admin');
+                log('👑 Bergabung ke room: admin', 'info');
+            } else {
+                log('❌ Tidak terhubung ke server', 'error');
+            }
+        });
+        
+        testNotificationBtn.addEventListener('click', () => {
+            if (socket && socket.connected) {
+                const testNotification = {
+                    title: 'Test Notifikasi',
+                    message: 'Ini adalah notifikasi test dari Socket.IO',
+                    type: 'info',
+                    timestamp: new Date().toISOString()
+                };
+                socket.emit('notification', testNotification);
+                log('📢 Mengirim test notification...', 'info');
+            } else {
+                log('❌ Tidak terhubung ke server', 'error');
+            }
+        });
+        
+        // Initialize buttons state
+        connectBtn.disabled = false;
+        log('🔌 Halaman siap. Klik tombol Connect untuk memulai koneksi.', 'info');
+    </script>
+</body>
+</html>

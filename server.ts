@@ -45,7 +45,7 @@ async function createCustomServer() {
       addTrailingSlash: false,
       cors: {
         origin: dev 
-          ? ['http://localhost:3000']
+          ? ['http://localhost:3000', 'https://preview-chat-af47107e-3f47-4194-b3a8-37b349a85b62.space.z.ai']
           : ['https://preview-chat-63e78080-40b1-453f-b361-0564260db910.space.z.ai', '*.space.z.ai'],
         methods: ['GET', 'POST'],
         credentials: true,

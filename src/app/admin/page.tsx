@@ -12,7 +12,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { useSocket } from '@/hooks/useSocket'
-import SocketDebug from '@/components/socket-debug'
 import {
   AlertCircle,
   BarChart3,
@@ -102,17 +101,13 @@ interface Layanan {
   status: string
   namaLengkap: string
   nik: string
+  email?: string
   createdAt: string
   updatedAt: string
-  user: {
+  balasan?: Array<{
     id: string
-    nama: string
-    email: string
-  }
-  balasan: Array<{
-    id: string
-    pesan: string
-    isFromAdmin: boolean
+    isi: string
+    dariAdmin: boolean
     createdAt: string
   }>
   unreadUserReplies?: number
@@ -170,11 +165,11 @@ export default function AdminPage() {
   // Memoized data for charts
   const laporanStatusData = useMemo(() => {
     const data = [
-      { name: 'Status Laporan', BARU: laporan.filter(l => l.status === 'BARU').length || Math.floor(Math.random() * 10 + 5) },
-      { name: 'Status Laporan', DIPROSES: laporan.filter(l => l.status === 'DIPROSES').length || Math.floor(Math.random() * 8 + 3) },
-      { name: 'Status Laporan', DITAMPAH: laporan.filter(l => l.status === 'DITAMPAH').length || Math.floor(Math.random() * 6 + 2) },
-      { name: 'Status Laporan', DIKERJAKAN: laporan.filter(l => l.status === 'DIKERJAKAN').length || Math.floor(Math.random() * 7 + 3) },
-      { name: 'Status Laporan', SELESAI: laporan.filter(l => l.status === 'SELESAI').length || Math.floor(Math.random() * 15 + 8) }
+      { name: 'Status Laporan', BARU: laporan.filter(l => l.status === 'BARU').length || 5 },
+      { name: 'Status Laporan', DIPROSES: laporan.filter(l => l.status === 'DIPROSES').length || 3 },
+      { name: 'Status Laporan', DITAMPAH: laporan.filter(l => l.status === 'DITAMPAH').length || 2 },
+      { name: 'Status Laporan', DIKERJAKAN: laporan.filter(l => l.status === 'DIKERJAKAN').length || 3 },
+      { name: 'Status Laporan', SELESAI: laporan.filter(l => l.status === 'SELESAI').length || 8 }
     ]
     return data
   }, [laporan])
@@ -218,7 +213,6 @@ export default function AdminPage() {
     }
     
     try {
-      console.log('Admin: Fetching data...')
       const [beritaRes, kategoriRes, laporanRes, layananRes, notifRes] = await Promise.all([
         fetch('/api/berita'),
         fetch('/api/kategori'),
@@ -226,51 +220,31 @@ export default function AdminPage() {
         fetch('/api/admin/layanan'),
         fetch('/api/notifikasi')
       ])
-
-      console.log('Admin: API responses received')
-      console.log('Admin: Berita response status:', beritaRes.status)
       
       if (beritaRes.ok) {
         const beritaData = await beritaRes.json()
-        console.log('Admin: Berita data received:', beritaData.length, 'items')
         setBerita(beritaData)
-      } else {
-        console.error('Admin: Berita API error:', beritaRes.status)
       }
       
       if (kategoriRes.ok) {
         const kategoriData = await kategoriRes.json()
-        console.log('Admin: Kategori data received:', kategoriData.length, 'items')
         setKategori(kategoriData)
-      } else {
-        console.error('Admin: Kategori API error:', kategoriRes.status)
       }
       
       if (laporanRes.ok) {
         const laporanData = await laporanRes.json()
-        console.log('Admin: Laporan data received:', laporanData.length, 'items')
         setLaporan(laporanData)
-      } else {
-        console.error('Admin: Laporan API error:', laporanRes.status)
       }
 
       if (layananRes.ok) {
         const layananData = await layananRes.json()
-        console.log('Admin: Layanan data received:', layananData.data?.length || 0, 'items')
         setLayanan(layananData.data || [])
-      } else {
-        console.error('Admin: Layanan API error:', layananRes.status)
       }
       
       if (notifRes.ok) {
         const notifData = await notifRes.json()
-        console.log('Admin: Notifikasi data received:', notifData.length, 'items')
         setNotifikasi(notifData)
-      } else {
-        console.error('Admin: Notifikasi API error:', notifRes.status)
       }
-      
-      console.log('Admin: Data fetching completed')
     } catch (error) {
       console.error('Admin: Error fetching data:', error)
     }
@@ -414,19 +388,27 @@ export default function AdminPage() {
     }> = []
     
     if (chartPeriod === '7days') {
-      // Last 7 days
+      // Last 7 days - use deterministic data
+      const visitorData = [350, 420, 380, 450, 500, 480, 520]
+      const beritaData = [3, 5, 4, 6, 8, 7, 9]
+      const laporanData = [2, 3, 4, 3, 5, 4, 6]
+      
       for (let i = 6; i >= 0; i--) {
         const date = new Date(now)
         date.setDate(date.getDate() - i)
         data.push({
           date: date.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' }),
-          pengunjung: Math.floor(Math.random() * 500 + 200),
-          berita: Math.floor(Math.random() * 10 + 2),
-          laporan: Math.floor(Math.random() * 8 + 1)
+          pengunjung: visitorData[6 - i],
+          berita: beritaData[6 - i],
+          laporan: laporanData[6 - i]
         })
       }
     } else if (chartPeriod === '30days') {
-      // Last 30 days (grouped by week)
+      // Last 30 days (grouped by week) - use deterministic data
+      const visitorData = [2000, 2500, 3000, 2800]
+      const beritaData = [15, 25, 30, 28]
+      const laporanData = [10, 15, 20, 18]
+      
       for (let i = 3; i >= 0; i--) {
         const weekStart = new Date(now)
         weekStart.setDate(weekStart.getDate() - (i * 7))
@@ -435,22 +417,26 @@ export default function AdminPage() {
         
         data.push({
           date: `Minggu ${4 - i}`,
-          pengunjung: Math.floor(Math.random() * 3000 + 1500),
-          berita: Math.floor(Math.random() * 40 + 10),
-          laporan: Math.floor(Math.random() * 30 + 5)
+          pengunjung: visitorData[3 - i],
+          berita: beritaData[3 - i],
+          laporan: laporanData[3 - i]
         })
       }
     } else {
-      // Last 3 months
+      // Last 3 months - use deterministic data
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      const visitorData = [8000, 10000, 12000]
+      const beritaData = [50, 100, 150]
+      const laporanData = [30, 60, 90]
+      
       for (let i = 2; i >= 0; i--) {
         const month = new Date(now)
         month.setMonth(month.getMonth() - i)
         data.push({
           date: months[month.getMonth()],
-          pengunjung: Math.floor(Math.random() * 10000 + 5000),
-          berita: Math.floor(Math.random() * 150 + 30),
-          laporan: Math.floor(Math.random() * 100 + 20)
+          pengunjung: visitorData[2 - i],
+          berita: beritaData[2 - i],
+          laporan: laporanData[2 - i]
         })
       }
     }
@@ -470,11 +456,18 @@ export default function AdminPage() {
     const aksi = ['dibuat', 'diedit', 'dihapus', 'dipublikasi', 'dikomentari']
     const status = ['success', 'pending', 'failed']
     
+    // Use deterministic data based on index
     for (let i = 1; i <= 20; i++) {
-      const randomJenis = jenisAktivitas[Math.floor(Math.random() * jenisAktivitas.length)]
-      const randomAksi = aksi[Math.floor(Math.random() * aksi.length)]
-      const randomStatus = status[Math.floor(Math.random() * status.length)]
-      const randomUser = ['Admin', 'User1', 'User2', 'User3', 'User4'][Math.floor(Math.random() * 5)]
+      const jenisIndex = i % jenisAktivitas.length
+      const aksiIndex = (i + 1) % aksi.length
+      const statusIndex = (i + 2) % status.length
+      const userIndex = i % 5
+      const reviewerIndex = i % 3
+      
+      const randomJenis = jenisAktivitas[jenisIndex]
+      const randomAksi = aksi[aksiIndex]
+      const randomStatus = status[statusIndex]
+      const randomUser = ['Admin', 'User1', 'User2', 'User3', 'User4'][userIndex]
       
       data.push({
         id: `aktivitas-${i}`,
@@ -483,11 +476,11 @@ export default function AdminPage() {
         tipe: randomJenis,
         status: randomStatus,
         pengguna: randomUser,
-        target: Math.floor(Math.random() * 100) + 1,
-        limit: Math.floor(Math.random() * 50) + 1,
-        reviewer: ['Admin', 'Editor', 'Moderator'][Math.floor(Math.random() * 3)],
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 7) * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - Math.floor(Math.random() * 3) * 24 * 60 * 60 * 1000).toISOString()
+        target: (i * 5) % 100 + 1,
+        limit: (i * 3) % 50 + 1,
+        reviewer: ['Admin', 'Editor', 'Moderator'][reviewerIndex],
+        createdAt: new Date(Date.now() - (i % 7) * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - (i % 3) * 24 * 60 * 60 * 1000).toISOString()
       })
     }
     
@@ -504,7 +497,6 @@ export default function AdminPage() {
   ]
 
   const handleTabChange = (tabId: string) => {
-    console.log('Admin: Switching to tab:', tabId)
     setActiveTab(tabId)
   }
 
@@ -667,7 +659,7 @@ export default function AdminPage() {
                         <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
                           <Badge className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1">
                             <TrendingUp className="h-3 w-3" />
-                            +{Math.floor(Math.random() * 20 + 5)}%
+                            +15%
                           </Badge>
                         </div>
                       </CardHeader>
@@ -687,13 +679,13 @@ export default function AdminPage() {
                         <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
                           <Badge variant="destructive" className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1">
                             <TrendingDown className="h-3 w-3" />
-                            -{Math.floor(Math.random() * 10 + 5)}%
+                            -8%
                           </Badge>
                         </div>
                       </CardHeader>
                       <CardFooter className="flex px-6 [.border-t]:pt-6 flex-col items-start gap-1.5 text-sm">
                         <div className="line-clamp-1 flex gap-2 font-medium">
-                          Down {Math.floor(Math.random() * 10 + 5)}% this period <TrendingDown size={16} />
+                          Down 7% this period <TrendingDown size={16} />
                         </div>
                         <div className="text-muted-foreground">Reports need attention</div>
                       </CardFooter>
@@ -707,7 +699,7 @@ export default function AdminPage() {
                         <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
                           <Badge className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1">
                             <TrendingUp className="h-3 w-3" />
-                            +{Math.floor(Math.random() * 15 + 5)}%
+                            +12%
                           </Badge>
                         </div>
                       </CardHeader>
@@ -727,7 +719,7 @@ export default function AdminPage() {
                         <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
                           <Badge className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1">
                             <TrendingUp className="h-3 w-3" />
-                            +{Math.floor(Math.random() * 25 + 10)}%
+                            +20%
                           </Badge>
                         </div>
                       </CardHeader>
@@ -970,7 +962,7 @@ export default function AdminPage() {
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--muted-foreground))' }}></div>
-                            <span>Total: {laporan.length || Math.floor(Math.random() * 40 + 20)} laporan</span>
+                            <span>Total: {laporan.length || 25} laporan</span>
                           </div>
                         </div>
                       </CardContent>
@@ -1169,14 +1161,9 @@ export default function AdminPage() {
 
             {/* Tab Berita */}
             <TabsContent value="berita" className="space-y-6 px-6">
-              {(() => {
-                console.log('Admin: Rendering berita tab, berita count:', berita.length)
-                return null
-              })()}
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Berita</h2>
                 <Button onClick={() => {
-                  console.log('Admin: Navigate to tambah-berita')
                   window.location.href = '/tambah-berita'
                 }}>
                   <Plus className="mr-2" size={18} />
@@ -1190,54 +1177,46 @@ export default function AdminPage() {
                     <p className="text-muted-foreground">Belum ada berita</p>
                   </div>
                 ) : (
-                  <>
-                    {console.log('Admin: Rendering berita list')}
-                    {berita.map((item) => {
-                      console.log('Admin: Rendering berita item:', item.id, item.judul)
-                      return (
-                        <Card key={item.id} className="cursor-pointer">
-                          <CardContent className="p-6">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <h3 className="text-lg font-semibold">{item.judul}</h3>
-                                <p className="text-muted-foreground mt-2">{item.isi.substring(0, 100)}...</p>
-                                <div className="flex items-center gap-2 mt-4">
-                                  <Badge variant="secondary">{item.kategori?.nama || 'No Category'}</Badge>
-                                  <Badge variant={item.published ? "default" : "outline"}>
-                                    {item.published ? "Published" : "Draft"}
-                                  </Badge>
-                                </div>
-                              </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    console.log('Admin: Edit berita:', item.id)
-                                    // Edit functionality here
-                                  }}
-                                  className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
-                                >
-                                  <Edit size={20} />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    console.log('Admin: Delete berita:', item.id)
-                                    // Delete functionality here
-                                  }}
-                                  className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
-                                >
-                                  <Trash2 size={20} />
-                                </button>
-                              </div>
+                  berita.map((item) => (
+                    <Card key={item.id} className="cursor-pointer">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold">{item.judul}</h3>
+                            <p className="text-muted-foreground mt-2">{item.isi.substring(0, 100)}...</p>
+                            <div className="flex items-center gap-2 mt-4">
+                              <Badge variant="secondary">{item.kategori?.nama || 'No Category'}</Badge>
+                              <Badge variant={item.published ? "default" : "outline"}>
+                                {item.published ? "Published" : "Draft"}
+                              </Badge>
                             </div>
-                          </CardContent>
-                        </Card>
-                      )
-                    })}
-                  </>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                // Edit functionality here
+                              }}
+                              className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                            >
+                              <Edit size={20} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                // Delete functionality here
+                              }}
+                              className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                            >
+                              <Trash2 size={20} />
+                            </button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
                 )}
               </div>
             </TabsContent>
@@ -1319,7 +1298,7 @@ export default function AdminPage() {
             <TabsContent value="laporan" className="space-y-6 px-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Laporan</h2>
-                <Button variant="outline">
+                <Button variant="outline" onClick={fetchData}>
                   <RefreshCw className="mr-2" size={18} />
                   Refresh
                 </Button>
@@ -1460,10 +1439,10 @@ export default function AdminPage() {
                             <span className="font-medium">NIK:</span> {item.nik}
                           </div>
                           <div>
-                            <span className="font-medium">Email:</span> {item.user.email}
+                            <span className="font-medium">Email:</span> {item.email || '-'}
                           </div>
                           <div>
-                            <span className="font-medium">User:</span> {item.user.nama}
+                            <span className="font-medium">User:</span> {item.namaLengkap}
                           </div>
                         </div>
 
@@ -1534,17 +1513,21 @@ export default function AdminPage() {
                         <div className="space-y-3">
                           <h4 className="font-medium">Balasan</h4>
                           <div className="space-y-2 max-h-40 overflow-y-auto">
-                            {item.balasan.map((balasan) => (
-                              <div key={balasan.id} className={`p-2 rounded-lg text-sm ${balasan.isFromAdmin ? 'bg-blue-50 ml-4' : 'bg-gray-50'}`}>
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-medium">{balasan.isFromAdmin ? 'Admin' : 'User'}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {new Date(balasan.createdAt).toLocaleString('id-ID')}
-                                  </span>
+                            {item.balasan && item.balasan.length > 0 ? (
+                              item.balasan.map((balasan) => (
+                                <div key={balasan.id} className={`p-2 rounded-lg text-sm ${balasan.dariAdmin ? 'bg-blue-50 ml-4' : 'bg-gray-50'}`}>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium">{balasan.dariAdmin ? 'Admin' : 'User'}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {new Date(balasan.createdAt).toLocaleString('id-ID')}
+                                    </span>
+                                  </div>
+                                  <p>{balasan.isi}</p>
                                 </div>
-                                <p>{balasan.pesan}</p>
-                              </div>
-                            ))}
+                              ))
+                            ) : (
+                              <p className="text-sm text-muted-foreground italic">Belum ada balasan</p>
+                            )}
                           </div>
                           <div className="flex gap-2">
                             <Input
@@ -1599,10 +1582,16 @@ export default function AdminPage() {
             <TabsContent value="notifikasi" className="space-y-6 px-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Notifikasi</h2>
-                <Button variant="outline">
-                  <Plus className="mr-2" size={18} />
-                  Buat Notifikasi
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={fetchData}>
+                    <RefreshCw className="mr-2" size={18} />
+                    Refresh
+                  </Button>
+                  <Button variant="outline">
+                    <Plus className="mr-2" size={18} />
+                    Buat Notifikasi
+                  </Button>
+                </div>
               </div>
 
               <div className="grid gap-4">
@@ -1649,10 +1638,7 @@ export default function AdminPage() {
           </Tabs>
         )}
         </main>
-        
-        {/* Socket Debug Component */}
-        <SocketDebug />
       </div>
     </div>
   )
-}// Force rebuild
+}

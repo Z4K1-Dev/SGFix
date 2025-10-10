@@ -145,97 +145,116 @@ export default function LayananPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Layanan Online</h1>
-        <p className="text-muted-foreground">
-          Ajukan berbagai layanan kependudukan secara online
-        </p>
+    <div className="min-h-screen bg-background">
+      {/* Mobile Container */}
+      <div className="max-w-[412px] mx-auto bg-background min-h-screen">
+        {/* Header */}
+        <header className="bg-primary text-primary-foreground p-4 shadow-md">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => window.history.back()}
+              className="inline-flex items-center justify-center rounded-md hover:bg-primary-foreground/20 h-8 w-8 p-0 text-primary-foreground"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div>
+              <h1 className="text-lg font-bold tracking-tight">Layanan Online</h1>
+              <p className="text-sm opacity-90">Ajukan layanan kependudukan</p>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto pb-20">
+          <div className="p-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+                <TabsTrigger value="daftar" className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+                  <History className="h-4 w-4" />
+                  <span>Daftar</span>
+                </TabsTrigger>
+                <TabsTrigger value="pilih" className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+                  <Plus className="h-4 w-4" />
+                  <span>Baru</span>
+                </TabsTrigger>
+                <TabsTrigger value="form" disabled={!selectedJenisLayanan} className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+                  <FileText className="h-4 w-4" />
+                  <span>Form</span>
+                </TabsTrigger>
+                <TabsTrigger value="detail" disabled={!selectedLayanan} className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+                  <FileText className="h-4 w-4" />
+                  <span>Detail</span>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="daftar" className="mt-4">
+                <LayananList
+                  layananList={layananList}
+                  onSelect={handleSelectLayanan}
+                  onDetail={handleDetail}
+                  onBalas={handleBalas}
+                  onAjukanBaru={() => setActiveTab('pilih')}
+                  isLoading={isLoading}
+                />
+              </TabsContent>
+
+              <TabsContent value="pilih" className="mt-4">
+                <JenisLayananSelector onSelect={handleSelectJenisLayanan} />
+              </TabsContent>
+
+              <TabsContent value="form" className="mt-4">
+                {selectedJenisLayanan && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setActiveTab('pilih')}
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Kembali
+                      </Button>
+                      <Badge variant="outline" className="text-xs">
+                        {getJenisLayananLabel(selectedJenisLayanan)}
+                      </Badge>
+                    </div>
+                    
+                    <MultiStepForm
+                      jenisLayanan={getJenisLayananLabel(selectedJenisLayanan)}
+                      onSubmit={handleAjukanLayanan}
+                      onCancel={handleBatal}
+                      isLoading={isLoading}
+                    />
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="detail" className="mt-4">
+                {selectedLayanan && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setActiveTab('daftar')}
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Kembali
+                      </Button>
+                    </div>
+                    
+                    <StatusTracker
+                      layanan={selectedLayanan}
+                      onDetail={() => router.push(`/layanan/${selectedLayanan.id}`)}
+                      onBalas={() => router.push(`/layanan/${selectedLayanan.id}/balasan`)}
+                    />
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="daftar" className="flex items-center space-x-2">
-            <History className="h-4 w-4" />
-            <span>Daftar Layanan</span>
-          </TabsTrigger>
-          <TabsTrigger value="pilih" className="flex items-center space-x-2">
-            <Plus className="h-4 w-4" />
-            <span>Ajukan Baru</span>
-          </TabsTrigger>
-          <TabsTrigger value="form" disabled={!selectedJenisLayanan} className="flex items-center space-x-2">
-            <FileText className="h-4 w-4" />
-            <span>Form Pengajuan</span>
-          </TabsTrigger>
-          <TabsTrigger value="detail" disabled={!selectedLayanan} className="flex items-center space-x-2">
-            <FileText className="h-4 w-4" />
-            <span>Detail</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="daftar" className="mt-6">
-          <LayananList
-            layananList={layananList}
-            onSelect={handleSelectLayanan}
-            onDetail={handleDetail}
-            onBalas={handleBalas}
-            onAjukanBaru={() => setActiveTab('pilih')}
-            isLoading={isLoading}
-          />
-        </TabsContent>
-
-        <TabsContent value="pilih" className="mt-6">
-          <JenisLayananSelector onSelect={handleSelectJenisLayanan} />
-        </TabsContent>
-
-        <TabsContent value="form" className="mt-6">
-          {selectedJenisLayanan && (
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setActiveTab('pilih')}
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Kembali
-                </Button>
-                <Badge variant="outline">
-                  {getJenisLayananLabel(selectedJenisLayanan)}
-                </Badge>
-              </div>
-              
-              <MultiStepForm
-                jenisLayanan={getJenisLayananLabel(selectedJenisLayanan)}
-                onSubmit={handleAjukanLayanan}
-                onCancel={handleBatal}
-                isLoading={isLoading}
-              />
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="detail" className="mt-6">
-          {selectedLayanan && (
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setActiveTab('daftar')}
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Kembali ke Daftar
-                </Button>
-              </div>
-              
-              <StatusTracker
-                layanan={selectedLayanan}
-                onDetail={() => router.push(`/layanan/${selectedLayanan.id}`)}
-                onBalas={() => router.push(`/layanan/${selectedLayanan.id}/balasan`)}
-              />
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }

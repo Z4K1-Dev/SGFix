@@ -4,6 +4,7 @@ import React from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { JenisLayananSkeleton } from '@/components/loading-skeleton'
 import { 
   User, 
   FileText, 
@@ -151,6 +152,19 @@ const kategoriColors: Record<string, string> = {
 }
 
 export function JenisLayananSelector({ onSelect }: JenisLayananSelectorProps) {
+  const [isLoading, setIsLoading] = React.useState(false)
+
+  React.useEffect(() => {
+    // Simulate loading untuk demo
+    setIsLoading(true)
+    const timer = setTimeout(() => setIsLoading(false), 1000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (isLoading) {
+    return <JenisLayananSkeleton />
+  }
+
   const kategoriList = Array.from(new Set(jenisLayananList.map(item => item.kategori)))
 
   return (

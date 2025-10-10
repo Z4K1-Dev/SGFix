@@ -24,8 +24,8 @@ class SocketClient {
         return
       }
 
-      // For testing, always use localhost
-      const socketUrl = 'http://localhost:3000'
+      // Gunakan URL dinamis dari current origin
+      const socketUrl = window.location.origin
 
       console.log('Connecting to Socket.IO server:', socketUrl)
       console.log('Socket path:', '/api/socket')
@@ -42,7 +42,6 @@ class SocketClient {
         reconnectionDelay: this.reconnectDelay,
         // Disable HMR interference
         autoConnect: true,
-        forceNew: true,
       })
 
       // Handle connection success

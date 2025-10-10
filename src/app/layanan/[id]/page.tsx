@@ -41,10 +41,10 @@ interface LayananDetail {
   email: string
   formData?: string
   dokumen?: string
-  balasan: Array<{
+  balasan?: Array<{
     id: string
-    pesan: string
-    isFromAdmin: boolean
+    isi: string
+    dariAdmin: boolean
     createdAt: string
     user?: {
       nama: string
@@ -352,26 +352,26 @@ export default function LayananDetailPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {layanan.balasan.map((balasan) => (
+                {layanan.balasan?.map((balasan) => (
                   <div key={balasan.id} className="flex items-start space-x-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      balasan.isFromAdmin 
+                      balasan.dariAdmin 
                         ? 'bg-blue-100 text-blue-600' 
                         : 'bg-gray-100 text-gray-600'
                     }`}>
-                      {balasan.isFromAdmin ? 'A' : 'U'}
+                      {balasan.dariAdmin ? 'A' : 'U'}
                     </div>
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center space-x-2">
                         <span className="font-medium text-sm">
-                          {balasan.isFromAdmin ? 'Admin' : 'Anda'}
+                          {balasan.dariAdmin ? 'Admin' : 'Anda'}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {formatDate(balasan.createdAt)}
                         </span>
                       </div>
                       <p className="text-sm bg-gray-50 rounded-lg p-3">
-                        {balasan.pesan}
+                        {balasan.isi}
                       </p>
                     </div>
                   </div>

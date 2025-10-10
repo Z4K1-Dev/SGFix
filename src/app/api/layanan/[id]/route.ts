@@ -3,13 +3,14 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // Untuk demo, tidak perlu auth - tampilkan semua layanan
     const layanan = await db.layanan.findFirst({
       where: {
-        id: params.id
+        id
       },
       include: {
         balasan: {
@@ -51,13 +52,14 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // Untuk demo, tidak perlu auth - cari layanan berdasarkan ID saja
     const layanan = await db.layanan.findFirst({
       where: {
-        id: params.id
+        id
       }
     })
 
@@ -72,16 +74,12 @@ export async function PUT(
       tempatLahir,
       tanggalLahir,
       jenisKelamin,
-      agama,
-      pekerjaan,
-      statusPerkawinan,
-      kewarganegaraan,
       alamat,
       rt,
       rw,
       kelurahan,
       kecamatan,
-      kabupatenKota,
+      kabupaten,
       provinsi,
       kodePos,
       telepon,
@@ -97,23 +95,19 @@ export async function PUT(
     }
 
     const updatedLayanan = await db.layanan.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         namaLengkap,
         nik,
         tempatLahir,
-        tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
+        tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : undefined,
         jenisKelamin,
-        agama,
-        pekerjaan,
-        statusPerkawinan,
-        kewarganegaraan,
         alamat,
         rt,
         rw,
         kelurahan,
         kecamatan,
-        kabupatenKota,
+        kabupaten,
         provinsi,
         kodePos,
         telepon,
@@ -137,13 +131,14 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // Untuk demo, tidak perlu auth - cari layanan berdasarkan ID saja
     const layanan = await db.layanan.findFirst({
       where: {
-        id: params.id
+        id
       }
     })
 
@@ -161,17 +156,17 @@ export async function DELETE(
 
     // Delete related balasan first
     await db.balasanLayanan.deleteMany({
-      where: { layananId: params.id }
+      where: { layananId: id }
     })
 
     // Delete related notifications
     await db.notifikasi.deleteMany({
-      where: { layananId: params.id }
+      where: { layananId: id }
     })
 
     // Delete layanan
     await db.layanan.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { BeritaDetailSkeleton } from '@/components/loading-skeleton'
 import DocTabs from '@/components/doctabs'
 import { 
   ArrowLeft, 
@@ -145,36 +146,7 @@ export default function BeritaDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-md mx-auto bg-background min-h-screen">
-          {/* Header */}
-          <header className="bg-primary text-primary-foreground p-3 shadow-md">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => router.back()}>
-                <ArrowLeft className="mr-2" size={18} />
-              </Button>
-              <h1 className="text-lg font-bold">Memuat...</h1>
-            </div>
-          </header>
-
-          {/* Loading Content */}
-          <div className="p-4 space-y-4">
-            <div className="animate-pulse">
-              <div className="h-6 bg-muted rounded mb-3"></div>
-              <div className="h-4 bg-muted rounded mb-2"></div>
-              <div className="h-4 bg-muted rounded w-3/4"></div>
-            </div>
-            <div className="h-48 bg-muted rounded-xl animate-pulse"></div>
-            <div className="space-y-2 animate-pulse">
-              <div className="h-4 bg-muted rounded"></div>
-              <div className="h-4 bg-muted rounded"></div>
-              <div className="h-4 bg-muted rounded w-5/6"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return <BeritaDetailSkeleton />
   }
 
   if (!berita) {

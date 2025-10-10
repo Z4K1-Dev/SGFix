@@ -12,8 +12,8 @@ import { ArrowLeft, Send, User, Shield, Calendar, MessageCircle } from 'lucide-r
 
 interface Balasan {
   id: string
-  pesan: string
-  isFromAdmin: boolean
+  isi: string
+  dariAdmin: boolean
   isRead: boolean
   createdAt: string
   user?: {
@@ -130,8 +130,8 @@ export default function LayananBalasanPage() {
       // Add the new message to the list
       const newBalasan: Balasan = {
         id: result.data.id,
-        pesan: result.data.pesan,
-        isFromAdmin: false,
+        isi: result.data.isi,
+        dariAdmin: false,
         isRead: true,
         createdAt: result.data.createdAt
       }
@@ -273,11 +273,11 @@ export default function LayananBalasanPage() {
               balasanList.map((balasan) => (
                 <div key={balasan.id} className="flex items-start space-x-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    balasan.isFromAdmin 
+                    balasan.dariAdmin 
                       ? 'bg-blue-100 text-blue-600' 
                       : 'bg-gray-100 text-gray-600'
                   }`}>
-                    {balasan.isFromAdmin ? (
+                    {balasan.dariAdmin ? (
                       <Shield className="h-4 w-4" />
                     ) : (
                       <User className="h-4 w-4" />
@@ -287,12 +287,12 @@ export default function LayananBalasanPage() {
                   <div className="flex-1 space-y-1 min-w-0">
                     <div className="flex items-center space-x-2">
                       <span className="font-medium text-sm">
-                        {balasan.isFromAdmin ? 'Admin' : 'Anda'}
+                        {balasan.dariAdmin ? 'Admin' : 'Anda'}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {formatDate(balasan.createdAt)}
                       </span>
-                      {balasan.isFromAdmin && !balasan.isRead && (
+                      {balasan.dariAdmin && !balasan.isRead && (
                         <Badge variant="secondary" className="text-xs">
                           Baru
                         </Badge>
@@ -300,11 +300,11 @@ export default function LayananBalasanPage() {
                     </div>
                     
                     <div className={`rounded-lg p-3 text-sm ${
-                      balasan.isFromAdmin 
+                      balasan.dariAdmin 
                         ? 'bg-blue-50 text-blue-900 border border-blue-200' 
                         : 'bg-gray-50 text-gray-900 border border-gray-200'
                     }`}>
-                      <p className="whitespace-pre-wrap break-words">{balasan.pesan}</p>
+                      <p className="whitespace-pre-wrap break-words">{balasan.isi}</p>
                     </div>
                   </div>
                 </div>

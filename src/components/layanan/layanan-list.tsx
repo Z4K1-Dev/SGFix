@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { LayananSkeleton } from '@/components/loading-skeleton'
 import { 
   Search, 
   Filter, 
@@ -41,6 +42,7 @@ interface LayananListProps {
   onAjukanBaru?: () => void
   showActions?: boolean
   showAjukanButton?: boolean
+  isLoading?: boolean
 }
 
 const statusConfig = {
@@ -99,7 +101,8 @@ export function LayananList({
   onBalas, 
   onAjukanBaru,
   showActions = true,
-  showAjukanButton = true 
+  showAjukanButton = true,
+  isLoading = false
 }: LayananListProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('SEMUA')
@@ -177,8 +180,17 @@ export function LayananList({
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((index) => (
+            <LayananSkeleton key={index} />
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* Filters */}
+          <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -221,7 +233,13 @@ export function LayananList({
       </div>
 
       {/* Layanan List */}
-      {filteredLayanan.length === 0 ? (
+      {isLoading ? (
+        <div className="grid gap-4">
+          {[1, 2, 3].map((index) => (
+            <LayananSkeleton key={index} />
+          ))}
+        </div>
+      ) : filteredLayanan.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <div className="text-center space-y-3">
@@ -356,6 +374,8 @@ export function LayananList({
             </div>
           </CardContent>
         </Card>
+      )}
+        </>
       )}
     </div>
   )

@@ -3,13 +3,14 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // Untuk demo, tidak perlu auth - verifikasi layanan exists
     const layanan = await db.layanan.findFirst({
       where: {
-        id: params.id
+        id
       }
     })
 
@@ -23,7 +24,7 @@ export async function GET(
 
     const balasan = await db.balasanLayanan.findMany({
       where: {
-        layananId: params.id
+        layananId: id
       },
       orderBy: { createdAt: 'asc' },
       skip: (page - 1) * limit,
@@ -32,7 +33,7 @@ export async function GET(
 
     const total = await db.balasanLayanan.count({
       where: {
-        layananId: params.id
+        layananId: id
       }
     })
 
@@ -56,13 +57,14 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // Untuk demo, tidak perlu auth - verifikasi layanan exists
     const layanan = await db.layanan.findFirst({
       where: {
-        id: params.id
+        id
       }
     })
 
@@ -83,7 +85,7 @@ export async function POST(
     // Create balasan - untuk demo, tidak perlu userId
     const balasan = await db.balasanLayanan.create({
       data: {
-        layananId: params.id,
+        layananId: id,
         isi: pesan.trim(),
         dariAdmin: false
       }
@@ -95,7 +97,7 @@ export async function POST(
         judul: `Balasan terkirim untuk ${layanan.judul}`,
         pesan: `Balasan Anda telah terkirim dan akan diproses oleh admin`,
         tipe: 'LAYANAN_BALASAN' as any,
-        layananId: params.id
+        layananId: id
       }
     })
 
