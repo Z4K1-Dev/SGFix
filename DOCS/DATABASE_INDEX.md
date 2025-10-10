@@ -124,10 +124,10 @@ CREATE TABLE Laporan (
 **Status Values**:
 ```typescript
 enum Status {
-  BARU      = 'BARU',        // New report
-  DIPROSES  = 'DIPROSES',    // Being processed
-  DITAMPAH  = 'DITAMPAH',    // Accepted
-  DIKERJAKAN = 'DIKERJAKAN', // Being worked on
+  BARU        = 'BARU',        // New report
+  DITAMPUNG   = 'DITAMPUNG',   // Being processed/taken in
+  DITERUSKAN  = 'DITERUSKAN',  // Forwarded to related unit
+  DIKERJAKAN  = 'DIKERJAKAN',  // Being worked on
   SELESAI   = 'SELESAI'      // Completed
 }
 ```

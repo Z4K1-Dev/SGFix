@@ -197,7 +197,7 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 **Query Parameters**:
 ```typescript
 {
-  status?: "BARU" | "DIPROSES" | "DITAMPAH" | "DIKERJAKAN" | "SELESAI",
+  status?: "BARU" | "DITAMPUNG" | "DITERUSKAN" | "DIKERJAKAN" | "SELESAI",
   page?: number,                   // Default: 1
   limit?: number                   // Default: 10, max: 50
 }
@@ -281,7 +281,7 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 **Request Body**:
 ```typescript
 {
-  status: "BARU" | "DIPROSES" | "DITAMPAH" | "DIKERJAKAN" | "SELESAI"
+  status: "BARU" | "DITAMPUNG" | "DITERUSKAN" | "DIKERJAKAN" | "SELESAI"
 }
 ```
 

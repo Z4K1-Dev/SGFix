@@ -159,8 +159,8 @@ model BalasanLayanan {
 
 enum Status {
   BARU
-  DIPROSES
-  DITAMPAH
+  DITAMPUNG
+  DITERUSKAN
   DIKERJAKAN
   SELESAI
 }

@@ -64,9 +64,9 @@ export async function PUT(
 
     // Validate status transitions
     const validTransitions: Record<StatusLayanan, StatusLayanan[]> = {
-      [StatusLayanan.BARU]: [StatusLayanan.DIPROSES, StatusLayanan.DITOLAK],
-      [StatusLayanan.DIPROSES]: [StatusLayanan.DITAMPAH, StatusLayanan.DITOLAK],
-      [StatusLayanan.DITAMPAH]: [StatusLayanan.DIKERJAKAN, StatusLayanan.DITOLAK],
+      [StatusLayanan.BARU]: [StatusLayanan.DITAMPUNG, StatusLayanan.DITOLAK],
+      [StatusLayanan.DITAMPUNG]: [StatusLayanan.DITERUSKAN, StatusLayanan.DITOLAK],
+      [StatusLayanan.DITERUSKAN]: [StatusLayanan.DIKERJAKAN, StatusLayanan.DITOLAK],
       [StatusLayanan.DIKERJAKAN]: [StatusLayanan.SELESAI, StatusLayanan.DITOLAK],
       [StatusLayanan.SELESAI]: [],
       [StatusLayanan.DITOLAK]: [StatusLayanan.BARU] // Allow resubmission
@@ -102,15 +102,15 @@ export async function PUT(
     let notifikasiType = ''
 
     switch (status) {
-      case StatusLayanan.DIPROSES:
-        notifikasiTitle = `Layanan ${layanan.judul} sedang diproses`
-        notifikasiMessage = `Pengajuan layanan Anda sedang dalam proses verifikasi`
-        notifikasiType = 'LAYANAN_PROSES'
+      case StatusLayanan.DITAMPUNG:
+        notifikasiTitle = `Layanan ${layanan.judul} ditampung`
+        notifikasiMessage = `Pengajuan layanan Anda telah ditampung untuk diproses`
+        notifikasiType = 'LAYANAN_DITAMPUNG'
         break
-      case StatusLayanan.DITAMPAH:
-        notifikasiTitle = `Layanan ${layanan.judul} ditahan`
-        notifikasiMessage = `Pengajuan layanan Anda ditahan sementara`
-        notifikasiType = 'LAYANAN_DITAMPAH'
+      case StatusLayanan.DITERUSKAN:
+        notifikasiTitle = `Layanan ${layanan.judul} diteruskan`
+        notifikasiMessage = `Pengajuan layanan Anda telah diteruskan ke unit terkait`
+        notifikasiType = 'LAYANAN_DITERUSKAN'
         break
       case StatusLayanan.DIKERJAKAN:
         notifikasiTitle = `Layanan ${layanan.judul} sedang dikerjakan`

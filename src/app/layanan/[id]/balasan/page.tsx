@@ -177,7 +177,7 @@ export default function LayananBalasanPage() {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'BARU': 'bg-gray-100 text-gray-800 border-gray-200',
-      'DIPROSES': 'bg-blue-100 text-blue-800 border-blue-200',
+      'DITAMPUNG': 'bg-blue-100 text-blue-800 border-blue-200',
       'DIVERIFIKASI': 'bg-yellow-100 text-yellow-800 border-yellow-200',
       'DISETUJUI': 'bg-green-100 text-green-800 border-green-200',
       'SELESAI': 'bg-emerald-100 text-emerald-800 border-emerald-200',

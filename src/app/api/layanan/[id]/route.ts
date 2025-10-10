@@ -87,7 +87,7 @@ export async function PUT(
     } = body
 
     // Only allow updates for certain statuses
-    if (!['BARU', 'DIPROSES'].includes(layanan.status)) {
+    if (!['BARU', 'DITAMPUNG'].includes(layanan.status)) {
       return NextResponse.json(
         { error: 'Cannot update layanan in current status' },
         { status: 400 }

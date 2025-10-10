@@ -14,7 +14,7 @@ interface LayananDetail {
   id: string
   judul: string
   jenisLayanan: string
-  status: 'BARU' | 'DIPROSES' | 'DIVERIFIKASI' | 'DISETUJUI' | 'SELESAI' | 'DITOLAK'
+  status: 'BARU' | 'DITAMPUNG' | 'DIVERIFIKASI' | 'DISETUJUI' | 'SELESAI' | 'DITOLAK'
   createdAt: string
   updatedAt: string
   estimasiSelesai?: string

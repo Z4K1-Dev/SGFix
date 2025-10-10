@@ -27,7 +27,7 @@ interface LayananItem {
   id: string
   judul: string
   jenisLayanan: string
-  status: 'BARU' | 'DIPROSES' | 'DIVERIFIKASI' | 'DISETUJUI' | 'SELESAI' | 'DITOLAK'
+  status: 'BARU' | 'DITAMPUNG' | 'DIVERIFIKASI' | 'DISETUJUI' | 'SELESAI' | 'DITOLAK'
   createdAt: string
   updatedAt: string
   estimasiSelesai?: string
@@ -51,8 +51,8 @@ const statusConfig = {
     color: 'bg-gray-100 text-gray-800 border-gray-200',
     icon: <Clock className="h-3 w-3" />
   },
-  DIPROSES: {
-    label: 'Diproses',
+  DITAMPUNG: {
+    label: 'Ditampung',
     color: 'bg-blue-100 text-blue-800 border-blue-200',
     icon: <AlertCircle className="h-3 w-3" />
   },
@@ -153,7 +153,7 @@ export function LayananList({
   const getStatusPriority = (status: string) => {
     const priorities: Record<string, number> = {
       'BARU': 1,
-      'DIPROSES': 2,
+      'DITAMPUNG': 2,
       'DIVERIFIKASI': 3,
       'DISETUJUI': 4,
       'SELESAI': 5,
@@ -211,7 +211,7 @@ export function LayananList({
             <SelectContent>
               <SelectItem value="SEMUA">Semua Status</SelectItem>
               <SelectItem value="BARU">Baru</SelectItem>
-              <SelectItem value="DIPROSES">Diproses</SelectItem>
+              <SelectItem value="DITAMPUNG">Ditampung</SelectItem>
               <SelectItem value="DIVERIFIKASI">Diverifikasi</SelectItem>
               <SelectItem value="DISETUJUI">Disetujui</SelectItem>
               <SelectItem value="SELESAI">Selesai</SelectItem>

@@ -25,7 +25,7 @@ interface StatusLayanan {
   id: string
   judul: string
   jenisLayanan: string
-  status: 'BARU' | 'DIPROSES' | 'DIVERIFIKASI' | 'DISETUJUI' | 'SELESAI' | 'DITOLAK'
+  status: 'BARU' | 'DITAMPUNG' | 'DIVERIFIKASI' | 'DISETUJUI' | 'SELESAI' | 'DITOLAK'
   createdAt: string
   updatedAt: string
   catatan?: string
@@ -47,8 +47,8 @@ const statusConfig = {
     icon: <Clock className="h-4 w-4" />,
     description: 'Pengajuan telah diterima dan menunggu proses awal'
   },
-  DIPROSES: {
-    label: 'Diproses',
+  DITAMPUNG: {
+    label: 'Ditampung',
     color: 'bg-blue-100 text-blue-800 border-blue-200',
     icon: <AlertCircle className="h-4 w-4" />,
     description: 'Pengajuan sedang dalam proses verifikasi'
@@ -81,7 +81,7 @@ const statusConfig = {
 
 const timelineSteps = [
   { key: 'BARU', label: 'Pengajuan Diterima' },
-  { key: 'DIPROSES', label: 'Sedang Diproses' },
+  { key: 'DITAMPUNG', label: 'Sedang Ditampung' },
   { key: 'DIVERIFIKASI', label: 'Verifikasi' },
   { key: 'DISETUJUI', label: 'Disetujui' },
   { key: 'SELESAI', label: 'Selesai' }

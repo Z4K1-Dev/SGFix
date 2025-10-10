@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
       where: {
         nik,
         status: {
-          in: [StatusLayanan.BARU, StatusLayanan.DIPROSES, StatusLayanan.DITAMPAH, StatusLayanan.DIKERJAKAN]
+          in: [StatusLayanan.BARU, StatusLayanan.DITAMPUNG, StatusLayanan.DITERUSKAN, StatusLayanan.DIKERJAKAN]
         }
       }
     })

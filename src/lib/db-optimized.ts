@@ -160,8 +160,8 @@ export const laporanQueries = {
   getStats: async () => {
     const stats = await Promise.all([
       db.laporan.count({ where: { status: 'BARU' } }),
-      db.laporan.count({ where: { status: 'DIPROSES' } }),
-      db.laporan.count({ where: { status: 'DITAMPAH' } }),
+      db.laporan.count({ where: { status: 'DITAMPUNG' } }),
+      db.laporan.count({ where: { status: 'DITERUSKAN' } }),
       db.laporan.count({ where: { status: 'DIKERJAKAN' } }),
       db.laporan.count({ where: { status: 'SELESAI' } }),
       db.laporan.count()

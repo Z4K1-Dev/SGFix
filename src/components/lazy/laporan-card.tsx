@@ -44,8 +44,8 @@ function LaporanCardContent({ item, onClick }: LaporanCardProps) {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       BARU: 'bg-blue-100 text-blue-800 border-blue-200',
-      DIPROSES: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      DITAMPAH: 'bg-orange-100 text-orange-800 border-orange-200',
+      DITAMPUNG: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      DITERUSKAN: 'bg-orange-100 text-orange-800 border-orange-200',
       DIKERJAKAN: 'bg-purple-100 text-purple-800 border-purple-200',
       SELESAI: 'bg-green-100 text-green-800 border-green-200',
     }
@@ -55,7 +55,7 @@ function LaporanCardContent({ item, onClick }: LaporanCardProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'BARU': return <AlertCircle size={12} />
-      case 'DIPROSES': return <Clock size={12} />
+      case 'DITAMPUNG': return <Clock size={12} />
       case 'SELESAI': return <CheckCircle size={12} />
       default: return <Clock size={12} />
     }

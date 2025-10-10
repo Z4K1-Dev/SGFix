@@ -182,8 +182,8 @@ npm start
 ## Status Laporan
 
 1. **BARU** - Laporan baru masuk
-2. **DIPROSES** - Sedang diproses admin
-3. **DITAMPAH** - Ditunda sementara
+2. **DITAMPUNG** - Laporan ditampung untuk diproses
+3. **DITERUSKAN** - Laporan diteruskan ke unit terkait
 4. **DIKERJAKAN** - Sedang dikerjakan
 5. **SELESAI** - Laporan selesai
 

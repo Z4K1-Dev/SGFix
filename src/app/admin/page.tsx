@@ -42,7 +42,7 @@ import {
   X
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { toast } from 'sonner'
 
 // Force dynamic rendering
@@ -165,11 +165,11 @@ export default function AdminPage() {
   // Memoized data for charts
   const laporanStatusData = useMemo(() => {
     const data = [
-      { name: 'Status Laporan', BARU: laporan.filter(l => l.status === 'BARU').length || 5 },
-      { name: 'Status Laporan', DIPROSES: laporan.filter(l => l.status === 'DIPROSES').length || 3 },
-      { name: 'Status Laporan', DITAMPAH: laporan.filter(l => l.status === 'DITAMPAH').length || 2 },
-      { name: 'Status Laporan', DIKERJAKAN: laporan.filter(l => l.status === 'DIKERJAKAN').length || 3 },
-      { name: 'Status Laporan', SELESAI: laporan.filter(l => l.status === 'SELESAI').length || 8 }
+      { name: 'Baru', value: laporan.filter(l => l.status === 'BARU').length || 5, fill: 'var(--chart-2)' },
+      { name: 'Ditampung', value: laporan.filter(l => l.status === 'DITAMPUNG').length || 3, fill: 'var(--chart-3)' },
+      { name: 'Diteruskan', value: laporan.filter(l => l.status === 'DITERUSKAN').length || 2, fill: 'var(--chart-4)' },
+      { name: 'Dikerjakan', value: laporan.filter(l => l.status === 'DIKERJAKAN').length || 3, fill: 'var(--chart-1)' },
+      { name: 'Selesai', value: laporan.filter(l => l.status === 'SELESAI').length || 8, fill: 'var(--chart-5)' }
     ]
     return data
   }, [laporan])
@@ -358,8 +358,8 @@ export default function AdminPage() {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       BARU: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800',
-      DIPROSES: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800',
-      DITAMPAH: 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800',
+      DITAMPUNG: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800',
+      DITERUSKAN: 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800',
       DIKERJAKAN: 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-800',
       SELESAI: 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800',
     }
@@ -369,7 +369,7 @@ export default function AdminPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'BARU': return <AlertCircle size={16} />
-      case 'DIPROSES': return <Clock size={16} />
+      case 'DITAMPUNG': return <Clock size={16} />
       case 'SELESAI': return <CheckCircle size={16} />
       default: return <Clock size={16} />
     }
@@ -872,8 +872,8 @@ export default function AdminPage() {
                           className="h-[250px] w-full"
                           style={{
                             '--color-baru': 'var(--chart-2)',
-                            '--color-diproses': 'var(--chart-3)',
-                            '--color-ditampah': 'var(--chart-4)',
+                            '--color-ditampung': 'var(--chart-3)',
+                            '--color-diteruskan': 'var(--chart-4)',
                             '--color-dikerjakan': 'var(--chart-5)',
                             '--color-selesai': 'var(--chart-1)'
                           } as React.CSSProperties}
@@ -901,65 +901,19 @@ export default function AdminPage() {
                                 }}
                                 labelStyle={{ color: 'hsl(var(--foreground))' }}
                               />
-                              <Bar 
-                                dataKey="BARU" 
-                                fill="var(--color-baru)" 
+                              <Bar
+                                dataKey="value"
                                 radius={[4, 4, 0, 0]}
-                                name="BARU"
-                                stackId="a"
-                              />
-                              <Bar 
-                                dataKey="DIPROSES" 
-                                fill="var(--color-diproses)" 
-                                radius={[4, 4, 0, 0]}
-                                name="DIPROSES"
-                                stackId="a"
-                              />
-                              <Bar 
-                                dataKey="DITAMPAH" 
-                                fill="var(--color-ditampah)" 
-                                radius={[4, 4, 0, 0]}
-                                name="DITAMPAH"
-                                stackId="a"
-                              />
-                              <Bar 
-                                dataKey="DIKERJAKAN" 
-                                fill="var(--color-dikerjakan)" 
-                                radius={[4, 4, 0, 0]}
-                                name="DIKERJAKAN"
-                                stackId="a"
-                              />
-                              <Bar 
-                                dataKey="SELESAI" 
-                                fill="var(--color-selesai)" 
-                                radius={[4, 4, 0, 0]}
-                                name="SELESAI"
-                                stackId="a"
-                              />
+                                name="Status"
+                              >
+                                {laporanStatusData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                                ))}
+                              </Bar>
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
-                        <div className="flex justify-center gap-4 mt-4 text-xs text-muted-foreground flex-wrap">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-2))' }}></div>
-                            <span>BARU</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }}></div>
-                            <span>DIPROSES</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-4))' }}></div>
-                            <span>DITAMPAH</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-5))' }}></div>
-                            <span>DIKERJAKAN</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-1))' }}></div>
-                            <span>SELESAI</span>
-                          </div>
+                        <div className="flex justify-center mt-4 text-xs text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--muted-foreground))' }}></div>
                             <span>Total: {laporan.length || 25} laporan</span>
@@ -1331,8 +1285,8 @@ export default function AdminPage() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="BARU">Baru</SelectItem>
-                              <SelectItem value="DIPROSES">Diproses</SelectItem>
-                              <SelectItem value="DITAMPAH">Ditampah</SelectItem>
+                              <SelectItem value="DITAMPUNG">Ditampung</SelectItem>
+                              <SelectItem value="DITERUSKAN">Diteruskan</SelectItem>
                               <SelectItem value="DIKERJAKAN">Dikerjakan</SelectItem>
                               <SelectItem value="SELESAI">Selesai</SelectItem>
                             </SelectContent>
@@ -1459,7 +1413,7 @@ export default function AdminPage() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="BARU">Baru</SelectItem>
-                                    <SelectItem value="DIPROSES">Diproses</SelectItem>
+                                    <SelectItem value="DITAMPUNG">Ditampung</SelectItem>
                                     <SelectItem value="DIVERIFIKASI">Diverifikasi</SelectItem>
                                     <SelectItem value="DISETUJUI">Disetujui</SelectItem>
                                     <SelectItem value="SELESAI">Selesai</SelectItem>
