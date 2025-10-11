@@ -1116,12 +1116,12 @@ export default function AdminPage() {
             <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
               {/* Tab contents for non-dashboard tabs */}
             {/* Tab Dashboard */}
-            <TabsContent value="dashboard" className="space-y-6">
+            <TabsContent value="dashboard" className="space-y-6 mt-6">
               {/* Dashboard content is already rendered above */}
             </TabsContent>
 
             {/* Tab Berita */}
-            <TabsContent value="berita" className="space-y-6 px-6">
+            <TabsContent value="berita" className="space-y-6 px-6 mt-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Berita</h2>
                 <Button onClick={() => {
@@ -1183,7 +1183,7 @@ export default function AdminPage() {
             </TabsContent>
 
             {/* Tab Kategori */}
-            <TabsContent value="kategori" className="space-y-6 px-6">
+            <TabsContent value="kategori" className="space-y-6 px-6 mt-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Kategori</h2>
                 <Dialog>
@@ -1394,7 +1394,7 @@ export default function AdminPage() {
             </TabsContent>
 
             {/* Tab Layanan */}
-            <TabsContent value="layanan" className="space-y-6 px-6">
+            <TabsContent value="layanan" className="space-y-6 px-6 mt-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Layanan</h2>
                 <Button variant="outline" onClick={fetchData}>
@@ -1580,7 +1580,7 @@ export default function AdminPage() {
             </TabsContent>
 
             {/* Tab Notifikasi */}
-            <TabsContent value="notifikasi" className="space-y-6 px-6">
+            <TabsContent value="notifikasi" className="space-y-6 px-6 mt-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Notifikasi</h2>
                 <div className="flex gap-2">
