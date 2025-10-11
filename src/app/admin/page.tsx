@@ -161,6 +161,7 @@ export default function AdminPage() {
     alasanPenolakan: '',
     estimasiSelesai: ''
   })
+  const [notifFilter, setNotifFilter] = useState('semua')
 
   // Memoized data for charts
   const laporanStatusData = useMemo(() => {
@@ -403,6 +404,24 @@ export default function AdminPage() {
   }
 
   const unreadCount = notifikasi.filter(n => !n.dibaca && n.untukAdmin).length
+  
+  // Filter notifikasi berdasarkan tipe
+  const filteredNotifikasi = useMemo(() => {
+    if (notifFilter === 'semua') {
+      return notifikasi
+    }
+    
+    return notifikasi.filter(notif => {
+      if (notifFilter === 'berita') {
+        return notif.tipe.includes('BERITA')
+      } else if (notifFilter === 'laporan') {
+        return notif.tipe.includes('LAPORAN')
+      } else if (notifFilter === 'layanan') {
+        return notif.tipe.includes('LAYANAN')
+      }
+      return false
+    })
+  }, [notifikasi, notifFilter])
 
   // Generate dummy chart data based on period
   const generateChartData = () => {
@@ -1611,6 +1630,17 @@ export default function AdminPage() {
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Notifikasi</h2>
                 <div className="flex gap-2">
+                  <Select value={notifFilter} onValueChange={setNotifFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Filter tipe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="semua">Semua</SelectItem>
+                      <SelectItem value="berita">Berita</SelectItem>
+                      <SelectItem value="laporan">Laporan</SelectItem>
+                      <SelectItem value="layanan">Layanan</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Button variant="outline" onClick={fetchData}>
                     <RefreshCw className="mr-2" size={18} />
                     Refresh
@@ -1623,7 +1653,7 @@ export default function AdminPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {notifikasi.map((item) => (
+                {filteredNotifikasi.map((item) => (
                   <Card key={item.id} className={`${item.dibaca ? "opacity-60" : ""} cursor-pointer`}>
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-3">
