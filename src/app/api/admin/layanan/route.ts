@@ -30,6 +30,15 @@ export async function GET(request: NextRequest) {
       ]
     }
 
+    // Check if db.layanan exists
+    if (!db.layanan) {
+      console.error('db.layanan is not defined. Database might not be connected properly.')
+      return NextResponse.json(
+        { error: 'Database connection error' },
+        { status: 500 }
+      )
+    }
+
     // Get total count
     const total = await db.layanan.count({ where })
 

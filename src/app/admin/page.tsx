@@ -239,6 +239,13 @@ export default function AdminPage() {
       if (layananRes.ok) {
         const layananData = await layananRes.json()
         setLayanan(layananData.data || [])
+      } else {
+        // If admin API fails, try the regular API
+        const regularLayananRes = await fetch('/api/layanan')
+        if (regularLayananRes.ok) {
+          const layananData = await regularLayananRes.json()
+          setLayanan(layananData.data || [])
+        }
       }
       
       if (notifRes.ok) {
@@ -1249,7 +1256,7 @@ export default function AdminPage() {
             </TabsContent>
 
             {/* Tab Laporan */}
-            <TabsContent value="laporan" className="space-y-6 px-6">
+            <TabsContent value="laporan" className="space-y-6 px-6 mt-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Laporan</h2>
                 <Button variant="outline" onClick={fetchData}>
@@ -1258,72 +1265,111 @@ export default function AdminPage() {
                 </Button>
               </div>
 
-              <div className="grid gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {laporan.map((item) => (
                   <Card key={item.id} className="cursor-pointer">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold">{item.judul}</h3>
-                          <p className="text-muted-foreground mt-2">{item.keterangan}</p>
-                          <div className="flex items-center gap-2 mt-4">
-                            <Badge className={getStatusColor(item.status)}>
-                              <div className="flex items-center gap-1">
-                                {getStatusIcon(item.status)}
-                                {item.status}
-                              </div>
-                            </Badge>
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(item.createdAt).toLocaleDateString('id-ID')}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Select onValueChange={(value) => handleUpdateStatusLaporan(item.id, value)}>
-                            <SelectTrigger className="w-32">
-                              <SelectValue placeholder="Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="BARU">Baru</SelectItem>
-                              <SelectItem value="DITAMPUNG">Ditampung</SelectItem>
-                              <SelectItem value="DITERUSKAN">Diteruskan</SelectItem>
-                              <SelectItem value="DIKERJAKAN">Dikerjakan</SelectItem>
-                              <SelectItem value="SELESAI">Selesai</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <button
-                          onClick={() => {
-                            // View functionality here
-                          }}
-                          className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
-                        >
-                          <Eye size={20} />
-                        </button>
-                        </div>
-                      </div>
-                      
-                      {/* Balasan Section */}
-                      {item.balasan && item.balasan.length > 0 && (
-                        <div className="mt-4 p-4 bg-muted rounded-lg">
-                          <h4 className="font-medium mb-2">Balasan:</h4>
-                          {item.balasan.map((balasan) => (
-                            <div key={balasan.id} className="mb-2">
-                              <div className="flex items-center gap-2">
-                                <Badge variant={balasan.dariAdmin ? "default" : "secondary"}>
-                                  {balasan.dariAdmin ? "Admin" : "User"}
-                                </Badge>
-                                <span className="text-sm text-muted-foreground">
-                                  {new Date(balasan.createdAt).toLocaleDateString('id-ID')}
-                                </span>
-                              </div>
-                              <p className="text-sm mt-1">{balasan.isi}</p>
-                            </div>
-                          ))}
+                    <CardContent className="p-4">
+                      {/* Foto Laporan */}
+                      {item.foto && (
+                        <div className="w-full h-48 bg-muted rounded-lg mb-4 overflow-hidden">
+                          <img
+                            src={item.foto}
+                            alt={item.judul}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = '/placeholder-image.png'
+                            }}
+                          />
                         </div>
                       )}
                       
-                      {/* Balas Form */}
-                      <div className="mt-4 flex gap-2">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1 text-left">
+                          <h3 className="text-lg font-semibold line-clamp-2">{item.judul}</h3>
+                          <p className="text-muted-foreground mt-1 text-sm line-clamp-3">{item.keterangan}</p>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => {
+                              // View functionality here
+                            }}
+                            className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                            title="Detail"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              // Edit functionality here
+                            }}
+                            className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                            title="Edit"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center mt-3">
+                        <div className="text-left">
+                          <Badge className={getStatusColor(item.status)}>
+                            <div className="flex items-center gap-1">
+                              {getStatusIcon(item.status)}
+                              {item.status}
+                            </div>
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(item.createdAt).toLocaleDateString('id-ID')}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Status Update */}
+                      <div className="flex gap-2 mb-3">
+                        <Select onValueChange={(value) => handleUpdateStatusLaporan(item.id, value)}>
+                          <SelectTrigger className="w-32 text-sm">
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="BARU">Baru</SelectItem>
+                            <SelectItem value="DITAMPUNG">Ditampung</SelectItem>
+                            <SelectItem value="DITERUSKAN">Diteruskan</SelectItem>
+                            <SelectItem value="DIKERJAKAN">Dikerjakan</SelectItem>
+                            <SelectItem value="SELESAI">Selesai</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Balasan Section - Compact */}
+                      {item.balasan && item.balasan.length > 0 && (
+                        <div className="mb-3 p-3 bg-muted rounded-lg">
+                          <h4 className="font-medium text-sm mb-2">Balasan ({item.balasan.length}):</h4>
+                          <div className="max-h-20 overflow-y-auto space-y-1">
+                            {item.balasan.slice(0, 2).map((balasan) => (
+                              <div key={balasan.id} className="text-xs">
+                                <div className="flex items-center gap-1">
+                                  <Badge variant={balasan.dariAdmin ? "default" : "secondary"} className="text-xs px-1 py-0">
+                                    {balasan.dariAdmin ? "Admin" : "User"}
+                                  </Badge>
+                                  <span className="text-muted-foreground">
+                                    {new Date(balasan.createdAt).toLocaleDateString('id-ID')}
+                                  </span>
+                                </div>
+                                <p className="mt-1 line-clamp-2">{balasan.isi}</p>
+                              </div>
+                            ))}
+                            {item.balasan.length > 2 && (
+                              <p className="text-xs text-muted-foreground italic">
+                                +{item.balasan.length - 2} balasan lainnya
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Balas Form - Compact */}
+                      <div className="flex gap-2">
                         <Input
                           placeholder="Tulis balasan..."
                           value={selectedLaporan === item.id ? balasanForm : ''}
@@ -1331,13 +1377,14 @@ export default function AdminPage() {
                             setSelectedLaporan(item.id)
                             setBalasanForm(e.target.value)
                           }}
+                          className="text-sm"
                         />
-                        <button 
+                        <button
                           onClick={() => handleBalasLaporan(item.id)}
                           disabled={!balasanForm.trim()}
                           className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <Send size={18} />
+                          <Send size={14} />
                         </button>
                       </div>
                     </CardContent>

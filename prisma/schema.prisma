@@ -175,6 +175,7 @@ enum StatusLayanan {
 }
 
 enum JenisLayanan {
+  KTP_EL
   KTP_BARU
   KTP_HILANG
   KTP_RUSAK
@@ -188,11 +189,20 @@ enum JenisLayanan {
   KK_BARU
   KK_PERUBAHAN
   KK_HILANG
+  IMB
+  SIUP
+  SKDU
 }
 
 enum JenisKelamin {
   LAKI_LAKI
   PEREMPUAN
+}
+
+// Untuk backward compatibility
+enum JenisKelaminAlias {
+  L
+  P
 }
 
 enum TipeNotif {
