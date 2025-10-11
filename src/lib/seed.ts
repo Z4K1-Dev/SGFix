@@ -297,35 +297,35 @@ export async function seedData() {
           {
             judul: 'Laporan Baru',
             pesan: 'Ada laporan baru tentang jalan berlubang di Jl. Merdeka yang perlu ditindaklanjuti.',
-            tipe: 'info',
+            tipe: 'LAPORAN_BARU',
             untukAdmin: true,
             dibaca: false
           },
           {
             judul: 'Pengajuan Layanan',
             pesan: 'Pengguna baru mengajukan layanan pembuatan KTP hilang.',
-            tipe: 'info',
+            tipe: 'LAYANAN_BARU',
             untukAdmin: true,
             dibaca: false
           },
           {
             judul: 'Sistem Maintenance',
             pesan: 'Sistem akan melakukan maintenance pada hari Sabtu pukul 23:00 - 01:00 WIB.',
-            tipe: 'warning',
+            tipe: 'LAPORAN_UPDATE',
             untukAdmin: true,
             dibaca: true
           },
           {
             judul: 'Laporan Selesai',
             pesan: 'Laporan tentang lampu jalan mati sudah selesai ditangani.',
-            tipe: 'success',
+            tipe: 'LAPORAN_UPDATE',
             untukAdmin: false,
             dibaca: false
           },
           {
             judul: 'Status Layanan Diubah',
             pesan: 'Status pengajuan layanan Anda telah berubah menjadi "Diproses".',
-            tipe: 'info',
+            tipe: 'LAYANAN_UPDATE',
             untukAdmin: false,
             dibaca: false
           }

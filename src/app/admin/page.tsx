@@ -627,7 +627,6 @@ export default function AdminPage() {
             {settingsOpen && sidebarOpen && (
               <div className="ml-6 space-y-2">
                 <Button variant="ghost" size="default" className="w-full justify-start h-10 active:shadow-none active:scale-[0.98] transition-all duration-200">
-                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
                   <Image className="text-sidebar-foreground mr-2" size={28} />
                   <span className="text-sidebar-foreground">Image</span>
                 </Button>

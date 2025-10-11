@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { JenisLayanan, StatusLayanan } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       where: {
         nik,
         status: {
-          in: [StatusLayanan.BARU, StatusLayanan.DITAMPUNG, StatusLayanan.DITERUSKAN, StatusLayanan.DIKERJAKAN]
+          in: [StatusLayanan.BARU, StatusLayanan.DITAMPAH, StatusLayanan.DIPROSES, StatusLayanan.DIKERJAKAN]
         }
       }
     })
