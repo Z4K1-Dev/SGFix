@@ -362,6 +362,26 @@ export default function AdminPage() {
     }
   }
 
+  const handleMarkAsRead = async (notifId: string) => {
+    try {
+      // Update local state immediately for better UX
+      setNotifikasi(prev =>
+        prev.map(notif =>
+          notif.id === notifId ? { ...notif, dibaca: true } : notif
+        )
+      )
+      
+      // In a real app, you would call an API here
+      // const response = await fetch(`/api/notifikasi/${notifId}/read`, {
+      //   method: 'PUT'
+      // })
+      
+      toast.success('Notifikasi ditandai sebagai dibaca')
+    } catch (error) {
+      toast.error('Gagal menandai notifikasi')
+    }
+  }
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       BARU: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800',
@@ -1270,8 +1290,8 @@ export default function AdminPage() {
                   <Card key={item.id} className="cursor-pointer">
                     <CardContent className="p-4">
                       {/* Foto Laporan */}
-                      {item.foto && (
-                        <div className="w-full h-48 bg-muted rounded-lg mb-4 overflow-hidden">
+                      <div className="w-full h-48 bg-muted rounded-lg mb-4 overflow-hidden relative">
+                        {item.foto ? (
                           <img
                             src={item.foto}
                             alt={item.judul}
@@ -1280,8 +1300,15 @@ export default function AdminPage() {
                               e.currentTarget.src = '/placeholder-image.png'
                             }}
                           />
-                        </div>
-                      )}
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <div className="text-center">
+                              <Image size={48} className="mx-auto text-muted-foreground mb-2" />
+                              <p className="text-muted-foreground text-sm">No Image</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1 text-left">
@@ -1595,30 +1622,21 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {notifikasi.map((item) => (
                   <Card key={item.id} className={`${item.dibaca ? "opacity-60" : ""} cursor-pointer`}>
                     <CardContent className="p-6">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold">{item.judul}</h3>
-                          <p className="text-muted-foreground mt-2">{item.pesan}</p>
-                          <div className="flex items-center gap-2 mt-4">
-                            <Badge variant={item.tipe === 'info' ? 'default' : item.tipe === 'warning' ? 'destructive' : 'secondary'}>
-                              {item.tipe}
-                            </Badge>
-                            <Badge variant={item.untukAdmin ? "default" : "secondary"}>
-                              {item.untukAdmin ? "Admin" : "User"}
-                            </Badge>
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(item.createdAt).toLocaleDateString('id-ID')}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-lg font-semibold line-clamp-2">{item.judul}</h3>
+                        <div className="flex gap-1">
                           {!item.dibaca && (
-                            <Button variant="outline" size="sm">
-                              Tandai dibaca
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMarkAsRead(item.id)}
+                              className="h-8 px-2 text-xs"
+                            >
+                              Baca
                             </Button>
                           )}
                           <button
@@ -1626,10 +1644,25 @@ export default function AdminPage() {
                               // Delete functionality here
                             }}
                             className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                            title="Hapus"
                           >
-                            <Trash2 size={20} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
+                      </div>
+                      <p className="text-muted-foreground text-sm mb-4 line-clamp-3">{item.pesan}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={item.tipe.includes('BARU') ? 'default' : item.tipe.includes('UPDATE') ? 'secondary' : 'outline'} className="text-xs">
+                            {item.tipe.replace('_', ' ')}
+                          </Badge>
+                          <Badge variant={item.untukAdmin ? "default" : "secondary"} className="text-xs">
+                            {item.untukAdmin ? "Admin" : "User"}
+                          </Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(item.createdAt).toLocaleDateString('id-ID')}
+                        </span>
                       </div>
                     </CardContent>
                   </Card>

@@ -288,6 +288,55 @@ export async function seedData() {
       console.log('Laporan data already exists')
     }
 
+    // Cek apakah sudah ada data notifikasi
+    const existingNotifikasi = await db.notifikasi.findFirst()
+    if (!existingNotifikasi) {
+      // Buat data notifikasi sample
+      await db.notifikasi.createMany({
+        data: [
+          {
+            judul: 'Laporan Baru',
+            pesan: 'Ada laporan baru tentang jalan berlubang di Jl. Merdeka yang perlu ditindaklanjuti.',
+            tipe: 'info',
+            untukAdmin: true,
+            dibaca: false
+          },
+          {
+            judul: 'Pengajuan Layanan',
+            pesan: 'Pengguna baru mengajukan layanan pembuatan KTP hilang.',
+            tipe: 'info',
+            untukAdmin: true,
+            dibaca: false
+          },
+          {
+            judul: 'Sistem Maintenance',
+            pesan: 'Sistem akan melakukan maintenance pada hari Sabtu pukul 23:00 - 01:00 WIB.',
+            tipe: 'warning',
+            untukAdmin: true,
+            dibaca: true
+          },
+          {
+            judul: 'Laporan Selesai',
+            pesan: 'Laporan tentang lampu jalan mati sudah selesai ditangani.',
+            tipe: 'success',
+            untukAdmin: false,
+            dibaca: false
+          },
+          {
+            judul: 'Status Layanan Diubah',
+            pesan: 'Status pengajuan layanan Anda telah berubah menjadi "Diproses".',
+            tipe: 'info',
+            untukAdmin: false,
+            dibaca: false
+          }
+        ]
+      })
+
+      console.log('Notifikasi data seeded successfully')
+    } else {
+      console.log('Notifikasi data already exists')
+    }
+
     console.log('Data seeding completed')
   } catch (error) {
     console.error('Error seeding data:', error)
