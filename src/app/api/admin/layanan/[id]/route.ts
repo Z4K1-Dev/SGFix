@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { StatusLayanan } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   request: NextRequest,
@@ -64,12 +64,11 @@ export async function PUT(
 
     // Validate status transitions
     const validTransitions: Record<StatusLayanan, StatusLayanan[]> = {
-      [StatusLayanan.BARU]: [StatusLayanan.DITAMPUNG, StatusLayanan.DITOLAK],
-      [StatusLayanan.DITAMPUNG]: [StatusLayanan.DITERUSKAN, StatusLayanan.DITOLAK],
-      [StatusLayanan.DITERUSKAN]: [StatusLayanan.DIKERJAKAN, StatusLayanan.DITOLAK],
-      [StatusLayanan.DIKERJAKAN]: [StatusLayanan.SELESAI, StatusLayanan.DITOLAK],
+      [StatusLayanan.DITERIMA]: [StatusLayanan.DIPROSES, StatusLayanan.DITOLAK],
+      [StatusLayanan.DIPROSES]: [StatusLayanan.DIVERIFIKASI, StatusLayanan.DITOLAK],
+      [StatusLayanan.DIVERIFIKASI]: [StatusLayanan.SELESAI, StatusLayanan.DITOLAK],
       [StatusLayanan.SELESAI]: [],
-      [StatusLayanan.DITOLAK]: [StatusLayanan.BARU] // Allow resubmission
+      [StatusLayanan.DITOLAK]: [StatusLayanan.DITERIMA] // Allow resubmission
     }
 
     if (!validTransitions[layanan.status].includes(status as StatusLayanan)) {
@@ -102,20 +101,20 @@ export async function PUT(
     let notifikasiType = ''
 
     switch (status) {
-      case StatusLayanan.DITAMPUNG:
-        notifikasiTitle = `Layanan ${layanan.judul} ditampung`
-        notifikasiMessage = `Pengajuan layanan Anda telah ditampung untuk diproses`
-        notifikasiType = 'LAYANAN_DITAMPUNG'
+      case StatusLayanan.DITERIMA:
+        notifikasiTitle = `Layanan ${layanan.judul} diterima`
+        notifikasiMessage = `Pengajuan layanan Anda telah diterima dan akan diproses`
+        notifikasiType = 'LAYANAN_DITERIMA'
         break
-      case StatusLayanan.DITERUSKAN:
-        notifikasiTitle = `Layanan ${layanan.judul} diteruskan`
-        notifikasiMessage = `Pengajuan layanan Anda telah diteruskan ke unit terkait`
-        notifikasiType = 'LAYANAN_DITERUSKAN'
+      case StatusLayanan.DIPROSES:
+        notifikasiTitle = `Layanan ${layanan.judul} diproses`
+        notifikasiMessage = `Pengajuan layanan Anda sedang dalam proses`
+        notifikasiType = 'LAYANAN_DIPROSES'
         break
-      case StatusLayanan.DIKERJAKAN:
-        notifikasiTitle = `Layanan ${layanan.judul} sedang dikerjakan`
-        notifikasiMessage = `Pengajuan layanan Anda sedang diproses`
-        notifikasiType = 'LAYANAN_DIKERJAKAN'
+      case StatusLayanan.DIVERIFIKASI:
+        notifikasiTitle = `Layanan ${layanan.judul} diverifikasi`
+        notifikasiMessage = `Pengajuan layanan Anda sedang diverifikasi`
+        notifikasiType = 'LAYANAN_DIVERIFIKASI'
         break
       case StatusLayanan.SELESAI:
         notifikasiTitle = `Layanan ${layanan.judul} selesai`

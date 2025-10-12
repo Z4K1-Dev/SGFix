@@ -1,31 +1,29 @@
 'use client'
 
-import React from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { StatusTrackerSkeleton } from '@/components/loading-skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { StatusTrackerSkeleton } from '@/components/loading-skeleton'
-import { 
-  CheckCircle2, 
-  Clock, 
-  XCircle, 
-  AlertCircle, 
-  FileText,
-  Calendar,
-  User,
-  MessageSquare,
-  Download,
-  Eye
-} from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Download,
+  Eye,
+  FileText,
+  MessageSquare,
+  XCircle
+} from 'lucide-react'
+import React from 'react'
 
 // Types
 interface StatusLayanan {
   id: string
   judul: string
   jenisLayanan: string
-  status: 'BARU' | 'DITAMPUNG' | 'DIVERIFIKASI' | 'DISETUJUI' | 'SELESAI' | 'DITOLAK'
+  status: 'DITERIMA' | 'DIPROSES' | 'DIVERIFIKASI' | 'SELESAI' | 'DITOLAK'
   createdAt: string
   updatedAt: string
   catatan?: string
@@ -41,29 +39,23 @@ interface StatusTrackerProps {
 }
 
 const statusConfig = {
-  BARU: {
-    label: 'Pengajuan Baru',
-    color: 'bg-gray-100 text-gray-800 border-gray-200',
-    icon: <Clock className="h-4 w-4" />,
-    description: 'Pengajuan telah diterima dan menunggu proses awal'
-  },
-  DITAMPUNG: {
-    label: 'Ditampung',
+  DITERIMA: {
+    label: 'Diterima',
     color: 'bg-blue-100 text-blue-800 border-blue-200',
-    icon: <AlertCircle className="h-4 w-4" />,
-    description: 'Pengajuan sedang dalam proses verifikasi'
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    description: 'Pengajuan telah diterima dan akan diproses'
+  },
+  DIPROSES: {
+    label: 'Diproses',
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    icon: <Clock className="h-4 w-4" />,
+    description: 'Pengajuan sedang dalam proses'
   },
   DIVERIFIKASI: {
     label: 'Diverifikasi',
-    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    color: 'bg-orange-100 text-orange-800 border-orange-200',
     icon: <Eye className="h-4 w-4" />,
     description: 'Data sedang diverifikasi oleh petugas'
-  },
-  DISETUJUI: {
-    label: 'Disetujui',
-    color: 'bg-green-100 text-green-800 border-green-200',
-    icon: <CheckCircle2 className="h-4 w-4" />,
-    description: 'Pengajuan telah disetujui'
   },
   SELESAI: {
     label: 'Selesai',
@@ -80,10 +72,9 @@ const statusConfig = {
 }
 
 const timelineSteps = [
-  { key: 'BARU', label: 'Pengajuan Diterima' },
-  { key: 'DITAMPUNG', label: 'Sedang Ditampung' },
+  { key: 'DITERIMA', label: 'Pengajuan Diterima' },
+  { key: 'DIPROSES', label: 'Sedang Diproses' },
   { key: 'DIVERIFIKASI', label: 'Verifikasi' },
-  { key: 'DISETUJUI', label: 'Disetujui' },
   { key: 'SELESAI', label: 'Selesai' }
 ]
 

@@ -1,33 +1,30 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { LayananSkeleton } from '@/components/loading-skeleton'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { LayananSkeleton } from '@/components/loading-skeleton'
-import { 
-  Search, 
-  Filter, 
-  Plus, 
-  Eye, 
-  MessageSquare,
-  Calendar,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  MoreHorizontal
-} from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Eye,
+  MessageSquare,
+  Plus,
+  Search,
+  XCircle
+} from 'lucide-react'
+import { useState } from 'react'
 
 // Types
 interface LayananItem {
   id: string
   judul: string
   jenisLayanan: string
-  status: 'BARU' | 'DITAMPUNG' | 'DIVERIFIKASI' | 'DISETUJUI' | 'SELESAI' | 'DITOLAK'
+  status: 'DITERIMA' | 'DIPROSES' | 'DIVERIFIKASI' | 'SELESAI' | 'DITOLAK'
   createdAt: string
   updatedAt: string
   estimasiSelesai?: string
@@ -46,25 +43,20 @@ interface LayananListProps {
 }
 
 const statusConfig = {
-  BARU: {
-    label: 'Baru',
-    color: 'bg-gray-100 text-gray-800 border-gray-200',
-    icon: <Clock className="h-3 w-3" />
-  },
-  DITAMPUNG: {
-    label: 'Ditampung',
+  DITERIMA: {
+    label: 'Diterima',
     color: 'bg-blue-100 text-blue-800 border-blue-200',
-    icon: <AlertCircle className="h-3 w-3" />
+    icon: <CheckCircle2 className="h-3 w-3" />
+  },
+  DIPROSES: {
+    label: 'Diproses',
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    icon: <Clock className="h-3 w-3" />
   },
   DIVERIFIKASI: {
     label: 'Diverifikasi',
-    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    color: 'bg-orange-100 text-orange-800 border-orange-200',
     icon: <Eye className="h-3 w-3" />
-  },
-  DISETUJUI: {
-    label: 'Disetujui',
-    color: 'bg-green-100 text-green-800 border-green-200',
-    icon: <CheckCircle2 className="h-3 w-3" />
   },
   SELESAI: {
     label: 'Selesai',
@@ -152,12 +144,11 @@ export function LayananList({
 
   const getStatusPriority = (status: string) => {
     const priorities: Record<string, number> = {
-      'BARU': 1,
-      'DITAMPUNG': 2,
+      'DITERIMA': 1,
+      'DIPROSES': 2,
       'DIVERIFIKASI': 3,
-      'DISETUJUI': 4,
-      'SELESAI': 5,
-      'DITOLAK': 6
+      'SELESAI': 4,
+      'DITOLAK': 5
     }
     return priorities[status] || 999
   }
@@ -210,10 +201,9 @@ export function LayananList({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="SEMUA">Semua Status</SelectItem>
-              <SelectItem value="BARU">Baru</SelectItem>
-              <SelectItem value="DITAMPUNG">Ditampung</SelectItem>
+              <SelectItem value="DITERIMA">Diterima</SelectItem>
+              <SelectItem value="DIPROSES">Diproses</SelectItem>
               <SelectItem value="DIVERIFIKASI">Diverifikasi</SelectItem>
-              <SelectItem value="DISETUJUI">Disetujui</SelectItem>
               <SelectItem value="SELESAI">Selesai</SelectItem>
               <SelectItem value="DITOLAK">Ditolak</SelectItem>
             </SelectContent>

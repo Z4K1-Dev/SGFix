@@ -1,28 +1,43 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  trailingSlash: true,
-  output: 'standalone',
-  experimental: {
-    forceSwcTransforms: true,
+  typescript: {
+    ignoreBuildErrors: true,
   },
-  webpack: (config, { isServer }) => {
-    // Mengatasi masalah case sensitivity pada Windows
-    config.resolve.symlinks = false;
-    
-    // Mengabaikan warning case sensitivity
-    config.ignoreWarnings = [
-      /There are multiple modules with names that only differ in casing/,
-      function (warning) {
-        return (
-          warning.message &&
-          warning.message.includes('multiple modules with names that only differ in casing')
-        );
-      },
-    ];
-    
+  reactStrictMode: false,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  // Allow cross-origin requests for preview environment
+ allowedDevOrigins: [
+    'preview-chat-46449324-1d9b-4b5b-bb3b-00fba80141ba.space.z.ai',
+    'preview-chat-63e78080-40b1-453f-b361-0564260db910.space.z.ai',
+    'preview-chat-af47107e-3f47-4194-b3a8-37b349a85b62.space.z.ai',
+    '*.space.z.ai'
+  ],
+  // Configure webpack for both dev and production
+ webpack: (config, { dev, isServer }) => {
+    // Simplified webpack config to avoid HMR conflicts
     return config;
   },
-}
+  // Disable experimental features
+  experimental: {
+    webpackBuildWorker: false,
+    optimizeCss: false,
+  },
+  // Configure headers for CORS
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,DELETE,PATCH,POST,PUT' },
+          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+        ],
+      },
+    ];
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

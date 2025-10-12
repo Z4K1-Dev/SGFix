@@ -1504,10 +1504,9 @@ export default function AdminPage() {
                                     <SelectValue placeholder="Pilih status" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="BARU">Baru</SelectItem>
-                                    <SelectItem value="DITAMPUNG">Ditampung</SelectItem>
+                                    <SelectItem value="DITERIMA">Diterima</SelectItem>
+                                    <SelectItem value="DIPROSES">Diproses</SelectItem>
                                     <SelectItem value="DIVERIFIKASI">Diverifikasi</SelectItem>
-                                    <SelectItem value="DISETUJUI">Disetujui</SelectItem>
                                     <SelectItem value="SELESAI">Selesai</SelectItem>
                                     <SelectItem value="DITOLAK">Ditolak</SelectItem>
                                   </SelectContent>

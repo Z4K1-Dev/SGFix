@@ -126,7 +126,7 @@ model Layanan {
   kodePos        String?
   telepon        String?
   email          String?
-  status         StatusLayanan  @default(BARU)
+  status         StatusLayanan  @default(DITERIMA)
   dokumen        String?        // JSON string untuk multiple documents
   formData        String?        // JSON string untuk multi-step form data
   keterangan     String?
@@ -166,10 +166,9 @@ enum Status {
 }
 
 enum StatusLayanan {
-  BARU
+  DITERIMA
   DIPROSES
-  DITAMPAH
-  DIKERJAKAN
+  DIVERIFIKASI
   SELESAI
   DITOLAK
 }

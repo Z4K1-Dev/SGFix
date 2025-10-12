@@ -1,22 +1,22 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  Camera, 
-  MapPin, 
-  FileText, 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Progress } from '@/components/ui/progress'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Camera,
   CheckCircle,
-  Upload,
-  AlertCircle
+  FileText,
+  MapPin,
+  Upload
 } from 'lucide-react'
+import { useCallback, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 interface LaporanData {
@@ -223,9 +223,9 @@ export default function BuatLaporanPage() {
               <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                 {formData.foto ? (
                   <div className="space-y-4">
-                    <img 
-                      src={formData.foto} 
-                      alt="Preview" 
+                    <img
+                      src={formData.foto?.startsWith('http') || formData.foto?.startsWith('/') ? formData.foto : `/${formData.foto}`}
+                      alt="Preview"
                       className="max-w-full h-48 mx-auto object-cover rounded-lg"
                     />
                     <Button
@@ -334,9 +334,9 @@ export default function BuatLaporanPage() {
                 {formData.foto && (
                   <div>
                     <h4 className="font-medium mb-2">Foto:</h4>
-                    <img 
-                      src={formData.foto} 
-                      alt="Foto laporan" 
+                    <img
+                      src={formData.foto?.startsWith('http') || formData.foto?.startsWith('/') ? formData.foto : `/${formData.foto}`}
+                      alt="Foto laporan"
                       className="max-w-full h-48 object-cover rounded-lg"
                     />
                   </div>

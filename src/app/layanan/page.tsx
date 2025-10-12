@@ -1,20 +1,19 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { JenisLayananSelector, LayananList, MultiStepForm, StatusTracker } from '@/components/layanan'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LayananList, JenisLayananSelector, MultiStepForm, StatusTracker } from '@/components/layanan'
 import { useToast } from '@/hooks/use-toast'
+import { ArrowLeft, FileText, History, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { Plus, ArrowLeft, History, FileText } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 interface LayananItem {
   id: string
   judul: string
   jenisLayanan: string
-  status: 'BARU' | 'DITAMPUNG' | 'DIVERIFIKASI' | 'DISETUJUI' | 'SELESAI' | 'DITOLAK'
+  status: 'DITERIMA' | 'DIPROSES' | 'DIVERIFIKASI' | 'SELESAI' | 'DITOLAK'
   createdAt: string
   updatedAt: string
   estimasiSelesai?: string

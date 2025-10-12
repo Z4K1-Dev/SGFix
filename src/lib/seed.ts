@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { JenisLayanan, StatusLayanan, Status } from '@prisma/client'
+import { JenisLayanan, Status, StatusLayanan } from '@prisma/client'
 
 /**
  * Seed data default untuk aplikasi
@@ -65,7 +65,7 @@ export async function seedData() {
           {
             judul: 'Pengajuan KTP Hilang',
             jenisLayanan: JenisLayanan.KTP_HILANG,
-            status: StatusLayanan.BARU,
+            status: StatusLayanan.DITERIMA,
             namaLengkap: 'Ahmad Rizki',
             nik: '3201011234560001',
             tempatLahir: 'Jakarta',
@@ -109,7 +109,7 @@ export async function seedData() {
           {
             judul: 'Pengajuan IMB',
             jenisLayanan: JenisLayanan.SURAT_KETERANGAN,
-            status: StatusLayanan.DITAMPAH,
+            status: StatusLayanan.DITOLAK,
             namaLengkap: 'Budi Santoso',
             nik: '3201011234560003',
             tempatLahir: 'Surabaya',
@@ -131,7 +131,7 @@ export async function seedData() {
           {
             judul: 'Pengajuan KK Baru',
             jenisLayanan: JenisLayanan.KK_BARU,
-            status: StatusLayanan.DIKERJAKAN,
+            status: StatusLayanan.DIVERIFIKASI,
             namaLengkap: 'Dewi Lestari',
             nik: '3201011234560004',
             tempatLahir: 'Yogyakarta',
@@ -189,8 +189,8 @@ export async function seedData() {
             }
           })
           
-          // Balasan dari user (jika status bukan BARU)
-          if (layanan.status !== StatusLayanan.BARU) {
+          // Balasan dari user (jika status bukan DITERIMA)
+          if (layanan.status !== StatusLayanan.DITERIMA) {
             await db.balasanLayanan.create({
               data: {
                 layananId: layanan.id,

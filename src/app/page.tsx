@@ -1,42 +1,32 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Image from 'next/image'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent } from '@/components/ui/tabs'
-import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
 import DocTabs from '@/components/doctabs'
-import { BeritaSkeleton, LaporanSkeleton, StatsCardSkeleton, SliderSkeleton } from '@/components/loading-skeleton'
+import { BeritaSkeleton, LaporanSkeleton, SliderSkeleton, StatsCardSkeleton } from '@/components/loading-skeleton'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { 
-  Home,
-  FileText,
-  Users, 
-  Settings, 
-  Bell, 
-  MapPin, 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { useSocket } from '@/hooks/useSocket'
+import {
+  AlertCircle,
+  BarChart3,
+  Bell,
   Camera,
   CheckCircle,
+  ChevronRight,
   Clock,
-  AlertCircle,
-  TrendingUp,
+  FileText,
+  Home,
+  MapPin,
   MessageSquare,
-  BarChart3,
-  Wifi,
-  WifiOff,
-  Cog,
-  Phone,
-  Mail,
-  Calendar,
   Search,
-  Plus,
-  ChevronRight
+  Wifi,
+  WifiOff
 } from 'lucide-react'
+import Image from 'next/image'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { useSocket } from '@/hooks/useSocket'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -653,7 +643,7 @@ export default function HomePage() {
                         {item.foto && (
                           <div className="w-full h-32 bg-muted rounded-xl mb-3 overflow-hidden">
                           <Image
-                            src={item.foto}
+                            src={item.foto?.startsWith('http') || item.foto?.startsWith('/') ? item.foto : `/${item.foto}`}
                             alt={item.judul}
                             fill
                             className="object-cover"

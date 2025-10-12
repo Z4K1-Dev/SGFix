@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       where: {
         nik,
         status: {
-          in: [StatusLayanan.BARU, StatusLayanan.DITAMPAH, StatusLayanan.DIPROSES, StatusLayanan.DIKERJAKAN]
+          in: [StatusLayanan.DITERIMA, StatusLayanan.DITOLAK, StatusLayanan.DIPROSES, StatusLayanan.DIVERIFIKASI]
         }
       }
     })
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
       data: {
         judul,
         jenisLayanan: jenisLayanan as JenisLayanan,
-        status: StatusLayanan.BARU,
+        status: StatusLayanan.DITERIMA,
         namaLengkap,
         nik,
         tempatLahir,

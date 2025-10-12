@@ -1,24 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { LaporanDetailSkeleton } from '@/components/loading-skeleton'
-import { 
-  ArrowLeft, 
-  MapPin, 
-  Calendar, 
-  Clock, 
-  Camera,
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import {
   AlertCircle,
+  ArrowLeft,
+  Calendar,
   CheckCircle,
-  MessageSquare,
-  Share2,
-  Download
+  Clock,
+  MapPin,
+  MessageSquare
 } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 interface Balasan {
@@ -228,7 +224,7 @@ export default function LaporanDetailPage() {
                 <h3 className="text-lg font-semibold">Foto</h3>
                 <div className="rounded-lg overflow-hidden">
                   <img
-                    src={laporan.foto}
+                    src={laporan.foto?.startsWith('http') || laporan.foto?.startsWith('/') ? laporan.foto : `/${laporan.foto}`}
                     alt={laporan.judul}
                     className="w-full h-auto max-h-96 object-cover"
                     onError={(e) => {
@@ -238,7 +234,7 @@ export default function LaporanDetailPage() {
                         <div class="w-full h-64 bg-gray-100 flex items-center justify-center rounded-lg">
                           <div class="text-center">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-gray-400 mb-2">
-                              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                               <circle cx="12" cy="13" r="4"></circle>
                             </svg>
                             <p class="text-gray-500">Gambar tidak tersedia</p>
