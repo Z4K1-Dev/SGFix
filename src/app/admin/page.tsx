@@ -2,7 +2,8 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartAreaInteractive } from '@/components/ui/chart-area-interactive'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -42,7 +43,7 @@ import {
   X
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { toast } from 'sonner'
 
 // Force dynamic rendering
@@ -781,123 +782,8 @@ export default function AdminPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 lg:px-6">
                     {/* Visitor Analytics Chart */}
                     <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
-                      <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
-                        <CardTitle className="leading-none font-semibold">Total Visitors</CardTitle>
-                        <CardDescription className="text-muted-foreground text-sm">
-                          <span className="hidden @[540px]/card:block">Total for the last 3 months</span>
-                          <span className="@[540px]/card:hidden">Last 3 months</span>
-                        </CardDescription>
-                        <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
-                          {/* Toggle Group for Desktop */}
-                          <div className="hidden @[767px]/card:flex items-center rounded-md border shadow-xs" role="group">
-                            <button
-                              type="button"
-                              onClick={() => setChartPeriod('3months')}
-                              className={`inline-flex items-center justify-center gap-2 text-sm font-medium h-9 px-4 min-w-0 flex-1 shrink-0 rounded-none shadow-none first:rounded-l-md last:rounded-r-md border-l-0 first:border-l transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring ${
-                                chartPeriod === '3months' 
-                                  ? 'bg-accent text-accent-foreground' 
-                                  : 'bg-transparent border-input text-foreground'
-                              }`}
-                            >
-                              Last 3 months
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setChartPeriod('30days')}
-                              className={`inline-flex items-center justify-center gap-2 text-sm font-medium h-9 px-4 min-w-0 flex-1 shrink-0 rounded-none shadow-none first:rounded-l-md last:rounded-r-md border-l-0 first:border-l transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring ${
-                                chartPeriod === '30days' 
-                                  ? 'bg-accent text-accent-foreground' 
-                                  : 'bg-transparent border-input text-foreground'
-                              }`}
-                            >
-                              Last 30 days
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setChartPeriod('7days')}
-                              className={`inline-flex items-center justify-center gap-2 text-sm font-medium h-9 px-4 min-w-0 flex-1 shrink-0 rounded-none shadow-none first:rounded-l-md last:rounded-r-md border-l-0 first:border-l transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring ${
-                                chartPeriod === '7days' 
-                                  ? 'bg-accent text-accent-foreground' 
-                                  : 'bg-transparent border-input text-foreground'
-                              }`}
-                            >
-                              Last 7 days
-                            </button>
-                          </div>
-                          
-                          {/* Select for Mobile */}
-                          <Select value={chartPeriod} onValueChange={setChartPeriod}>
-                            <SelectTrigger className="w-40 @[767px]/card:hidden border-input bg-transparent px-3 py-2 text-sm h-8 flex items-center justify-between gap-2 rounded-md border shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="3months">Last 3 months</SelectItem>
-                              <SelectItem value="30days">Last 30 days</SelectItem>
-                              <SelectItem value="7days">Last 7 days</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-                        <div 
-                          data-chart="visitors-chart"
-                          className="[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border flex justify-center text-xs [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden aspect-auto h-[250px] w-full"
-                          style={{
-                            '--color-desktop': 'var(--primary)',
-                            '--color-mobile': 'var(--chart-2)'
-                          } as React.CSSProperties}
-                        >
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={memoizedChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                              <defs>
-                                <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="var(--color-desktop)" stopOpacity={1}/>
-                                  <stop offset="95%" stopColor="var(--color-desktop)" stopOpacity={0.1}/>
-                                </linearGradient>
-                                <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="var(--color-mobile)" stopOpacity={0.8}/>
-                                  <stop offset="95%" stopColor="var(--color-mobile)" stopOpacity={0.1}/>
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                              <XAxis 
-                                dataKey="date" 
-                                tick={{ fontSize: 12 }}
-                                className="text-muted-foreground"
-                              />
-                              <YAxis 
-                                tick={{ fontSize: 12 }}
-                                className="text-muted-foreground"
-                              />
-                              <Tooltip 
-                                contentStyle={{ 
-                                  backgroundColor: 'hsl(var(--card))',
-                                  border: '1px solid hsl(var(--border))',
-                                  borderRadius: '8px'
-                                }}
-                                labelStyle={{ color: 'hsl(var(--foreground))' }}
-                              />
-                              <Area 
-                                type="monotone" 
-                                dataKey="pengunjung" 
-                                stroke="var(--color-desktop)" 
-                                strokeWidth={2}
-                                fillOpacity={0.6}
-                                fill="url(#fillDesktop)"
-                                name="Desktop"
-                              />
-                              <Area 
-                                type="monotone" 
-                                dataKey="berita" 
-                                stroke="var(--color-mobile)" 
-                                strokeWidth={2}
-                                fillOpacity={0.6}
-                                fill="url(#fillMobile)"
-                                name="Mobile"
-                              />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </div>
+                      <CardContent className="px-6 pt-6">
+                        <ChartAreaInteractive />
                       </CardContent>
                     </Card>
 
