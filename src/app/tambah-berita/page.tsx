@@ -1,16 +1,41 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Save, Eye, FileText, Image, Calendar, User } from 'lucide-react'
-import { toast } from 'sonner'
-import { MDXEditor, headingsPlugin, listsPlugin, quotePlugin, thematicBreakPlugin, markdownShortcutPlugin } from '@mdxeditor/editor'
+import {
+  BlockTypeSelect,
+  BoldItalicUnderlineToggles,
+  codeBlockPlugin,
+  codeMirrorPlugin,
+  CodeToggle,
+  CreateLink,
+  diffSourcePlugin,
+  DiffSourceToggleWrapper,
+  headingsPlugin,
+  imagePlugin,
+  InsertCodeBlock,
+  InsertImage,
+  InsertTable,
+  InsertThematicBreak,
+  linkDialogPlugin,
+  listsPlugin,
+  ListsToggle,
+  markdownShortcutPlugin,
+  MDXEditor,
+  quotePlugin,
+  Separator,
+  tablePlugin,
+  thematicBreakPlugin,
+  toolbarPlugin,
+  UndoRedo
+} from '@mdxeditor/editor'
 import '@mdxeditor/editor/style.css'
+import { ArrowLeft, Calendar, Eye, FileText, Save } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 interface Kategori {
   id: string
@@ -220,8 +245,8 @@ export default function TambahBeritaPage() {
                       alt="Preview" 
                       className="w-full h-48 object-cover rounded-lg border border-border"
                       onError={(e) => {
-                        e.currentTarget.src = ''
-                        e.currentTarget.style.display = 'none'
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
                       }}
                     />
                   </div>
@@ -248,11 +273,38 @@ export default function TambahBeritaPage() {
                     markdown={formData.isi}
                     onChange={(value) => setFormData({ ...formData, isi: value })}
                     plugins={[
+                      toolbarPlugin({
+                        toolbarContents: () => (
+                          <DiffSourceToggleWrapper>
+                            <UndoRedo />
+                            <Separator />
+                            <BoldItalicUnderlineToggles />
+                            <CodeToggle />
+                            <Separator />
+                            <CreateLink />
+                            <InsertImage />
+                            <Separator />
+                            <InsertTable />
+                            <InsertThematicBreak />
+                            <InsertCodeBlock />
+                            <Separator />
+                            <BlockTypeSelect />
+                            <ListsToggle />
+                            <Separator />
+                          </DiffSourceToggleWrapper>
+                        )
+                      }),
                       headingsPlugin(),
                       listsPlugin(),
                       quotePlugin(),
                       thematicBreakPlugin(),
-                      markdownShortcutPlugin()
+                      markdownShortcutPlugin(),
+                      codeBlockPlugin(),
+                      codeMirrorPlugin(),
+                      tablePlugin(),
+                      imagePlugin(),
+                      linkDialogPlugin(),
+                      diffSourcePlugin()
                     ]}
                     contentEditableClassName="prose prose-sm max-w-none focus:outline-none min-h-[400px] p-4"
                   />

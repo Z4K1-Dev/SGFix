@@ -9,9 +9,6 @@ const nextConfig = {
   },
   // Allow cross-origin requests for preview environment
  allowedDevOrigins: [
-    'preview-chat-46449324-1d9b-4b5b-bb3b-00fba80141ba.space.z.ai',
-    'preview-chat-63e78080-40b1-453f-b361-0564260db910.space.z.ai',
-    'preview-chat-af47107e-3f47-4194-b3a8-37b349a85b62.space.z.ai',
     '*.space.z.ai'
   ],
   // Configure webpack for both dev and production
