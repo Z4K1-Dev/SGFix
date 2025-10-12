@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ChartPieLayanan } from '@/components/ui/pie-chart-layanan'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
@@ -866,71 +867,8 @@ export default function AdminPage() {
                       </CardContent>
                     </Card>
 
-                    {/* Layanan Status Chart */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
-                      <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
-                        <div>
-                          <CardTitle className="leading-none font-semibold">Statistik Layanan</CardTitle>
-                          <div className="text-muted-foreground text-sm">
-                            <span className="hidden @[540px]/card:block">Distribusi status layanan masuk</span>
-                            <span className="@[540px]/card:hidden">Status layanan</span>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-                        <div
-                          className="h-[250px] w-full"
-                          style={{
-                            '--color-diterima': 'var(--chart-1)',
-                            '--color-diproses': 'var(--chart-2)',
-                            '--color-diverifikasi': 'var(--chart-3)',
-                            '--color-selesai': 'var(--chart-4)',
-                            '--color-ditolak': 'var(--chart-5)'
-                          } as React.CSSProperties}
-                        >
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                              data={layananStatusData}
-                              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                            >
-                              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                              <XAxis
-                                dataKey="name"
-                                tick={{ fontSize: 11 }}
-                                className="text-muted-foreground"
-                              />
-                              <YAxis
-                                tick={{ fontSize: 12 }}
-                                className="text-muted-foreground"
-                              />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: 'hsl(var(--card))',
-                                  border: '1px solid hsl(var(--border))',
-                                  borderRadius: '8px'
-                                }}
-                                labelStyle={{ color: 'hsl(var(--foreground))' }}
-                              />
-                              <Bar
-                                dataKey="value"
-                                radius={[4, 4, 0, 0]}
-                                name="Status"
-                              >
-                                {layananStatusData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                                ))}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-                        <div className="flex justify-center mt-4 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--muted-foreground))' }}></div>
-                            <span>Total: {layanan.length || 27} layanan</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    {/* Layanan Status Chart - Pie Chart */}
+                    <ChartPieLayanan />
                   </div>
 
                   {/* Recent Activity Table */}
