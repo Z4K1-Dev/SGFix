@@ -69,13 +69,13 @@ export default function LaporanDetailPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      BARU: 'bg-blue-100 text-blue-800 border-blue-200',
-      DITAMPUNG: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      DITERUSKAN: 'bg-orange-100 text-orange-800 border-orange-200',
-      DIKERJAKAN: 'bg-purple-100 text-purple-800 border-purple-200',
-      SELESAI: 'bg-green-100 text-green-800 border-green-200',
+      BARU: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+      DITAMPUNG: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
+      DITERUSKAN: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800',
+      DIKERJAKAN: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800',
+      SELESAI: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
     }
-    return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200'
+    return colors[status] || 'bg-muted text-muted-foreground border-border'
   }
 
   const getStatusIcon = (status: string) => {
@@ -146,13 +146,13 @@ export default function LaporanDetailPage() {
 
   if (error || !laporan) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-[412px] mx-auto px-4">
+      <div className="min-h-screen bg-background py-8">
+        <div className="max-w-md mx-auto px-4">
           <Card>
             <CardContent className="text-center py-12">
-              <AlertCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
+              <AlertCircle className="w-16 h-16 mx-auto text-destructive mb-4" />
               <h2 className="text-xl font-semibold mb-2">Laporan Tidak Ditemukan</h2>
-              <p className="text-gray-600 mb-4">{error || 'Laporan tidak ditemukan'}</p>
+              <p className="text-muted-foreground mb-4">{error || 'Laporan tidak ditemukan'}</p>
               <Button onClick={() => router.push('/')}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Kembali ke Beranda
@@ -165,8 +165,8 @@ export default function LaporanDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-[412px] mx-auto px-4">
+    <div className="min-h-screen bg-background py-8">
+      <div className="max-w-md mx-auto px-4">
         {/* Header */}
         <div className="mb-6">
           <Button
@@ -186,7 +186,7 @@ export default function LaporanDetailPage() {
                   {laporan.status}
                 </div>
               </Badge>
-              <h1 className="text-xl font-bold text-gray-900">{laporan.judul}</h1>
+              <h1 className="text-xl font-bold text-foreground">{laporan.judul}</h1>
             </div>
           </div>
         </div>
@@ -197,8 +197,8 @@ export default function LaporanDetailPage() {
             {/* 1. Informasi Laporan */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
                   {new Date(laporan.createdAt).toLocaleDateString('id-ID', {
                     day: 'numeric',
                     month: 'long',
@@ -208,8 +208,8 @@ export default function LaporanDetailPage() {
               </div>
               
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
                   {new Date(laporan.createdAt).toLocaleTimeString('id-ID', {
                     hour: '2-digit',
                     minute: '2-digit'
@@ -230,17 +230,21 @@ export default function LaporanDetailPage() {
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
-                      target.parentElement!.innerHTML = `
-                        <div class="w-full h-64 bg-gray-100 flex items-center justify-center rounded-lg">
-                          <div class="text-center">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-gray-400 mb-2">
-                              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                              <circle cx="12" cy="13" r="4"></circle>
-                            </svg>
-                            <p class="text-gray-500">Gambar tidak tersedia</p>
+                      
+                      // Periksa apakah parentElement ada sebelum mengaksesnya
+                      if (target.parentElement) {
+                        target.parentElement.innerHTML = `
+                          <div class="w-full h-64 bg-muted flex items-center justify-center rounded-lg">
+                            <div class="text-center">
+                              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-muted-foreground mb-2">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                              </svg>
+                              <p class="text-muted-foreground">Gambar tidak tersedia</p>
+                            </div>
                           </div>
-                        </div>
-                      `;
+                        `;
+                      }
                     }}
                   />
                 </div>
@@ -250,7 +254,7 @@ export default function LaporanDetailPage() {
             {/* 3. Keterangan Laporan */}
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Keterangan Laporan</h3>
-              <p className="text-gray-700 whitespace-pre-wrap">{laporan.keterangan}</p>
+              <p className="text-foreground whitespace-pre-wrap">{laporan.keterangan}</p>
             </div>
 
             {/* 4. Lokasi */}
@@ -260,7 +264,7 @@ export default function LaporanDetailPage() {
                   <MapPin className="w-5 h-5" />
                   Lokasi
                 </h3>
-                <div className="text-sm text-gray-600 space-y-2">
+                <div className="text-sm text-muted-foreground space-y-2">
                   <p>Latitude: {laporan.latitude.toFixed(6)}</p>
                   <p>Longitude: {laporan.longitude.toFixed(6)}</p>
                   
@@ -287,17 +291,17 @@ export default function LaporanDetailPage() {
                 {laporan.balasan.map((balasan) => (
                   <Card key={balasan.id} className={`${
                     balasan.dariAdmin
-                      ? 'bg-blue-50 border border-blue-200'
-                      : 'bg-gray-50 border border-gray-200'
+                      ? 'bg-primary/10 border border-primary/20'
+                      : 'bg-muted border-border'
                   }`}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className={`text-sm font-medium ${
-                          balasan.dariAdmin ? 'text-blue-700' : 'text-gray-700'
+                          balasan.dariAdmin ? 'text-primary' : 'text-foreground'
                         }`}>
                           {balasan.dariAdmin ? 'Admin' : 'Anda'}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           {new Date(balasan.createdAt).toLocaleDateString('id-ID', {
                             day: 'numeric',
                             month: 'short',
@@ -307,7 +311,7 @@ export default function LaporanDetailPage() {
                           })}
                         </span>
                       </div>
-                      <p className="text-gray-700">{balasan.isi}</p>
+                      <p className="text-foreground">{balasan.isi}</p>
                     </CardContent>
                   </Card>
                 ))}

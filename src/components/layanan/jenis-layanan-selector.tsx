@@ -145,10 +145,10 @@ const jenisLayananList: JenisLayanan[] = [
 ]
 
 const kategoriColors: Record<string, string> = {
-  'KTP': 'bg-blue-100 text-blue-800 border-blue-200',
-  'Akta': 'bg-green-100 text-green-800 border-green-200',
-  'Surat': 'bg-orange-100 text-orange-800 border-orange-200',
-  'KK': 'bg-purple-100 text-purple-800 border-purple-200'
+  'KTP': 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+  'Akta': 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
+  'Surat': 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800',
+  'KK': 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800'
 }
 
 export function JenisLayananSelector({ onSelect }: JenisLayananSelectorProps) {
@@ -168,46 +168,44 @@ export function JenisLayananSelector({ onSelect }: JenisLayananSelectorProps) {
   const kategoriList = Array.from(new Set(jenisLayananList.map(item => item.kategori)))
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6">
+    <div className="w-full max-w-md mx-auto space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Pilih Jenis Layanan</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-xl font-bold">Pilih Jenis Layanan</h2>
+        <p className="text-sm text-muted-foreground">
           Pilih jenis layanan yang ingin Anda ajukan
         </p>
       </div>
 
       {kategoriList.map(kategori => (
-        <div key={kategori} className="space-y-4">
+        <div key={kategori} className="space-y-3">
           <div className="flex items-center space-x-2">
-            <Badge className={kategoriColors[kategori]}>
+            <Badge className={`${kategoriColors[kategori]} text-xs`}>
               {kategori}
             </Badge>
             <div className="h-px bg-border flex-1" />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-3">
             {jenisLayananList
               .filter(layanan => layanan.kategori === kategori)
               .map(layanan => (
-                <Card 
-                  key={layanan.id} 
-                  className="cursor-pointer hover:shadow-md transition-shadow duration-200 hover:scale-[1.02] transition-transform"
+                <Card
+                  key={layanan.id}
+                  className="cursor-pointer hover:shadow-md transition-all duration-200 active:scale-[0.98]"
                   onClick={() => onSelect(layanan.id)}
                 >
-                  <CardHeader className="pb-3">
+                  <CardContent className="p-4">
                     <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-lg ${layanan.warna} text-white`}>
+                      <div className={`p-2 rounded-lg ${layanan.warna} text-white flex-shrink-0`}>
                         {layanan.icon}
                       </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{layanan.nama}</CardTitle>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base leading-tight">{layanan.nama}</h3>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {layanan.deskripsi}
+                        </p>
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-sm leading-relaxed">
-                      {layanan.deskripsi}
-                    </CardDescription>
                   </CardContent>
                 </Card>
               ))}
@@ -215,12 +213,12 @@ export function JenisLayananSelector({ onSelect }: JenisLayananSelectorProps) {
         </div>
       ))}
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <div className="flex items-start space-x-2">
-          <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-          <div className="text-sm text-blue-800">
+          <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-blue-800 dark:text-blue-300">
             <p className="font-medium mb-1">Informasi Penting</p>
-            <ul className="list-disc list-inside space-y-1 text-blue-700">
+            <ul className="list-disc list-inside space-y-1 text-blue-700 dark:text-blue-400">
               <li>Siapkan dokumen yang diperlukan sebelum memulai pengajuan</li>
               <li>Pastikan data yang Anda masukkan sudah benar dan lengkap</li>
               <li>Proses pengajuan dapat dipantau melalui menu "Status Layanan"</li>

@@ -139,9 +139,7 @@ export default function BeritaDetailPage() {
     return date.toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric'
     })
   }
 
@@ -196,12 +194,12 @@ export default function BeritaDetailPage() {
         </header>
 
         {/* Main Content */}
-        <main className="pb-20">
+        <main className="flex-1 overflow-y-auto pb-20">
           {/* Article Image */}
           {berita.gambar && (
             <div className="w-full h-48 bg-muted relative">
-              <img 
-                src={berita.gambar} 
+              <img
+                src={berita.gambar}
                 alt={berita.judul}
                 className="w-full h-full object-cover"
               />
@@ -243,19 +241,9 @@ export default function BeritaDetailPage() {
 
             <Separator className="mb-4" />
 
-            {/* DocTabs Component */}
-            <div className="mt-4">
-              <DocTabs
-                onChange={(index) => {
-                  if (index !== null) {
-                    const tabMap = ['artikel', 'komentar', 'bagikan'];
-                    const tabName = tabMap[index];
-                    if (tabName) {
-                      setActiveTab(tabName);
-                    }
-                  }
-                }}
-              />
+            {/* Article Content */}
+            <div className="prose prose-sm max-w-none text-foreground mb-6">
+              <div dangerouslySetInnerHTML={{ __html: berita.isi }} />
             </div>
 
             {/* Related Articles */}
@@ -273,8 +261,8 @@ export default function BeritaDetailPage() {
                         <div className="flex gap-3">
                           {item.gambar && (
                             <div className="w-16 h-16 bg-muted rounded-lg flex-shrink-0">
-                              <img 
-                                src={item.gambar} 
+                              <img
+                                src={item.gambar}
                                 alt={item.judul}
                                 className="w-full h-full object-cover rounded-lg"
                               />
@@ -303,6 +291,21 @@ export default function BeritaDetailPage() {
             )}
           </div>
         </main>
+
+        {/* Bottom Navigation */}
+        <footer className="fixed bottom-1 left-1/2 transform -translate-x-1/2 z-50">
+          <DocTabs
+            onChange={(index) => {
+              if (index !== null) {
+                const tabMap = ['artikel', 'komentar', 'bagikan'];
+                const tabName = tabMap[index];
+                if (tabName) {
+                  setActiveTab(tabName);
+                }
+              }
+            }}
+          />
+        </footer>
       </div>
     </div>
   )

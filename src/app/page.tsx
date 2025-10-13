@@ -639,31 +639,35 @@ export default function HomePage() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{item.keterangan}</p>
                         {item.foto && (
-                          <div className="w-full h-32 bg-muted rounded-xl mb-3 overflow-hidden">
-                          <Image
-                            src={item.foto?.startsWith('http') || item.foto?.startsWith('/') ? item.foto : `/${item.foto}`}
-                            alt={item.judul}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 100vw, 768px"
-                            onError={(e) => {
-                              // Fallback jika gambar gagal dimuat
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              target.parentElement!.innerHTML = `
-                                <div class="w-full h-32 bg-muted rounded-xl mb-3 flex items-center justify-center">
-                                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground">
-                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                                    <circle cx="12" cy="13" r="4"></circle>
-                                  </svg>
-                                </div>
-                              `;
-                            }}
-                          />
-                        </div>
-                      )}
+                          <div className="relative w-full h-32 bg-muted rounded-xl mb-3 overflow-hidden">
+                            <Image
+                              src={item.foto?.startsWith('http') || item.foto?.startsWith('/') ? item.foto : `/${item.foto}`}
+                              alt={item.judul}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 100vw, 768px"
+                              onError={(e) => {
+                                // Fallback jika gambar gagal dimuat
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                
+                                // Periksa apakah parentElement ada sebelum mengaksesnya
+                                if (target.parentElement) {
+                                  target.parentElement.innerHTML = `
+                                    <div class="w-full h-32 bg-muted rounded-xl mb-3 flex items-center justify-center">
+                                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground">
+                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                        <circle cx="12" cy="13" r="4"></circle>
+                                      </svg>
+                                    </div>
+                                  `;
+                                }
+                              }}
+                            />
+                          </div>
+                        )}
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{item.keterangan}</p>
                       <Button
                         variant="outline"
                         size="sm"

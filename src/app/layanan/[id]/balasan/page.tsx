@@ -176,24 +176,42 @@ export default function LayananBalasanPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      'BARU': 'bg-gray-100 text-gray-800 border-gray-200',
-      'DITAMPUNG': 'bg-blue-100 text-blue-800 border-blue-200',
-      'DIVERIFIKASI': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      'DISETUJUI': 'bg-green-100 text-green-800 border-green-200',
-      'SELESAI': 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      'DITOLAK': 'bg-red-100 text-red-800 border-red-200'
+      'BARU': 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-300 dark:border-gray-800',
+      'DITAMPUNG': 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+      'DIVERIFIKASI': 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
+      'DISETUJUI': 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
+      'SELESAI': 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
+      'DITOLAK': 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800'
     }
     return colors[status] || 'bg-gray-100 text-gray-800'
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    const date = new Date(dateString)
+    const today = new Date()
+    
+    // Check if the date is today
+    const isToday = date.getDate() === today.getDate() &&
+                   date.getMonth() === today.getMonth() &&
+                   date.getFullYear() === today.getFullYear()
+    
+    // Format date: DD/MM/YYYY (only if not today)
+    let datePart = ''
+    if (!isToday) {
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const year = date.getFullYear()
+      datePart = `${day}/${month}/${year} `
+    }
+    
+    // Format time: HH:MM AM/PM
+    let hours = date.getHours()
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    const ampm = hours >= 12 ? 'PM' : 'AM'
+    hours = hours % 12
+    hours = hours ? hours : 12 // the hour '0' should be '12'
+    
+    return `${datePart}${hours}:${minutes} ${ampm}`
   }
 
   if (isLoading) {
@@ -221,10 +239,10 @@ export default function LayananBalasanPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
+    <div className="container mx-auto py-8 px-4 max-w-[412px]">
       <div className="mb-6">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => router.push(`/layanan/${params.id}`)}
           className="mb-4"
         >
@@ -232,22 +250,23 @@ export default function LayananBalasanPage() {
           Kembali ke Detail
         </Button>
         
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">{layanan.judul}</h1>
-            <div className="flex items-center space-x-2 mt-2">
-              <Badge variant="outline">
-                {getJenisLayananLabel(layanan.jenisLayanan)}
-              </Badge>
-              <Badge className={getStatusColor(layanan.status)}>
-                {layanan.status}
-              </Badge>
-            </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold">{layanan.judul}</h1>
+            <Badge className={getStatusColor(layanan.status)}>
+              {layanan.status}
+            </Badge>
           </div>
           
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <MessageCircle className="h-4 w-4" />
-            <span>{balasanList.length} balasan</span>
+          <div className="flex items-center justify-between">
+            <Badge variant="outline">
+              {getJenisLayananLabel(layanan.jenisLayanan)}
+            </Badge>
+            
+            <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+              <MessageCircle className="h-4 w-4" />
+              <span>{balasanList.length} balasan</span>
+            </div>
           </div>
         </div>
       </div>
@@ -273,8 +292,8 @@ export default function LayananBalasanPage() {
               balasanList.map((balasan) => (
                 <div key={balasan.id} className="flex items-start space-x-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    balasan.dariAdmin 
-                      ? 'bg-blue-100 text-blue-600' 
+                    balasan.dariAdmin
+                      ? 'bg-blue-100 text-blue-600'
                       : 'bg-gray-100 text-gray-600'
                   }`}>
                     {balasan.dariAdmin ? (
@@ -292,17 +311,12 @@ export default function LayananBalasanPage() {
                       <span className="text-xs text-muted-foreground">
                         {formatDate(balasan.createdAt)}
                       </span>
-                      {balasan.dariAdmin && !balasan.isRead && (
-                        <Badge variant="secondary" className="text-xs">
-                          Baru
-                        </Badge>
-                      )}
                     </div>
                     
                     <div className={`rounded-lg p-3 text-sm ${
-                      balasan.dariAdmin 
-                        ? 'bg-blue-50 text-blue-900 border border-blue-200' 
-                        : 'bg-gray-50 text-gray-900 border border-gray-200'
+                      balasan.dariAdmin
+                        ? 'bg-popover text-popover-foreground'
+                        : 'bg-input text-card-foreground'
                     }`}>
                       <p className="whitespace-pre-wrap break-words">{balasan.isi}</p>
                     </div>

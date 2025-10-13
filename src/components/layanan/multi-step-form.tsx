@@ -702,107 +702,96 @@ export function MultiStepForm({ jenisLayanan, onSubmit, onCancel, isLoading = fa
   const CurrentStepComponent = steps[currentStep].component
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Pengajuan Layanan: {jenisLayanan}</span>
-          <Badge variant="outline">
-            Langkah {currentStep + 1} dari {steps.length}
-          </Badge>
-        </CardTitle>
-        <CardDescription>
-          {steps[currentStep].description}
-        </CardDescription>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="pb-4">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold leading-tight">Pengajuan Layanan: {jenisLayanan}</h2>
+            <Badge variant="outline" className="text-xs">
+              {currentStep + 1}/{steps.length}
+            </Badge>
+          </div>
+          <div className="flex items-center space-x-2">
+            {steps[currentStep].icon}
+            <p className="text-sm text-muted-foreground">{steps[currentStep].description}</p>
+          </div>
+        </div>
       </CardHeader>
       
-      <CardContent>
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+      <CardContent className="pb-4">
+        {/* Progress Steps - Compact Version */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
+              <div key={step.id} className="flex items-center flex-1">
                 <div
                   className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors",
+                    "flex items-center justify-center w-8 h-8 rounded-full border-2 text-xs transition-colors",
                     index <= currentStep
                       ? "bg-primary text-primary-foreground border-primary"
                       : "border-muted-foreground text-muted-foreground"
                   )}
                 >
                   {index < currentStep ? (
-                    <CheckCircle2 className="h-5 w-5" />
+                    <CheckCircle2 className="h-4 w-4" />
                   ) : (
-                    <span className="text-sm font-medium">{index + 1}</span>
+                    <span className="font-medium">{index + 1}</span>
                   )}
                 </div>
                 {index < steps.length - 1 && (
                   <div
                     className={cn(
-                      "w-full h-0.5 mx-2 transition-colors",
-                      index < currentStep ? "bg-primary" : "bg-muted"
+                      "flex-1 h-0.5 mx-1 transition-colors",
+                      index <= currentStep ? "bg-primary" : "border-muted-foreground border-t-2 border-dashed"
                     )}
                   />
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-2">
-            {steps.map((step, index) => (
-              <div
-                key={step.id}
-                className={cn(
-                  "text-xs text-center flex-1",
-                  index === currentStep ? "text-primary font-medium" : "text-muted-foreground"
-                )}
-              >
-                {step.title}
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Current Step Content */}
-        <div className="min-h-[400px]">
-          <div className="flex items-center space-x-2 mb-6">
-            {steps[currentStep].icon}
-            <h3 className="text-lg font-semibold">{steps[currentStep].title}</h3>
-          </div>
+        <div className="min-h-[300px]">
           <CurrentStepComponent data={formData} updateData={updateData} errors={errors} />
         </div>
       </CardContent>
       
-      <CardFooter className="flex justify-between">
-        <div className="flex space-x-2">
-          {currentStep > 0 && (
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={isLoading}
-            >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Sebelumnya
-            </Button>
-          )}
+      <CardFooter className="flex flex-col space-y-3">
+        <div className="flex w-full justify-between">
           <Button
-            variant="outline"
+            variant="destructive"
+            size="sm"
             onClick={onCancel}
             disabled={isLoading}
           >
             Batal
           </Button>
-        </div>
-        
-        <div className="flex space-x-2">
-          {currentStep < steps.length - 1 ? (
-            <Button onClick={handleNext} disabled={isLoading}>
-              Selanjutnya
-              <ChevronRight className="h-4 w-4 ml-2" />
-            </Button>
-          ) : (
-            <Button onClick={handleSubmit} disabled={isLoading}>
-              {isLoading ? 'Mengajukan...' : 'Ajukan Layanan'}
-            </Button>
-          )}
+          
+          <div className="flex space-x-2">
+            {currentStep > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePrevious}
+                disabled={isLoading}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Sebelumnya
+              </Button>
+            )}
+            
+            {currentStep < steps.length - 1 ? (
+              <Button size="sm" onClick={handleNext} disabled={isLoading}>
+                Selanjutnya
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            ) : (
+              <Button size="sm" onClick={handleSubmit} disabled={isLoading}>
+                {isLoading ? 'Mengajukan...' : 'Ajukan'}
+              </Button>
+            )}
+          </div>
         </div>
       </CardFooter>
     </Card>

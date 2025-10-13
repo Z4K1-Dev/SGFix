@@ -99,13 +99,20 @@ export function StatusTracker({ layanan, onDetail, onBalas, showActions = true }
   const currentStepIndex = timelineSteps.findIndex(step => step.key === layanan.status)
   
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    const date = new Date(dateString)
+    
+    // Format date: DD Month YYYY
+    const day = date.getDate()
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+    const month = monthNames[date.getMonth()]
+    const year = date.getFullYear()
+    
+    // Format time: HH.MM
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    
+    return `${day} ${month} ${year} pukul ${hours}.${minutes}`
   }
 
   const getJenisLayananLabel = (jenis: string) => {
@@ -247,40 +254,30 @@ export function StatusTracker({ layanan, onDetail, onBalas, showActions = true }
         <Separator />
 
         {/* Informasi Tambahan */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2 text-sm">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Diajukan:</span>
-              <span className="font-medium">{formatDate(layanan.createdAt)}</span>
-            </div>
-            
-            <div className="flex items-center space-x-2 text-sm">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Terakhir update:</span>
-              <span className="font-medium">{formatDate(layanan.updatedAt)}</span>
-            </div>
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Diajukan</label>
+            <p className="text-sm whitespace-nowrap">{formatDate(layanan.createdAt)}</p>
           </div>
           
-          <div className="space-y-3">
-            {layanan.estimasiSelesai && layanan.status !== 'SELESAI' && layanan.status !== 'DITOLAK' && (
-              <div className="flex items-center space-x-2 text-sm">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Estimasi selesai:</span>
-                <span className="font-medium">{layanan.estimasiSelesai}</span>
-              </div>
-            )}
-            
-            {layanan.catatan && (
-              <div className="flex items-start space-x-2 text-sm">
-                <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                <div>
-                  <span className="text-muted-foreground">Catatan:</span>
-                  <p className="font-medium mt-1">{layanan.catatan}</p>
-                </div>
-              </div>
-            )}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Terakhir Update</label>
+            <p className="text-sm whitespace-nowrap">{formatDate(layanan.updatedAt)}</p>
           </div>
+          
+          {layanan.estimasiSelesai && layanan.status !== 'SELESAI' && layanan.status !== 'DITOLAK' && (
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Estimasi Selesai</label>
+              <p className="text-sm whitespace-nowrap">{layanan.estimasiSelesai}</p>
+            </div>
+          )}
+          
+          {layanan.catatan && (
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Catatan</label>
+              <p className="text-sm">{layanan.catatan}</p>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons for Completed Status */}

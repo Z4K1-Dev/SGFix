@@ -45,27 +45,27 @@ interface LayananListProps {
 const statusConfig = {
   DITERIMA: {
     label: 'Diterima',
-    color: 'bg-blue-100 text-blue-800 border-blue-200',
+    color: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
     icon: <CheckCircle2 className="h-3 w-3" />
   },
   DIPROSES: {
     label: 'Diproses',
-    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
     icon: <Clock className="h-3 w-3" />
   },
   DIVERIFIKASI: {
     label: 'Diverifikasi',
-    color: 'bg-orange-100 text-orange-800 border-orange-200',
+    color: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800',
     icon: <Eye className="h-3 w-3" />
   },
   SELESAI: {
     label: 'Selesai',
-    color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    color: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
     icon: <CheckCircle2 className="h-3 w-3" />
   },
   DITOLAK: {
     label: 'Ditolak',
-    color: 'bg-red-100 text-red-800 border-red-200',
+    color: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
     icon: <XCircle className="h-3 w-3" />
   }
 }
@@ -86,40 +86,20 @@ const jenisLayananLabels: Record<string, string> = {
   'KK_HILANG': 'KK Hilang'
 }
 
-export function LayananList({ 
-  layananList, 
-  onSelect, 
-  onDetail, 
-  onBalas, 
+export function LayananList({
+  layananList,
+  onSelect,
+  onDetail,
+  onBalas,
   onAjukanBaru,
   showActions = true,
   showAjukanButton = true,
   isLoading = false
 }: LayananListProps) {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('SEMUA')
-  const [sortBy, setSortBy] = useState<string>('TERBARU')
-
-  // Filter and sort data
-  const filteredLayanan = layananList
-    .filter(layanan => {
-      const matchesSearch = layanan.judul.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          jenisLayananLabels[layanan.jenisLayanan]?.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesStatus = statusFilter === 'SEMUA' || layanan.status === statusFilter
-      return matchesSearch && matchesStatus
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'TERBARU':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        case 'TERLAMA':
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        case 'TERAKHIR_UPDATE':
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        default:
-          return 0
-      }
-    })
+  // Sort by last update first
+  const sortedLayanan = [...layananList].sort((a, b) => {
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  })
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -154,98 +134,44 @@ export function LayananList({
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6">
+    <div className="w-full max-w-md mx-auto space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Daftar Layanan</h2>
-          <p className="text-muted-foreground">
-            {layananList.length} pengajuan layanan
+          <h2 className="text-lg font-bold">Daftar Layanan</h2>
+          <p className="text-sm text-muted-foreground">
+            {layananList.length} pengajuan
           </p>
         </div>
         {showAjukanButton && (
-          <Button onClick={onAjukanBaru}>
-            <Plus className="h-4 w-4 mr-2" />
-            Ajukan Layanan Baru
+          <Button size="sm" onClick={onAjukanBaru}>
+            <Plus className="h-4 w-4 mr-1" />
+            Baru
           </Button>
         )}
       </div>
 
       {/* Loading State */}
       {isLoading ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[1, 2, 3].map((index) => (
             <LayananSkeleton key={index} />
           ))}
         </div>
-      ) : (
-        <>
-          {/* Filters */}
-          <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Cari layanan..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-        
-        <div className="flex gap-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="SEMUA">Semua Status</SelectItem>
-              <SelectItem value="DITERIMA">Diterima</SelectItem>
-              <SelectItem value="DIPROSES">Diproses</SelectItem>
-              <SelectItem value="DIVERIFIKASI">Diverifikasi</SelectItem>
-              <SelectItem value="SELESAI">Selesai</SelectItem>
-              <SelectItem value="DITOLAK">Ditolak</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Urutkan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="TERBARU">Terbaru</SelectItem>
-              <SelectItem value="TERLAMA">Terlama</SelectItem>
-              <SelectItem value="TERAKHIR_UPDATE">Terakhir Update</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Layanan List */}
-      {isLoading ? (
-        <div className="grid gap-4">
-          {[1, 2, 3].map((index) => (
-            <LayananSkeleton key={index} />
-          ))}
-        </div>
-      ) : filteredLayanan.length === 0 ? (
+      ) : sortedLayanan.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
+          <CardContent className="flex flex-col items-center justify-center py-8">
             <div className="text-center space-y-3">
-              <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-                <Search className="h-8 w-8 text-muted-foreground" />
+              <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+                <Search className="h-6 w-6 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold">Tidak ada layanan ditemukan</h3>
-              <p className="text-muted-foreground max-w-md">
-                {searchTerm || statusFilter !== 'SEMUA' 
-                  ? 'Coba ubah filter atau kata kunci pencarian' 
-                  : 'Belum ada pengajuan layanan. Ajukan layanan baru untuk memulai.'
-                }
+              <h3 className="text-base font-semibold">Belum ada layanan</h3>
+              <p className="text-sm text-muted-foreground">
+                Ajukan layanan baru untuk memulai.
               </p>
-              {showAjukanButton && !searchTerm && statusFilter === 'SEMUA' && (
-                <Button onClick={onAjukanBaru} className="mt-4">
-                  <Plus className="h-4 w-4 mr-2" />
+              {showAjukanButton && (
+                <Button size="sm" onClick={onAjukanBaru} className="mt-2">
+                  <Plus className="h-4 w-4 mr-1" />
                   Ajukan Layanan Baru
                 </Button>
               )}
@@ -253,119 +179,81 @@ export function LayananList({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {filteredLayanan.map((layanan) => {
+        <div className="space-y-3">
+          {sortedLayanan.map((layanan) => {
             const statusInfo = statusConfig[layanan.status]
             
             return (
-              <Card 
-                key={layanan.id} 
-                className={cn(
-                  "cursor-pointer hover:shadow-md transition-all duration-200",
-                  onSelect && "hover:scale-[1.01]"
-                )}
+              <Card
+                key={layanan.id}
+                className="cursor-pointer hover:shadow-md transition-all duration-200 active:scale-[0.98]"
                 onClick={() => onSelect?.(layanan)}
               >
-                <CardHeader className="pb-3">
+                <CardContent className="p-4">
                   <div className="flex items-start justify-between">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center space-x-2">
-                        <CardTitle className="text-lg">{layanan.judul}</CardTitle>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <h3 className="font-semibold text-base leading-tight truncate">{layanan.judul}</h3>
                         {layanan.hasUnreadReplies && (
-                          <Badge variant="destructive" className="text-xs">
+                          <Badge variant="destructive" className="text-xs px-1.5 py-0.5">
                             <MessageSquare className="h-3 w-3 mr-1" />
-                            Ada balasan
+                            Baru
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="outline">
+                      
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Badge variant="outline" className="text-xs">
                           {jenisLayananLabels[layanan.jenisLayanan]}
                         </Badge>
-                        <Badge className={statusInfo.color}>
+                        <Badge className={`${statusInfo.color} text-xs`}>
                           <div className="flex items-center space-x-1">
                             {statusInfo.icon}
                             <span>{statusInfo.label}</span>
                           </div>
                         </Badge>
                       </div>
+                      
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{formatDate(layanan.createdAt)}</span>
+                        </div>
+                        {layanan.estimasiSelesai && layanan.status !== 'SELESAI' && layanan.status !== 'DITOLAK' && (
+                          <div className="flex items-center space-x-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{layanan.estimasiSelesai}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     {showActions && (
-                      <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
-                        <Button 
-                          variant="outline" 
+                      <div className="flex space-x-1 ml-2" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => onDetail?.(layanan)}
+                          className="h-8 w-8 p-0"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3 w-3" />
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => onBalas?.(layanan)}
+                          className="h-8 w-8 p-0"
                         >
-                          <MessageSquare className="h-4 w-4" />
+                          <MessageSquare className="h-3 w-3" />
                         </Button>
                       </div>
                     )}
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="pt-0">
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{formatDate(layanan.createdAt)}</span>
-                      </div>
-                      {layanan.estimasiSelesai && layanan.status !== 'SELESAI' && layanan.status !== 'DITOLAK' && (
-                        <div className="flex items-center space-x-1">
-                          <Clock className="h-4 w-4" />
-                          <span>Estimasi: {layanan.estimasiSelesai}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <span>Update: {formatDate(layanan.updatedAt)}</span>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
             )
           })}
         </div>
-      )}
-
-      {/* Summary Stats */}
-      {layananList.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Ringkasan Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {Object.entries(statusConfig).map(([status, config]) => {
-                const count = layananList.filter(l => l.status === status).length
-                if (count === 0) return null
-                
-                return (
-                  <div key={status} className="text-center space-y-2">
-                    <div className={cn("inline-flex items-center justify-center w-12 h-12 rounded-full", config.color)}>
-                      {config.icon}
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">{count}</div>
-                      <div className="text-xs text-muted-foreground">{config.label}</div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-        </>
       )}
     </div>
   )

@@ -4,6 +4,7 @@ import * as React from "react"
 import { Label, Pie, PieChart, Sector } from "recharts"
 import { PieSectorDataItem } from "recharts/types/polar/Pie"
 
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -18,22 +19,16 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 
-export const description = "An interactive pie chart for layanan status"
+export const description = "An interactive pie chart for layanan status with toggle button legend"
 
 const layananData = [
-  { status: "Diterima", count: 7, fill: "var(--color-diterima)" },
-  { status: "Diproses", count: 5, fill: "var(--color-diproses)" },
-  { status: "Diverifikasi", count: 3, fill: "var(--color-diverifikasi)" },
-  { status: "Selesai", count: 10, fill: "var(--color-selesai)" },
-  { status: "Ditolak", count: 2, fill: "var(--color-ditolak)" },
+  { status: "Diterima", count: 7, fill: "#87bb8a" },
+  { status: "Diproses", count: 5, fill: "#5fa463" },
+  { status: "Diverifikasi", count: 3, fill: "#388e3c" },
+  { status: "Selesai", count: 10, fill: "#2c7130" },
+  { status: "Ditolak", count: 2, fill: "#afd1b1" },
 ]
 
 const chartConfig = {
@@ -70,7 +65,10 @@ export function ChartPieLayanan() {
     () => layananData.findIndex((item) => item.status === activeStatus),
     [activeStatus]
   )
-  const statuses = React.useMemo(() => layananData.map((item) => item.status), [])
+
+  // Pisahkan data menjadi dua baris
+  const firstRow = layananData.slice(0, 3)
+  const secondRow = layananData.slice(3, 5)
 
   return (
     <Card data-chart={id} className="flex flex-col">
@@ -80,41 +78,6 @@ export function ChartPieLayanan() {
           <CardTitle>Statistik Layanan</CardTitle>
           <CardDescription>Distribusi status layanan masuk</CardDescription>
         </div>
-        <Select value={activeStatus} onValueChange={setActiveStatus}>
-          <SelectTrigger
-            className="ml-auto h-7 w-[130px] rounded-lg pl-2.5"
-            aria-label="Pilih status"
-          >
-            <SelectValue placeholder="Pilih status" />
-          </SelectTrigger>
-          <SelectContent align="end" className="rounded-xl">
-            {statuses.map((key) => {
-              const config = chartConfig[key.toLowerCase() as keyof typeof chartConfig]
-
-              if (!config) {
-                return null
-              }
-
-              return (
-                <SelectItem
-                  key={key}
-                  value={key}
-                  className="rounded-lg [&_span]:flex"
-                >
-                  <div className="flex items-center gap-2 text-xs">
-                    <span
-                      className="flex h-3 w-3 shrink-0 rounded-xs"
-                      style={{
-                        backgroundColor: `var(--color-${key.toLowerCase()})`,
-                      }}
-                    />
-                    {config?.label}
-                  </div>
-                </SelectItem>
-              )
-            })}
-          </SelectContent>
-        </Select>
       </CardHeader>
       <CardContent className="flex flex-1 justify-center pb-0">
         <ChartContainer
@@ -180,6 +143,54 @@ export function ChartPieLayanan() {
             </Pie>
           </PieChart>
         </ChartContainer>
+      </CardContent>
+      
+      {/* Legend Toggle Button di tengah bawah */}
+      <CardContent className="flex flex-col items-center justify-center pb-6">
+        <div className="grid grid-cols-3 gap-2 mb-2">
+          {firstRow.map((item) => (
+            <Button
+              key={item.status}
+              variant={activeStatus === item.status ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveStatus(item.status)}
+              className={cn(
+                "flex items-center gap-2 text-xs h-6 px-2",
+                activeStatus === item.status && "bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-accent"
+              )}
+            >
+              <div
+                className="w-2 h-2 rounded-sm"
+                style={{
+                  backgroundColor: item.fill,
+                }}
+              />
+              {item.status}
+            </Button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {secondRow.map((item) => (
+            <Button
+              key={item.status}
+              variant={activeStatus === item.status ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveStatus(item.status)}
+              className={cn(
+                "flex items-center gap-2 text-xs h-6 px-2",
+                activeStatus === item.status && "bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-accent"
+              )}
+            >
+              <div
+                className="w-2 h-2 rounded-sm"
+                style={{
+                  backgroundColor: item.fill,
+                }}
+              />
+              {item.status}
+            </Button>
+          ))}
+        </div>
       </CardContent>
     </Card>
   )
