@@ -320,7 +320,7 @@ export default function HomePage() {
                     <span className="text-xs font-medium">Online</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1 text-yellow-300">
+                  <div className="flex items-center gap-1 text-red-300">
                     <WifiOff size={14} />
                     <span className="text-xs font-medium">Offline</span>
                   </div>
@@ -663,6 +663,10 @@ export default function HomePage() {
                                     </div>
                                   `;
                                 }
+                              }}
+                              onLoad={(e) => {
+                                // Memastikan gambar terload dengan benar
+                                console.log('Image loaded successfully:', e.currentTarget.src);
                               }}
                             />
                           </div>

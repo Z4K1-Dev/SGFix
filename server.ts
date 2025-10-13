@@ -44,16 +44,18 @@ async function createCustomServer() {
       path: '/api/socket',
       addTrailingSlash: false,
       cors: {
-        origin: dev 
-          ? ['http://localhost:3000', 'https://preview-chat-af47107e-3f47-4194-b3a8-37b349a85b62.space.z.ai']
-          : ['https://preview-chat-63e78080-40b1-453f-b361-0564260db910.space.z.ai', '*.space.z.ai'],
-        methods: ['GET', 'POST'],
+        origin: dev
+          ? ['http://localhost:3000', 'https://preview-chat-af47107e-3f47-4194-b3a8-37b349a85b62.space.z.ai', '*']
+          : ['https://preview-chat-63e78080-40b1-453f-b361-0564260db910.space.z.ai', '*.space.z.ai', '*'],
+        methods: ['GET', 'POST', 'OPTIONS'],
         credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Forwarded-For', 'X-Real-IP'],
       },
       transports: ['websocket', 'polling'],
       pingTimeout: 60000,
       pingInterval: 25000,
       maxHttpBufferSize: 1e8, // 100 MB
+      allowEIO3: true, // Support older versions of Engine.IO
     });
 
     // Socket connection handler
@@ -63,6 +65,18 @@ async function createCustomServer() {
       // Join room berdasarkan role (untuk demo, semua join public room)
       socket.join('public');
       socket.join('admin');
+      
+      // Handle join admin room
+      socket.on('join-admin', () => {
+        socket.join('admin');
+        console.log(`Admin ${socket.id} joined admin room`);
+      });
+      
+      // Handle join user room
+      socket.on('join-user', () => {
+        socket.join('user');
+        console.log(`User ${socket.id} joined user room`);
+      });
       
       // Handle koneksi real-time
       socket.on('join-room', (room: string) => {
@@ -83,14 +97,18 @@ async function createCustomServer() {
         room?: string;
         data?: any;
       }) => {
+        console.log('Received send-notification event:', data);
         const targetRoom = data.room || 'public';
-        io.to(targetRoom).emit('notification', {
+        const notification = {
           id: Date.now(),
-          type: data.type,
-          message: data.message,
+          judul: `Notification (${data.type})`,
+          pesan: data.message,
+          tipe: data.type,
           data: data.data,
           timestamp: new Date().toISOString()
-        });
+        };
+        console.log('Sending notification to room:', targetRoom, notification);
+        io.to(targetRoom).emit('notification', notification);
       });
       
       // Handle update status layanan
@@ -160,11 +178,17 @@ async function createCustomServer() {
       console.log('Socket.IO connection error:', err.req, err.code, err.message, err.context);
     });
 
+    // Log when socket.io server is ready
+    io.on('connection', (socket) => {
+      console.log(`Socket.IO server: Client connected with ID ${socket.id}`);
+    });
+
     // Start the server
     server.listen(currentPort, hostname, () => {
       console.log(`> Ready on http://${hostname}:${currentPort}`);
       console.log(`> Socket.IO server running at ws://${hostname}:${currentPort}/api/socket`);
       console.log(`> Environment: ${dev ? 'development' : 'production'}`);
+      console.log(`> Socket.IO path: /api/socket`);
     });
 
   } catch (err) {

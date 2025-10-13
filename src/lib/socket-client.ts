@@ -17,11 +17,16 @@ class SocketClient {
    */
   connect(token?: string): Promise<Socket> {
     return new Promise((resolve, reject) => {
-      // Check if already connected
-      if (this.socket?.connected) {
-        console.log('Socket already connected:', this.socket.id)
-        resolve(this.socket)
-        return
+      // Set timeout untuk promise
+      const timeout = setTimeout(() => {
+        reject(new Error('Socket connection timeout after 10 seconds'))
+      }, 10000)
+
+      // Disconnect existing socket if any
+      if (this.socket) {
+        this.socket.removeAllListeners()
+        this.socket.disconnect()
+        this.socket = null
       }
 
       // Gunakan URL dinamis dari current origin
@@ -40,14 +45,20 @@ class SocketClient {
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
         reconnectionDelay: this.reconnectDelay,
+        reconnectionDelayMax: 5000, // Max 5 seconds delay between reconnections
         // Disable HMR interference
         autoConnect: true,
+        // Tambahkan konfigurasi CORS untuk memastikan koneksi berhasil
+        withCredentials: false,
       })
 
       // Handle connection success
       this.socket.on('connect', () => {
         console.log('Connected to Socket.IO server:', this.socket?.id)
         this.reconnectAttempts = 0
+        
+        // Clear timeout
+        clearTimeout(timeout)
         
         // Join rooms (untuk demo, join semua room)
         this.socket?.emit('join-room', 'public')
@@ -60,6 +71,9 @@ class SocketClient {
       this.socket.on('connect_error', (error) => {
         console.error('Socket connection error:', error)
         this.reconnectAttempts++
+        
+        // Clear timeout
+        clearTimeout(timeout)
         
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
           console.error('Max reconnection attempts reached')
@@ -81,11 +95,25 @@ class SocketClient {
       // Handle reconnect
       this.socket.on('reconnect', (attemptNumber) => {
         console.log('Reconnected to Socket.IO server after', attemptNumber, 'attempts')
+        
+        // Re-join rooms after reconnection
+        this.socket?.emit('join-room', 'public')
+        this.socket?.emit('join-room', 'admin')
       })
 
       // Handle reconnect error
       this.socket.on('reconnect_error', (error) => {
         console.error('Socket reconnection error:', error)
+      })
+
+      // Handle reconnect failed
+      this.socket.on('reconnect_failed', () => {
+        console.error('Socket reconnection failed after all attempts')
+      })
+
+      // Handle connection timeout
+      this.socket.on('connect_timeout', () => {
+        console.warn('Socket connection timeout')
       })
     })
   }
