@@ -1,14 +1,15 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import { MobileLayout } from '@/components/layout/mobile-layout'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
-import { ArrowLeft, Send, User, Shield, Calendar, MessageCircle } from 'lucide-react'
+import { MessageCircle, Send, Shield, User } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 
 interface Balasan {
   id: string
@@ -239,153 +240,150 @@ export default function LayananBalasanPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-[412px]">
-      <div className="mb-6">
-        <Button
-          variant="outline"
-          onClick={() => router.push(`/layanan/${params.id}`)}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Kembali ke Detail
-        </Button>
-        
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold">{layanan.judul}</h1>
-            <Badge className={getStatusColor(layanan.status)}>
-              {layanan.status}
-            </Badge>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <Badge variant="outline">
-              {getJenisLayananLabel(layanan.jenisLayanan)}
-            </Badge>
+    <MobileLayout
+      title="Balasan Layanan"
+      showBackButton
+      backRoute={`/layanan/${params.id}`}
+    >
+      <div className="container mx-auto py-8 px-4 max-w-[412px]">
+        <div className="mb-6">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-bold">{layanan.judul}</h1>
+              <Badge className={getStatusColor(layanan.status)}>
+                {layanan.status}
+              </Badge>
+            </div>
             
-            <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-              <MessageCircle className="h-4 w-4" />
-              <span>{balasanList.length} balasan</span>
+            <div className="flex items-center justify-between">
+              <Badge variant="outline">
+                {getJenisLayananLabel(layanan.jenisLayanan)}
+              </Badge>
+              
+              <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                <MessageCircle className="h-4 w-4" />
+                <span>{balasanList.length} balasan</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <Card className="h-[600px] flex flex-col">
-        <CardHeader>
-          <CardTitle>Diskusi Layanan</CardTitle>
-          <CardDescription>
-            Kirim pertanyaan atau informasi terkait pengajuan layanan Anda
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="flex-1 flex flex-col">
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-            {balasanList.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Belum ada balasan</p>
-                <p className="text-sm">Kirim pesan untuk memulai diskusi</p>
-              </div>
-            ) : (
-              balasanList.map((balasan) => (
-                <div key={balasan.id} className="flex items-start space-x-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    balasan.dariAdmin
-                      ? 'bg-blue-100 text-blue-600'
-                      : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {balasan.dariAdmin ? (
-                      <Shield className="h-4 w-4" />
-                    ) : (
-                      <User className="h-4 w-4" />
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 space-y-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium text-sm">
-                        {balasan.dariAdmin ? 'Admin' : 'Anda'}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDate(balasan.createdAt)}
-                      </span>
+        <Card className="h-[600px] flex flex-col">
+          <CardHeader>
+            <CardTitle>Diskusi Layanan</CardTitle>
+            <CardDescription>
+              Kirim pertanyaan atau informasi terkait pengajuan layanan Anda
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="flex-1 flex flex-col">
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+              {balasanList.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Belum ada balasan</p>
+                  <p className="text-sm">Kirim pesan untuk memulai diskusi</p>
+                </div>
+              ) : (
+                balasanList.map((balasan) => (
+                  <div key={balasan.id} className="flex items-start space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      balasan.dariAdmin
+                        ? 'bg-blue-100 text-blue-600'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {balasan.dariAdmin ? (
+                        <Shield className="h-4 w-4" />
+                      ) : (
+                        <User className="h-4 w-4" />
+                      )}
                     </div>
                     
-                    <div className={`rounded-lg p-3 text-sm ${
-                      balasan.dariAdmin
-                        ? 'bg-popover text-popover-foreground'
-                        : 'bg-input text-card-foreground'
-                    }`}>
-                      <p className="whitespace-pre-wrap break-words">{balasan.isi}</p>
+                    <div className="flex-1 space-y-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium text-sm">
+                          {balasan.dariAdmin ? 'Admin' : 'Anda'}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(balasan.createdAt)}
+                        </span>
+                      </div>
+                      
+                      <div className={`rounded-lg p-3 text-sm ${
+                        balasan.dariAdmin
+                          ? 'bg-popover text-popover-foreground'
+                          : 'bg-input text-card-foreground'
+                      }`}>
+                        <p className="whitespace-pre-wrap break-words">{balasan.isi}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <Separator />
-
-          {/* Message Input */}
-          <div className="pt-4 space-y-3">
-            <div className="flex space-x-3">
-              <Textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Ketik pesan Anda..."
-                className="flex-1 min-h-[80px] resize-none"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSendMessage()
-                  }
-                }}
-              />
+                ))
+              )}
+              <div ref={messagesEndRef} />
             </div>
-            
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setNewMessage('')}
-                disabled={!newMessage.trim() || isSending}
-              >
-                Batal
-              </Button>
-              <Button
-                onClick={handleSendMessage}
-                disabled={!newMessage.trim() || isSending}
-              >
-                {isSending ? (
-                  <>Mengirim...</>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Kirim
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start space-x-2">
-          <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
-          <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">Catatan Penting</p>
-            <ul className="list-disc list-inside space-y-1 text-blue-700">
-              <li>Admin akan membalas pesan Anda dalam waktu 1x24 jam</li>
-              <li>Gunakan bahasa yang sopan dan jelas</li>
-              <li>Sertakan informasi yang relevan dengan pengajuan Anda</li>
-              <li>Jangan share informasi pribadi yang sensitif</li>
-            </ul>
+            <Separator />
+
+            {/* Message Input */}
+            <div className="pt-4 space-y-3">
+              <div className="flex space-x-3">
+                <Textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Ketik pesan Anda..."
+                  className="flex-1 min-h-[80px] resize-none"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSendMessage()
+                    }
+                  }}
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setNewMessage('')}
+                  disabled={!newMessage.trim() || isSending}
+                >
+                  Batal
+                </Button>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim() || isSending}
+                >
+                  {isSending ? (
+                    <>Mengirim...</>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Kirim
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start space-x-2">
+            <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
+            <div className="text-sm text-blue-800">
+              <p className="font-medium mb-1">Catatan Penting</p>
+              <ul className="list-disc list-inside space-y-1 text-blue-700">
+                <li>Admin akan membalas pesan Anda dalam waktu 1x24 jam</li>
+                <li>Gunakan bahasa yang sopan dan jelas</li>
+                <li>Sertakan informasi yang relevan dengan pengajuan Anda</li>
+                <li>Jangan share informasi pribadi yang sensitif</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </MobileLayout>
   )
 }

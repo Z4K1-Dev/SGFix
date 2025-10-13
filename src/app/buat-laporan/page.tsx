@@ -1,5 +1,6 @@
 'use client'
 
+import { MobileLayout } from '@/components/layout/mobile-layout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,6 +17,7 @@ import {
   MapPin,
   Upload
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -36,6 +38,7 @@ const steps = [
 ]
 
 export default function BuatLaporanPage() {
+  const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<LaporanData>({
     judul: '',
@@ -387,21 +390,28 @@ export default function BuatLaporanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-[412px] mx-auto px-4">
-        {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => window.history.back()}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Kembali
-          </Button>
-          <h1 className="text-3xl font-bold text-foreground">Buat Laporan</h1>
-          <p className="text-muted-foreground mt-2">Laporkan masalah atau aspirasi Anda</p>
-        </div>
+    <MobileLayout
+      title="Buat Laporan"
+      showBackButton={true}
+      backRoute="/"
+      activeTab="laporan"
+      onTabChange={(index) => {
+        if (index !== null) {
+          const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
+          const tabName = tabMap[index];
+          if (tabName && tabName !== 'laporan') {
+            if (tabName === 'beranda') {
+              router.push('/')
+            } else if (tabName === 'berita') {
+              router.push('/#berita')
+            } else if (tabName === 'layanan') {
+              router.push('/layanan')
+            }
+          }
+        }
+      }}
+    >
+      <div className="px-4 py-4">
 
         {/* Progress */}
         <div className="mb-8">
@@ -502,6 +512,6 @@ export default function BuatLaporanPage() {
           </div>
         </div>
       </div>
-    </div>
+    </MobileLayout>
   )
 }

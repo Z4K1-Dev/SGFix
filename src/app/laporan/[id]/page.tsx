@@ -1,5 +1,6 @@
 'use client'
 
+import { MobileLayout } from '@/components/layout/mobile-layout'
 import { LaporanDetailSkeleton } from '@/components/loading-skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -165,8 +166,28 @@ export default function LaporanDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-md mx-auto px-4">
+    <MobileLayout
+      title="Detail Laporan"
+      showBackButton={true}
+      backRoute="/"
+      activeTab="laporan"
+      onTabChange={(index) => {
+        if (index !== null) {
+          const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
+          const tabName = tabMap[index];
+          if (tabName && tabName !== 'laporan') {
+            if (tabName === 'beranda') {
+              router.push('/')
+            } else if (tabName === 'berita') {
+              router.push('/#berita')
+            } else if (tabName === 'layanan') {
+              router.push('/layanan')
+            }
+          }
+        }
+      }}
+    >
+      <div className="px-4 py-4">
         {/* Header */}
         <div className="mb-6">
           <Button
@@ -320,6 +341,6 @@ export default function LaporanDetailPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </MobileLayout>
   )
 }

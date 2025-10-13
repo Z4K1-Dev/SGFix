@@ -1,11 +1,15 @@
 'use client'
 
-import { JenisLayananSelector, LayananList, MultiStepForm, StatusTracker } from '@/components/layanan'
+import { JenisLayananSelector, MultiStepForm, StatusTracker } from '@/components/layanan'
+import { MobileLayout } from '@/components/layout/mobile-layout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
-import { ArrowLeft, FileText, History, Plus } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Clock, Eye, FileText, History, Plus, Search, XCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -17,21 +21,61 @@ interface LayananItem {
   createdAt: string
   updatedAt: string
   estimasiSelesai?: string
+  catatan?: string
+  alasanPenolakan?: string
+  namaLengkap: string
+  nik: string
+  alamat: string
+  noTelepon: string
+  email: string
   hasUnreadReplies?: boolean
 }
 
 export default function LayananPage() {
+  const router = useRouter()
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState('daftar')
   const [selectedJenisLayanan, setSelectedJenisLayanan] = useState<string | null>(null)
   const [layananList, setLayananList] = useState<LayananItem[]>([])
+  const [filteredLayanan, setFilteredLayanan] = useState<LayananItem[]>([])
   const [selectedLayanan, setSelectedLayanan] = useState<LayananItem | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
-  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted) {
+      fetchLayanan()
+    }
+  }, [mounted])
+
+  useEffect(() => {
+    // Filter layanan based on search query and status
+    let filtered = layananList
+
+    if (searchQuery) {
+      filtered = filtered.filter(item =>
+        item.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.namaLengkap.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.jenisLayanan.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(item => item.status === statusFilter)
+    }
+
+    setFilteredLayanan(filtered)
+  }, [layananList, searchQuery, statusFilter])
 
   const fetchLayanan = async () => {
     try {
-      setIsLoading(true)
+      setLoading(true)
       const response = await fetch('/api/layanan')
       if (!response.ok) throw new Error('Failed to fetch layanan')
       
@@ -45,13 +89,9 @@ export default function LayananPage() {
         variant: 'destructive'
       })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
-
-  useEffect(() => {
-    fetchLayanan()
-  }, [])
 
   const handleSelectJenisLayanan = (jenis: string) => {
     setSelectedJenisLayanan(jenis)
@@ -60,7 +100,7 @@ export default function LayananPage() {
 
   const handleAjukanLayanan = async (formData: any) => {
     try {
-      setIsLoading(true)
+      setLoading(true)
       
       // Prepare data for API
       const submitData = {
@@ -101,7 +141,7 @@ export default function LayananPage() {
         variant: 'destructive'
       })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
@@ -143,117 +183,269 @@ export default function LayananPage() {
     return labels[jenis] || jenis
   }
 
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      'DITERIMA': 'bg-blue-100 text-blue-800 border-blue-200',
+      'DIPROSES': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'DIVERIFIKASI': 'bg-orange-100 text-orange-800 border-orange-200',
+      'SELESAI': 'bg-green-100 text-green-800 border-green-200',
+      'DITOLAK': 'bg-red-100 text-red-800 border-red-200'
+    }
+    return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200'
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'DITERIMA':
+        return <CheckCircle className="h-3 w-3" />
+      case 'DIPROSES':
+      case 'DIVERIFIKASI':
+        return <Clock className="h-3 w-3" />
+      case 'SELESAI':
+        return <CheckCircle className="h-3 w-3" />
+      case 'DITOLAK':
+        return <XCircle className="h-3 w-3" />
+      default:
+        return <Clock className="h-3 w-3" />
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    })
+  }
+
+  const handleTabChange = (index: number | null) => {
+    if (index !== null) {
+      const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
+      const tabName = tabMap[index];
+      if (tabName && tabName !== 'layanan') {
+        if (tabName === 'layanan') {
+          // Already on layanan page
+          return
+        } else if (tabName === 'beranda') {
+          router.push('/')
+        } else if (tabName === 'berita') {
+          router.push('/#berita')
+        } else if (tabName === 'laporan') {
+          router.push('/#laporan')
+        }
+      }
+    }
+  };
+
+  if (!mounted) {
+    return null
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Mobile Container */}
-      <div className="max-w-[412px] mx-auto bg-background min-h-screen">
-        {/* Header */}
-        <header className="bg-primary text-primary-foreground p-4 shadow-md">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => window.history.back()}
-              className="inline-flex items-center justify-center rounded-md hover:bg-primary-foreground/20 h-8 w-8 p-0 text-primary-foreground"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight">Layanan Online</h1>
-              <p className="text-sm opacity-90">Ajukan layanan kependudukan</p>
-            </div>
-          </div>
-        </header>
+    <MobileLayout
+      title="Layanan"
+      showBackButton={true}
+      backRoute="/"
+      activeTab="layanan"
+      onTabChange={handleTabChange}
+    >
+      <div className="px-4 py-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+            <TabsTrigger value="daftar" className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+              <History className="h-4 w-4" />
+              <span>Daftar</span>
+            </TabsTrigger>
+            <TabsTrigger value="pilih" className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+              <Plus className="h-4 w-4" />
+              <span>Baru</span>
+            </TabsTrigger>
+            <TabsTrigger value="form" disabled={!selectedJenisLayanan} className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+              <FileText className="h-4 w-4" />
+              <span>Form</span>
+            </TabsTrigger>
+            <TabsTrigger value="detail" disabled={!selectedLayanan} className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+              <FileText className="h-4 w-4" />
+              <span>Detail</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto pb-20">
-          <div className="p-4">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 h-auto p-1">
-                <TabsTrigger value="daftar" className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
-                  <History className="h-4 w-4" />
-                  <span>Daftar</span>
-                </TabsTrigger>
-                <TabsTrigger value="pilih" className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
-                  <Plus className="h-4 w-4" />
-                  <span>Baru</span>
-                </TabsTrigger>
-                <TabsTrigger value="form" disabled={!selectedJenisLayanan} className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
-                  <FileText className="h-4 w-4" />
-                  <span>Form</span>
-                </TabsTrigger>
-                <TabsTrigger value="detail" disabled={!selectedLayanan} className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
-                  <FileText className="h-4 w-4" />
-                  <span>Detail</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="daftar" className="mt-4">
-                <LayananList
-                  layananList={layananList}
-                  onSelect={handleSelectLayanan}
-                  onDetail={handleDetail}
-                  onBalas={handleBalas}
-                  onAjukanBaru={() => setActiveTab('pilih')}
-                  isLoading={isLoading}
+          <TabsContent value="daftar" className="mt-4">
+            {/* Search and Filter */}
+            <div className="space-y-4 mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                <Input
+                  placeholder="Cari layanan..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-3 bg-muted border border-muted rounded-xl"
                 />
-              </TabsContent>
+              </div>
+              
+              <div className="flex items-center justify-between gap-2 pb-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full max-w-[200px]">
+                    <SelectValue placeholder="Filter Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Status</SelectItem>
+                    <SelectItem value="DITERIMA">Diterima</SelectItem>
+                    <SelectItem value="DIPROSES">Diproses</SelectItem>
+                    <SelectItem value="DIVERIFIKASI">Diverifikasi</SelectItem>
+                    <SelectItem value="SELESAI">Selesai</SelectItem>
+                    <SelectItem value="DITOLAK">Ditolak</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Button
+                  onClick={() => setActiveTab('pilih')}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Pengajuan Layanan
+                </Button>
+              </div>
+            </div>
 
-              <TabsContent value="pilih" className="mt-4">
-                <JenisLayananSelector onSelect={handleSelectJenisLayanan} />
-              </TabsContent>
-
-              <TabsContent value="form" className="mt-4">
-                {selectedJenisLayanan && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setActiveTab('pilih')}
-                      >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Kembali
-                      </Button>
-                      <Badge variant="outline" className="text-xs">
-                        {getJenisLayananLabel(selectedJenisLayanan)}
-                      </Badge>
-                    </div>
-                    
-                    <MultiStepForm
-                      jenisLayanan={getJenisLayananLabel(selectedJenisLayanan)}
-                      onSubmit={handleAjukanLayanan}
-                      onCancel={handleBatal}
-                      isLoading={isLoading}
-                    />
+            {/* Layanan List */}
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-muted h-24 rounded-xl"></div>
                   </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="detail" className="mt-4">
-                {selectedLayanan && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
+                ))}
+              </div>
+            ) : filteredLayanan.length > 0 ? (
+              <div className="space-y-4">
+                {filteredLayanan.map((item) => (
+                  <Card
+                    key={item.id}
+                    className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer"
+                    onClick={() => router.push(`/layanan/${item.id}`)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-base font-semibold text-foreground line-clamp-1">
+                            {item.judul}
+                          </CardTitle>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {getJenisLayananLabel(item.jenisLayanan)}
+                            </Badge>
+                            <Badge className={`text-xs border ${getStatusColor(item.status)}`}>
+                              <div className="flex items-center gap-1">
+                                {getStatusIcon(item.status)}
+                                {item.status}
+                              </div>
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Pemohon:</span>
+                          <span className="text-sm font-medium">{item.namaLengkap}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Tanggal:</span>
+                          <span className="text-sm">{formatDate(item.createdAt)}</span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
                         size="sm"
-                        onClick={() => setActiveTab('daftar')}
+                        className="w-full mt-3 active:shadow-none active:scale-[0.98] transition-all duration-200"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          router.push(`/layanan/${item.id}`)
+                        }}
                       >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Kembali
+                        <Eye className="mr-2 h-4 w-4" />
+                        Lihat Detail
                       </Button>
-                    </div>
-                    
-                    <StatusTracker
-                      layanan={selectedLayanan}
-                      onDetail={() => router.push(`/layanan/${selectedLayanan.id}`)}
-                      onBalas={() => router.push(`/layanan/${selectedLayanan.id}/balasan`)}
-                    />
-                  </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <FileText size={64} className="mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">Belum ada layanan</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {searchQuery || statusFilter !== 'all'
+                    ? 'Tidak ada layanan yang sesuai dengan filter'
+                    : 'Ajukan layanan pertama Anda'}
+                </p>
+                {!searchQuery && statusFilter === 'all' && (
+                  <Button onClick={() => setActiveTab('pilih')}>
+                    Ajukan Layanan Baru
+                  </Button>
                 )}
-              </TabsContent>
-            </Tabs>
-          </div>
-        </main>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="pilih" className="mt-4">
+            <JenisLayananSelector onSelect={handleSelectJenisLayanan} />
+          </TabsContent>
+
+          <TabsContent value="form" className="mt-4">
+            {selectedJenisLayanan && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setActiveTab('pilih')}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Kembali
+                  </Button>
+                  <Badge variant="outline" className="text-xs">
+                    {getJenisLayananLabel(selectedJenisLayanan)}
+                  </Badge>
+                </div>
+                
+                <MultiStepForm
+                  jenisLayanan={getJenisLayananLabel(selectedJenisLayanan)}
+                  onSubmit={handleAjukanLayanan}
+                  onCancel={handleBatal}
+                  isLoading={loading}
+                />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="detail" className="mt-4">
+            {selectedLayanan && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setActiveTab('daftar')}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Kembali
+                  </Button>
+                </div>
+                
+                <StatusTracker
+                  layanan={selectedLayanan}
+                  onDetail={() => router.push(`/layanan/${selectedLayanan.id}`)}
+                  onBalas={() => router.push(`/layanan/${selectedLayanan.id}/balasan`)}
+                />
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </MobileLayout>
   )
 }

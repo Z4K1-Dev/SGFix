@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Wifi, WifiOff, RefreshCw, Send } from 'lucide-react'
+import { RefreshCw, Send, Wifi, WifiOff } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Notification {
   id: number
@@ -62,7 +62,7 @@ export function SocketDebug({ role = 'user' }: { role?: 'user' | 'admin' }) {
         addLog(`Connected to Socket.IO server with ID: ${socket.id}`)
         setIsConnected(true)
         setConnectionError(null)
-        setSocketId(socket.id)
+        setSocketId(socket.id || null)
         
         // Join appropriate room based on role
         if (role === 'admin') {
