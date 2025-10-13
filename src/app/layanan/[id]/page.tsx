@@ -374,7 +374,8 @@ export default function LayananDetailPage() {
             className="w-full"
             onClick={() => router.push(`/layanan/${layanan.id}/balasan`)}
           >
-            <MessageSquare className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Kirim Balasan
           </Button>
           
           {layanan.status === 'SELESAI' && (
@@ -383,7 +384,8 @@ export default function LayananDetailPage() {
               className="w-full"
               onClick={handleDownload}
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-4 w-4 mr-2" />
+              Unduh Dokumen
             </Button>
           )}
         </CardContent>
