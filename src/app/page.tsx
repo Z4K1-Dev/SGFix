@@ -345,7 +345,7 @@ export default function HomePage() {
                     priority={currentSlide === 0}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
-                    <div className="text-primary-foreground">
+                    <div className="text-white">
                       <h3 className="text-lg font-semibold">Layanan Digital Pemerintah</h3>
                       <p className="text-sm opacity-90">Akses layanan publik dengan mudah dan cepat</p>
                     </div>
@@ -361,7 +361,7 @@ export default function HomePage() {
                     priority={currentSlide === 1}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
-                    <div className="text-primary-foreground">
+                    <div className="text-white">
                       <h3 className="text-lg font-semibold">Smart City Portal</h3>
                       <p className="text-sm opacity-90">Solusi modern untuk kebutuhan administrasi</p>
                     </div>
@@ -377,7 +377,7 @@ export default function HomePage() {
                     priority={currentSlide === 2}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
-                    <div className="text-primary-foreground">
+                    <div className="text-white">
                       <h3 className="text-lg font-semibold">E-Government Services</h3>
                       <p className="text-sm opacity-90">Pengelolaan dokumen online yang aman</p>
                     </div>
@@ -393,9 +393,9 @@ export default function HomePage() {
                   key={index}
                   onClick={() => setCurrentSlide(index)}
                   className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    currentSlide === index 
-                      ? 'bg-primary-foreground w-6' 
-                      : 'bg-primary-foreground/50 hover:bg-primary-foreground/75'
+                    currentSlide === index
+                      ? 'bg-white w-6'
+                      : 'bg-white/50 hover:bg-white/75'
                   }`}
                 />
               ))}

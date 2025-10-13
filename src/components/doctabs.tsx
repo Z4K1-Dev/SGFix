@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
 
 const HomeIcon = ({ className = "w-5 h-5" }) => (
   <svg
@@ -124,6 +124,7 @@ interface ExpandedTabsProps {
   tabs: TabItem[];
   className?: string;
   onChange?: (index: number | null) => void;
+  activeTab?: string;
 }
 
 const spanVariants = {
@@ -140,9 +141,20 @@ const spanVariants = {
   },
 };
 
-function ExpandedTabs({ tabs, className, onChange }: ExpandedTabsProps) {
+function ExpandedTabs({ tabs, className, onChange, activeTab }: ExpandedTabsProps) {
   const [selected, setSelected] = useState<number | null>(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Set active tab based on activeTab prop
+    if (activeTab) {
+      const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
+      const index = tabMap.indexOf(activeTab);
+      if (index !== -1) {
+        setSelected(index);
+      }
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -226,7 +238,7 @@ function ExpandedTabs({ tabs, className, onChange }: ExpandedTabsProps) {
   );
 }
 
-export default function Tabs2({ onChange }: { onChange?: (index: number | null) => void }) {
+export default function Tabs2({ onChange, activeTab }: { onChange?: (index: number | null) => void; activeTab?: string }) {
   const TABS: TabItem[] = [
     { title: "Home", icon: HomeIcon },
     { title: "Berita", icon: FileText },
@@ -237,5 +249,5 @@ export default function Tabs2({ onChange }: { onChange?: (index: number | null) 
 //    { title: "Settings", icon: SettingsIcon },
   ];
 
-  return <ExpandedTabs tabs={TABS} onChange={onChange} />;
+  return <ExpandedTabs tabs={TABS} onChange={onChange} activeTab={activeTab} />;
 }

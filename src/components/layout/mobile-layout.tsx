@@ -72,7 +72,7 @@ export function MobileLayout({
         {/* Bottom Navigation */}
         {showBottomNav && (
           <footer className="fixed bottom-1 left-1/2 transform -translate-x-1/2 z-50">
-            <DocTabs onChange={onTabChange || handleTabChange} />
+            <DocTabs onChange={onTabChange || handleTabChange} activeTab={activeTab} />
           </footer>
         )}
       </div>
