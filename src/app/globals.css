@@ -187,3 +187,12 @@ body {
 [data-slot="table-footer"] {
   border-top-color: var(--border);
 }
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
