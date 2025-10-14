@@ -6,13 +6,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-  AlertCircle,
-  ArrowLeft,
-  Calendar,
-  CheckCircle,
-  Clock,
-  MapPin,
-  MessageSquare
+    AlertCircle,
+    ArrowLeft,
+    Calendar,
+    CheckCircle,
+    Clock,
+    MapPin,
+    MessageSquare
 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -169,22 +169,14 @@ export default function LaporanDetailPage() {
     <MobileLayout
       title="Detail Laporan"
       showBackButton={true}
-      backRoute="/"
+      backRoute="/laporan"
       activeTab="laporan"
       onTabChange={(index) => {
-        if (index !== null) {
-          const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
-          const tabName = tabMap[index];
-          if (tabName && tabName !== 'laporan') {
-            if (tabName === 'beranda') {
-              router.push('/')
-            } else if (tabName === 'berita') {
-              router.push('/#berita')
-            } else if (tabName === 'layanan') {
-              router.push('/layanan')
-            }
-          }
-        }
+        if (index === null) return
+        const routes = ["/", "/berita", "/laporan", "/layanan", null, "/profile"]
+        const target = routes[index]
+        if (!target || target === "/laporan") return
+        router.push(target)
       }}
     >
       <div className="px-4 py-4">

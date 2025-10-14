@@ -1,25 +1,25 @@
 'use client'
 
 import { MobileLayout } from '@/components/layout/mobile-layout'
-import { BeritaSkeleton, LaporanSkeleton, SliderSkeleton, StatsCardSkeleton } from '@/components/loading-skeleton'
-import { Badge } from '@/components/ui/badge'
+import { BeritaSkeleton, SliderSkeleton, StatsCardSkeleton } from '@/components/loading-skeleton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import {
-  AlertCircle,
-  BarChart3,
-  Camera,
-  CheckCircle,
-  ChevronRight,
-  Clock,
-  FileText,
-  Home,
-  MapPin,
-  MessageSquare,
-  Search
+    AlertCircle,
+    BarChart3,
+    Camera,
+    CheckCircle,
+    ChevronRight,
+    Clock,
+    FileText,
+    Home,
+    MapPin,
+    MessageSquare,
+    Search
 } from 'lucide-react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -65,17 +65,17 @@ export default function HomePage() {
     setMounted(true)
   }, [])
 
+  const router = useRouter()
+
   const handleTabChange = (index: number | null) => {
-    if (index !== null) {
-      const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
-      const tabName = tabMap[index];
-      if (tabName) {
-        if (tabName === 'layanan') {
-          window.location.href = '/layanan';
-        } else {
-          setActiveTab(tabName);
-        }
-      }
+    if (index === null) return
+    const routes: (string | null)[] = ["/", "/berita", "/laporan", "/layanan", null, "/profile"]
+    const target = routes[index]
+    if (!target) return
+    if (target === "/") {
+      setActiveTab("beranda")
+    } else {
+      router.push(target)
     }
   };
 
@@ -551,156 +551,7 @@ export default function HomePage() {
           </Card>
         </TabsContent>
 
-        {/* Tab Berita */}
-        <TabsContent value="berita" className="px-4 pb-6 mt-4">
-          <div className="space-y-4">
-            {loading ? (
-              <>
-                <BeritaSkeleton />
-                <BeritaSkeleton />
-                <BeritaSkeleton />
-              </>
-            ) : (
-              berita.map((item) => (
-                <Card key={item.id} className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer" onClick={() => window.location.href = `/berita/${item.id}`}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-base font-semibold text-foreground line-clamp-2">{item.judul}</CardTitle>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {item.kategori.nama}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{item.isi}</p>
-                    <Button variant="outline" size="sm" className="w-full active:shadow-none active:scale-[0.98] transition-all duration-200" onClick={() => window.location.href = `/berita/${item.id}`}>
-                      Baca Selengkapnya
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-            {berita.length === 0 && !loading && (
-              <Card className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
-                <CardContent className="text-center py-12">
-                  <FileText size={64} />
-                  <p className="text-base text-muted-foreground font-medium">Belum ada berita tersedia</p>
-                  <p className="text-sm text-muted-foreground mt-1">Silakan kembali lagi nanti</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </TabsContent>
 
-        {/* Tab Laporan */}
-        <TabsContent value="laporan" className="px-4 pb-6 mt-4">
-          <div className="space-y-4">
-            {loading ? (
-              <>
-                <LaporanSkeleton />
-                <LaporanSkeleton />
-                <LaporanSkeleton />
-              </>
-            ) : (
-              laporan.map((item) => (
-                <Card key={item.id} className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-base font-semibold text-foreground line-clamp-1">{item.judul}</CardTitle>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge className={`text-xs border ${getStatusColor(item.status)}`}>
-                            <div className="flex items-center gap-1">
-                              {getStatusIcon(item.status)}
-                              {item.status}
-                            </div>
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {item.foto && (
-                      <div className="relative w-full h-32 bg-muted rounded-xl mb-3 overflow-hidden">
-                        <Image
-                          src={item.foto?.startsWith('http') || item.foto?.startsWith('/') ? item.foto : `/${item.foto}`}
-                          alt={item.judul}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 768px"
-                          onError={(e) => {
-                            // Fallback jika gambar gagal dimuat
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            
-                            // Periksa apakah parentElement ada sebelum mengaksesnya
-                            if (target.parentElement) {
-                              target.parentElement.innerHTML = `
-                                <div class="w-full h-32 bg-muted rounded-xl mb-3 flex items-center justify-center">
-                                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground">
-                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                                    <circle cx="12" cy="13" r="4"></circle>
-                                  </svg>
-                                </div>
-                              `;
-                            }
-                          }}
-                          onLoad={(e) => {
-                            // Memastikan gambar terload dengan benar
-                            console.log('Image loaded successfully:', e.currentTarget.src);
-                          }}
-                        />
-                      </div>
-                    )}
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{item.keterangan}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full active:shadow-none active:scale-[0.98] transition-all duration-200"
-                    onClick={() => window.location.href = `/laporan/${item.id}`}
-                  >
-                    Lihat Detail
-                  </Button>
-                </CardContent>
-              </Card>
-              ))
-            )}
-            {laporan.length === 0 && !loading && (
-              <Card className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
-                <CardContent className="text-center py-12">
-                  <MessageSquare size={64} />
-                  <p className="text-base text-muted-foreground font-medium">Belum ada laporan</p>
-                  <p className="text-sm text-muted-foreground mt-1">Buat laporan pertama Anda</p>
-                  <Button
-                    className="mt-4 bg-primary text-primary-foreground"
-                    onClick={() => window.location.href = '/buat-laporan'}
-                  >
-                    <Camera className="mr-2" size={16} />
-                    Buat Laporan Baru
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </TabsContent>
       </Tabs>
     </MobileLayout>
   )

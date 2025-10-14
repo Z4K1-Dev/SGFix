@@ -1,6 +1,6 @@
 'use client';
-import React from 'react';
 import { motion } from 'framer-motion';
+import React from 'react';
 
 // Define the props for our Icon components
 interface IconProps {
@@ -111,10 +111,10 @@ const Notification: React.FC<NotificationProps> = ({ type, title, message, showI
   return (
     // Wrap with motion.div for animations and apply glassy styles with dark mode support
     <motion.div
-      initial={{ opacity: 0, x: 100 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 100 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.25 }}
       className={`relative w-full max-w-sm rounded-xl p-4 backdrop-blur-xl bg-white/15 dark:bg-black/15 border border-gray-300/60 dark:border-gray-700/60 overflow-hidden ring-1 ring-gray-200/40 dark:ring-gray-700/40 drop-shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105`}
     >
         <div className={`absolute top-0 left-0 h-full w-full bg-gradient-to-br ${config.gradient} opacity-50`}></div>

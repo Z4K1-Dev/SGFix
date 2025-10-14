@@ -4,21 +4,21 @@ import * as React from "react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 
 import {
-    ChartConfig,
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
 } from "@/components/ui/chart"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import {
-    ToggleGroup,
-    ToggleGroupItem,
+  ToggleGroup,
+  ToggleGroupItem,
 } from "@/components/ui/toggle-group"
 
 export const description = "An interactive area chart"
@@ -123,11 +123,11 @@ const chartConfig = {
   },
   desktop: {
     label: "Desktop",
-    color: "hsl(var(--chart-1))",
+    color: "var(--chart-1)",
   },
   mobile: {
     label: "Mobile",
-    color: "hsl(var(--chart-2))",
+    color: "var(--chart-2)",
   },
 } satisfies ChartConfig
 
@@ -203,28 +203,12 @@ export function ChartAreaInteractive() {
         <AreaChart data={filteredData}>
           <defs>
             <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
-              <stop
-                offset="5%"
-                stopColor="var(--color-desktop)"
-                stopOpacity={1.0}
-              />
-              <stop
-                offset="95%"
-                stopColor="var(--color-desktop)"
-                stopOpacity={0.1}
-              />
+              <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={1.0} />
+              <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0.1} />
             </linearGradient>
             <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
-              <stop
-                offset="5%"
-                stopColor="var(--color-mobile)"
-                stopOpacity={0.8}
-              />
-              <stop
-                offset="95%"
-                stopColor="var(--color-mobile)"
-                stopOpacity={0.1}
-              />
+              <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0.1} />
             </linearGradient>
           </defs>
           <CartesianGrid vertical={false} />
@@ -260,14 +244,14 @@ export function ChartAreaInteractive() {
             dataKey="mobile"
             type="natural"
             fill="url(#fillMobile)"
-            stroke="var(--color-mobile)"
+            stroke="var(--chart-1)"
             stackId="a"
           />
           <Area
             dataKey="desktop"
             type="natural"
             fill="url(#fillDesktop)"
-            stroke="var(--color-desktop)"
+            stroke="var(--chart-2)"
             stackId="a"
           />
         </AreaChart>

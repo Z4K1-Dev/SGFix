@@ -13,39 +13,41 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { toast as appToast } from '@/hooks/use-toast'
 import { useSocket } from '@/hooks/useSocket'
 import {
-  AlertCircle,
-  BarChart3,
-  Bell,
-  CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  Edit,
-  Eye,
-  FileText,
-  Home,
-  Image,
-  LayoutGrid,
-  Menu,
-  MessageSquare,
-  Moon,
-  Plus,
-  RefreshCw,
-  Send,
-  Settings,
-  Sun,
-  Trash2,
-  TrendingDown,
-  TrendingUp,
-  Wifi,
-  WifiOff,
-  X
+    AlertCircle,
+    BarChart3,
+    Bell,
+    CheckCircle,
+    ChevronDown,
+    ChevronRight,
+    Clock,
+    Edit,
+    Eye,
+    FileText,
+    Home,
+    Image,
+    LayoutGrid,
+    Menu,
+    MessageSquare,
+    Moon,
+    Plus,
+    RefreshCw,
+    Send,
+    Settings,
+    Sun,
+    Trash2,
+    TrendingDown,
+    TrendingUp,
+    Wifi,
+    WifiOff,
+    X
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { toast } from 'sonner'
+
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -144,10 +146,25 @@ export default function AdminPage() {
   const [aktivitasData, setAktivitasData] = useState<Aktivitas[]>([])
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
-  
+
   // Socket integration
   const { isConnected, connectionError, notifications: realtimeNotif, clearNotifications } = useSocket('admin')
-  
+
+  // Toast for new realtime notifications (admin)
+  // Shows only when new arrives; UI list remains on the Notifikasi tab
+  const prevRealtimeCountRef = useRef(0)
+  useEffect(() => {
+    if (realtimeNotif && realtimeNotif.length > prevRealtimeCountRef.current) {
+      const latest: any = realtimeNotif[0]
+      if (latest) {
+        // Use app toast position (top center already configured globally)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        appToast({ title: latest.judul || 'Notifikasi baru', description: latest.pesan })
+      }
+      prevRealtimeCountRef.current = realtimeNotif.length
+    }
+  }, [realtimeNotif])
+
   // Form states
   const [kategoriForm, setKategoriForm] = useState({
     nama: '',
@@ -206,14 +223,14 @@ export default function AdminPage() {
     const handleError = (event: ErrorEvent) => {
       console.error('Admin: JavaScript error:', event.error)
     }
-    
+
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error('Admin: Unhandled promise rejection:', event.reason)
     }
-    
+
     window.addEventListener('error', handleError)
     window.addEventListener('unhandledrejection', handleUnhandledRejection)
-    
+
     return () => {
       window.removeEventListener('error', handleError)
       window.removeEventListener('unhandledrejection', handleUnhandledRejection)
@@ -225,7 +242,7 @@ export default function AdminPage() {
     if (typeof window === 'undefined') {
       return
     }
-    
+
     try {
       const [beritaRes, kategoriRes, laporanRes, layananRes, notifRes] = await Promise.all([
         fetch('/api/berita'),
@@ -234,17 +251,17 @@ export default function AdminPage() {
         fetch('/api/admin/layanan'),
         fetch('/api/notifikasi')
       ])
-      
+
       if (beritaRes.ok) {
         const beritaData = await beritaRes.json()
         setBerita(beritaData)
       }
-      
+
       if (kategoriRes.ok) {
         const kategoriData = await kategoriRes.json()
         setKategori(kategoriData)
       }
-      
+
       if (laporanRes.ok) {
         const laporanData = await laporanRes.json()
         setLaporan(laporanData)
@@ -261,7 +278,7 @@ export default function AdminPage() {
           setLayanan(layananData.data || [])
         }
       }
-      
+
       if (notifRes.ok) {
         const notifData = await notifRes.json()
         setNotifikasi(notifData)
@@ -384,12 +401,14 @@ export default function AdminPage() {
           notif.id === notifId ? { ...notif, dibaca: true } : notif
         )
       )
-      
-      // In a real app, you would call an API here
-      // const response = await fetch(`/api/notifikasi/${notifId}/read`, {
-      //   method: 'PUT'
-      // })
-      
+
+      // Sync to server
+      await fetch('/api/notifikasi', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [notifId] })
+      })
+
       toast.success('Notifikasi ditandai sebagai dibaca')
     } catch (error) {
       toast.error('Gagal menandai notifikasi')
@@ -417,13 +436,13 @@ export default function AdminPage() {
   }
 
   const unreadCount = notifikasi.filter(n => !n.dibaca && n.untukAdmin).length
-  
+
   // Filter notifikasi berdasarkan tipe
   const filteredNotifikasi = useMemo(() => {
     if (notifFilter === 'semua') {
       return notifikasi
     }
-    
+
     return notifikasi.filter(notif => {
       if (notifFilter === 'berita') {
         return notif.tipe.includes('BERITA')
@@ -445,13 +464,13 @@ export default function AdminPage() {
       berita: number
       laporan: number
     }> = []
-    
+
     if (chartPeriod === '7days') {
       // Last 7 days - use deterministic data
       const visitorData = [350, 420, 380, 450, 500, 480, 520]
       const beritaData = [3, 5, 4, 6, 8, 7, 9]
       const laporanData = [2, 3, 4, 3, 5, 4, 6]
-      
+
       for (let i = 6; i >= 0; i--) {
         const date = new Date(now)
         date.setDate(date.getDate() - i)
@@ -467,13 +486,13 @@ export default function AdminPage() {
       const visitorData = [2000, 2500, 3000, 2800]
       const beritaData = [15, 25, 30, 28]
       const laporanData = [10, 15, 20, 18]
-      
+
       for (let i = 3; i >= 0; i--) {
         const weekStart = new Date(now)
         weekStart.setDate(weekStart.getDate() - (i * 7))
         const weekEnd = new Date(weekStart)
         weekEnd.setDate(weekEnd.getDate() + 6)
-        
+
         data.push({
           date: `Minggu ${4 - i}`,
           pengunjung: visitorData[3 - i],
@@ -487,7 +506,7 @@ export default function AdminPage() {
       const visitorData = [8000, 10000, 12000]
       const beritaData = [50, 100, 150]
       const laporanData = [30, 60, 90]
-      
+
       for (let i = 2; i >= 0; i--) {
         const month = new Date(now)
         month.setMonth(month.getMonth() - i)
@@ -499,12 +518,12 @@ export default function AdminPage() {
         })
       }
     }
-    
+
     return data
   }
 
   const chartData = generateChartData()
-  
+
   // Memoize chart data to prevent regeneration on every render
   const memoizedChartData = useMemo(() => chartData, [chartPeriod])
 
@@ -514,7 +533,7 @@ export default function AdminPage() {
     const jenisAktivitas = ['berita', 'laporan', 'kategori', 'notifikasi', 'user']
     const aksi = ['dibuat', 'diedit', 'dihapus', 'dipublikasi', 'dikomentari']
     const status = ['success', 'pending', 'failed']
-    
+
     // Use deterministic data based on index
     for (let i = 1; i <= 20; i++) {
       const jenisIndex = i % jenisAktivitas.length
@@ -522,12 +541,12 @@ export default function AdminPage() {
       const statusIndex = (i + 2) % status.length
       const userIndex = i % 5
       const reviewerIndex = i % 3
-      
+
       const randomJenis = jenisAktivitas[jenisIndex]
       const randomAksi = aksi[aksiIndex]
       const randomStatus = status[statusIndex]
       const randomUser = ['Admin', 'User1', 'User2', 'User3', 'User4'][userIndex]
-      
+
       data.push({
         id: `aktivitas-${i}`,
         judul: `${randomJenis.charAt(0).toUpperCase() + randomJenis.slice(1)} ${randomAksi}`,
@@ -542,7 +561,7 @@ export default function AdminPage() {
         updatedAt: new Date(Date.now() - (i % 3) * 24 * 60 * 60 * 1000).toISOString()
       })
     }
-    
+
     setAktivitasData(data)
   }, [])
 
@@ -636,7 +655,7 @@ export default function AdminPage() {
                 strokeWidth="1.5"
               />
             </div>
-            
+
             {settingsOpen && sidebarOpen && (
               <div className="ml-6 space-y-2">
                 <Button variant="ghost" size="default" className="w-full justify-start h-10 active:shadow-none active:scale-[0.98] transition-all duration-200">
@@ -673,7 +692,7 @@ export default function AdminPage() {
               </div>
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <Button variant="outline" size="sm" className="transition-all duration-200 active:shadow-none active:scale-[0.98]">
+                  <Button variant="outline" size="sm" className="transition-all duration-200 active:shadow-none active:scale-[0.98]" onClick={() => setActiveTab('notifikasi')}>
                     <Bell className="text-foreground mr-2" size={18} />
                     <span className="text-foreground">Notifikasi</span>
                     {unreadCount > 0 && (
@@ -889,7 +908,7 @@ export default function AdminPage() {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <div className="flex-1 outline-none relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
                         <div className="overflow-hidden rounded-lg border-border border">
                           <div className="relative w-full overflow-y-auto overflow-x-hidden">
@@ -1008,7 +1027,7 @@ export default function AdminPage() {
                             </Table>
                           </div>
                         </div>
-                        
+
                         {/* Pagination */}
                         <div className="flex items-center justify-between px-4">
                           <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
@@ -1230,7 +1249,7 @@ export default function AdminPage() {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1 text-left">
                           <h3 className="text-lg font-semibold line-clamp-2">{item.judul}</h3>
@@ -1272,7 +1291,7 @@ export default function AdminPage() {
                           </span>
                         </div>
                       </div>
-                      
+
                       {/* Status Update */}
                       <div className="flex gap-2 mb-3">
                         <Select onValueChange={(value) => handleUpdateStatusLaporan(item.id, value)}>
@@ -1288,7 +1307,7 @@ export default function AdminPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       {/* Balasan Section - Compact */}
                       {item.balasan && item.balasan.length > 0 && (
                         <div className="mb-3 p-3 bg-muted rounded-lg">
@@ -1315,7 +1334,7 @@ export default function AdminPage() {
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Balas Form - Compact */}
                       <div className="flex gap-2">
                         <Input
@@ -1489,8 +1508,8 @@ export default function AdminPage() {
                                 }
                               }}
                             />
-                            <Button 
-                              onClick={() => handleBalasLayanan(item.id)} 
+                            <Button
+                              onClick={() => handleBalasLayanan(item.id)}
                               disabled={!layananBalasanForm.trim()}
                               size="sm"
                             >
@@ -1501,8 +1520,8 @@ export default function AdminPage() {
 
                         {/* Action Buttons */}
                         <div className="flex gap-2 pt-2">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => setSelectedLayanan(selectedLayanan === item.id ? null : item.id)}
                           >
@@ -1558,18 +1577,12 @@ export default function AdminPage() {
                   <Card key={item.id} className={`${item.dibaca ? "opacity-60" : ""} cursor-pointer`}>
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-3">
-                        <h3 className="text-lg font-semibold line-clamp-2">{item.judul}</h3>
-                        <div className="flex gap-1">
-                          {!item.dibaca && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleMarkAsRead(item.id)}
-                              className="h-8 px-2 text-xs"
-                            >
-                              Baca
-                            </Button>
-                          )}
+                        <h3 className="text-lg font-semibold line-clamp-2 pr-2 flex-1">{item.judul}</h3>
+                        <div className="flex items-start gap-2">
+                          <span
+                            className={`h-2.5 w-2.5 rounded-full mt-1 ${item.dibaca ? 'bg-muted-foreground' : 'bg-green-500'}`}
+                            title={item.dibaca ? 'Sudah dibaca' : 'Belum dibaca'}
+                          />
                           <button
                             onClick={() => {
                               // Delete functionality here

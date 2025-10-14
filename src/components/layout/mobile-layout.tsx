@@ -1,6 +1,7 @@
 'use client'
 
 import DocTabs from '@/components/doctabs'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { MobileHeader } from './mobile-header'
 
@@ -35,19 +36,18 @@ export function MobileLayout({
   }, [])
 
   // Default tab change handler
+  const router = useRouter()
+
   const handleTabChange = (index: number | null) => {
-    if (index !== null) {
-      const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
-      const tabName = tabMap[index];
-      if (tabName) {
-        if (tabName === 'layanan') {
-          window.location.href = '/layanan';
-        } else if (onTabChange) {
-          onTabChange(index);
-        }
-      }
+    if (index === null) return
+    const routes: (string | null)[] = ["/", "/berita", "/laporan", "/layanan", null, "/profile"]
+    const target = routes[index]
+    if (target) {
+      router.push(target)
+    } else if (onTabChange) {
+      onTabChange(index)
     }
-  };
+  }
 
   if (!mounted) {
     return null

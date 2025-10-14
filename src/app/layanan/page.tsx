@@ -2,6 +2,7 @@
 
 import { JenisLayananSelector, MultiStepForm, StatusTracker } from '@/components/layanan'
 import { MobileLayout } from '@/components/layout/mobile-layout'
+import { LayananSkeleton } from '@/components/loading-skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -220,22 +221,11 @@ export default function LayananPage() {
   }
 
   const handleTabChange = (index: number | null) => {
-    if (index !== null) {
-      const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
-      const tabName = tabMap[index];
-      if (tabName && tabName !== 'layanan') {
-        if (tabName === 'layanan') {
-          // Already on layanan page
-          return
-        } else if (tabName === 'beranda') {
-          router.push('/')
-        } else if (tabName === 'berita') {
-          router.push('/#berita')
-        } else if (tabName === 'laporan') {
-          router.push('/#laporan')
-        }
-      }
-    }
+    if (index === null) return
+    const routes: (string | null)[] = ["/", "/berita", "/laporan", "/layanan", null, "/profile"]
+    const target = routes[index]
+    if (!target || target === "/layanan") return
+    router.push(target)
   };
 
   if (!mounted) {
@@ -312,11 +302,9 @@ export default function LayananPage() {
             {/* Layanan List */}
             {loading ? (
               <div className="space-y-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="bg-muted h-24 rounded-xl"></div>
-                  </div>
-                ))}
+                <LayananSkeleton />
+                <LayananSkeleton />
+                <LayananSkeleton />
               </div>
             ) : filteredLayanan.length > 0 ? (
               <div className="space-y-4">

@@ -451,21 +451,11 @@ export default function LayananDetailPage() {
   }, [layanan])
 
   const handleTabChange = (index: number | null) => {
-    if (index !== null) {
-      const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
-      const tabName = tabMap[index];
-      if (tabName && tabName !== 'layanan') {
-        if (tabName === 'beranda') {
-          router.push('/')
-        } else if (tabName === 'berita') {
-          router.push('/#berita')
-        } else if (tabName === 'laporan') {
-          router.push('/#laporan')
-        } else if (tabName === 'layanan') {
-          router.push('/layanan')
-        }
-      }
-    }
+    if (index === null) return
+    const routes: (string | null)[] = ["/", "/berita", "/laporan", "/layanan", null, "/profile"]
+    const target = routes[index]
+    if (!target || target === "/layanan") return
+    router.push(target)
   };
 
   if (isLoading) {

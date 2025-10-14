@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import {
-  Bookmark,
-  Calendar,
-  Clock,
-  Eye,
-  Share2,
-  Tag,
-  User
+    Bookmark,
+    Calendar,
+    Clock,
+    Eye,
+    Share2,
+    Tag,
+    User
 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -143,24 +143,11 @@ export default function BeritaDetailPage() {
   }
 
   const handleTabChange = (index: number | null) => {
-    if (index !== null) {
-      const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
-      const tabName = tabMap[index];
-      if (tabName) {
-        if (tabName === 'beranda') {
-          router.push('/')
-        } else if (tabName === 'berita') {
-          // Navigasi ke homepage dengan tab berita aktif
-          router.push('/#berita')
-        } else if (tabName === 'laporan') {
-          router.push('/#laporan')
-        } else if (tabName === 'layanan') {
-          router.push('/layanan')
-        } else if (tabName === 'profile') {
-          // Handle profile navigation if needed
-        }
-      }
-    }
+    if (index === null) return
+    const routes: (string | null)[] = ["/", "/berita", "/laporan", "/layanan", null, "/profile"]
+    const target = routes[index]
+    if (!target || target === "/berita") return
+    router.push(target)
   };
 
   if (loading) {

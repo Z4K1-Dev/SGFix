@@ -8,14 +8,14 @@ import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  AlertCircle,
-  ArrowLeft,
-  ArrowRight,
-  Camera,
-  CheckCircle,
-  FileText,
-  MapPin,
-  Upload
+    AlertCircle,
+    ArrowLeft,
+    ArrowRight,
+    Camera,
+    CheckCircle,
+    FileText,
+    MapPin,
+    Upload
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState } from 'react'
@@ -396,19 +396,11 @@ export default function BuatLaporanPage() {
       backRoute="/"
       activeTab="laporan"
       onTabChange={(index) => {
-        if (index !== null) {
-          const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
-          const tabName = tabMap[index];
-          if (tabName && tabName !== 'laporan') {
-            if (tabName === 'beranda') {
-              router.push('/')
-            } else if (tabName === 'berita') {
-              router.push('/#berita')
-            } else if (tabName === 'layanan') {
-              router.push('/layanan')
-            }
-          }
-        }
+        if (index === null) return
+        const routes = ["/", "/berita", "/laporan", "/layanan", null, "/profile"]
+        const target = routes[index]
+        if (!target || target === "/laporan") return
+        router.push(target)
       }}
     >
       <div className="px-4 py-4">

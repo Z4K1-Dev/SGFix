@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -11,6 +11,12 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const untukAdmin = searchParams.get('untukAdmin')
+    const pageParam = searchParams.get('page')
+    const limitParam = searchParams.get('limit')
+
+    const page = Math.max(parseInt(pageParam || '1', 10) || 1, 1)
+    const limit = Math.min(Math.max(parseInt(limitParam || '20', 10) || 20, 1), 100)
+    const skip = (page - 1) * limit
 
     const where: any = {}
     if (untukAdmin !== null) {
@@ -20,19 +26,13 @@ export async function GET(request: NextRequest) {
     const notifikasi = await db.notifikasi.findMany({
       where,
       include: {
-        berita: {
-          select: { judul: true }
-        },
-        laporan: {
-          select: { judul: true }
-        },
-        balasan: {
-          select: { isi: true }
-        }
+        berita: { select: { judul: true } },
+        laporan: { select: { judul: true } },
+        balasan: { select: { isi: true } }
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
     })
 
     return NextResponse.json(notifikasi)
