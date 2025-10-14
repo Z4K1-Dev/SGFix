@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import '@/styles/mdxeditor-theme.css'
 import {
   BlockTypeSelect,
   BoldItalicUnderlineToggles,
@@ -269,7 +270,7 @@ export default function TambahBeritaPage() {
             <CardContent>
               {!isPreview ? (
                 <div className="min-h-[400px] border border-border rounded-lg overflow-hidden">
-                  <MDXEditor
+                  <MDXEditor className="mdx-editor"
                     markdown={formData.isi}
                     onChange={(value) => setFormData({ ...formData, isi: value })}
                     plugins={[
@@ -306,7 +307,7 @@ export default function TambahBeritaPage() {
                       linkDialogPlugin(),
                       diffSourcePlugin()
                     ]}
-                    contentEditableClassName="prose prose-sm max-w-none focus:outline-none min-h-[400px] p-4"
+                    contentEditableClassName="prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[400px] p-4"
                   />
                 </div>
               ) : (

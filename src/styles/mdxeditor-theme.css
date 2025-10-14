@@ -1,0 +1,373 @@
+/* MDXEditor Light Theme Customization */
+.mdx-editor {
+  /* Editor wrapper */
+  background-color: var(--background);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.mdx-editor .cm-editor {
+  /* CodeMirror editor */
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.mdx-editor .cm-content {
+  /* Editor content */
+  color: var(--foreground);
+  caret-color: var(--foreground);
+}
+
+.mdx-editor .cm-line {
+  /* Editor lines */
+  color: var(--foreground);
+}
+
+.mdx-editor ::selection,
+.mdx-editor [class*="cm-selectionBackground"] {
+  /* Text selection */
+  background-color: var(--primary);
+  opacity: 0.2;
+}
+
+.mdx-editor .cm-cursor {
+  /* Cursor */
+  border-left-color: var(--foreground) !important;
+}
+
+/* Toolbar */
+.mdx-editor .mdx-editor-toolbar {
+  background-color: var(--background);
+  border-color: var(--border);
+}
+
+.mdx-editor .mdx-editor-toolbar-item {
+  color: var(--foreground);
+}
+
+.mdx-editor .mdx-editor-toolbar-item:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.mdx-editor .mdx-editor-toolbar-item.active {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Headings */
+.mdx-editor .cm-heading {
+  color: var(--foreground);
+}
+
+/* Bold and italic */
+.mdx-editor .cm-strong {
+  color: var(--foreground);
+}
+
+.mdx-editor .cm-em {
+  color: var(--foreground);
+}
+
+/* Links */
+.mdx-editor .cm-link {
+  color: var(--primary);
+}
+
+.mdx-editor .cm-link:hover {
+  color: var(--primary);
+  opacity: 0.8;
+}
+
+/* Code blocks */
+.mdx-editor .cm-code {
+  background-color: var(--muted);
+  color: var(--foreground);
+  padding: 0.2em 0.4em;
+  border-radius: 0.2em;
+}
+
+/* Code blocks (fenced code blocks) */
+.mdx-editor .cm-line.HyperMD-codeblock {
+  background-color: var(--muted);
+  color: var(--foreground);
+  padding: 0.5em;
+  border-radius: 0.3em;
+}
+
+/* Lists */
+.mdx-editor .cm-list {
+  color: var(--foreground);
+}
+
+/* Quotes */
+.mdx-editor .cm-quote {
+  color: var(--muted-foreground);
+  border-left-color: var(--border);
+}
+
+/* Tables - using more specific selectors that CodeMirror might generate */
+.mdx-editor .cm-line:has(.HyperMD-table-row),
+.mdx-editor .HyperMD-table-row {
+  border-color: var(--border);
+}
+
+.mdx-editor .cm-line:has(.HyperMD-table-header),
+.mdx-editor .HyperMD-table-header {
+  background-color: var(--muted);
+  color: var(--foreground);
+}
+
+/* Horizontal rules */
+.mdx-editor .cm-line:has(.cm-hr),
+.mdx-editor .cm-hr {
+  border-color: var(--border);
+}
+
+/* Diff source toggle */
+.mdx-editor .diff-source-toggle {
+  background-color: var(--background);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.mdx-editor .diff-source-toggle:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Dialogs */
+.mdx-editor .mdx-editor-dialog {
+  background-color: var(--background);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.mdx-editor .mdx-editor-dialog input,
+.mdx-editor .mdx-editor-dialog textarea {
+  background-color: var(--background);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.mdx-editor .mdx-editor-dialog button {
+  background-color: var(--background);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.mdx-editor .mdx-editor-dialog button:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* MDXEditor Dark Theme Customization */
+.dark .mdx-editor {
+  /* Editor wrapper */
+  background-color: var(--background);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.dark .mdx-editor .cm-editor {
+  /* CodeMirror editor */
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.dark .mdx-editor .cm-content {
+  /* Editor content */
+  color: var(--foreground);
+  caret-color: var(--foreground);
+}
+
+.dark .mdx-editor .cm-line {
+  /* Editor lines */
+  color: var(--foreground);
+}
+
+.dark .mdx-editor ::selection,
+.dark .mdx-editor [class*="cm-selectionBackground"] {
+  /* Text selection */
+  background-color: var(--primary);
+  opacity: 0.2;
+}
+
+.dark .mdx-editor .cm-cursor {
+  /* Cursor */
+  border-left-color: var(--foreground) !important;
+}
+
+/* Toolbar */
+.dark .mdx-editor .mdx-editor-toolbar {
+  background-color: var(--background);
+  border-color: var(--border);
+}
+
+.dark .mdx-editor .mdx-editor-toolbar-item {
+  color: var(--foreground);
+}
+
+.dark .mdx-editor .mdx-editor-toolbar-item:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.dark .mdx-editor .mdx-editor-toolbar-item.active {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Headings */
+.dark .mdx-editor .cm-heading {
+  color: var(--foreground);
+}
+
+/* Bold and italic */
+.dark .mdx-editor .cm-strong {
+  color: var(--foreground);
+}
+
+.dark .mdx-editor .cm-em {
+  color: var(--foreground);
+}
+
+/* Links */
+.dark .mdx-editor .cm-link {
+  color: var(--primary);
+}
+
+.dark .mdx-editor .cm-link:hover {
+  color: var(--primary);
+  opacity: 0.8;
+}
+
+/* Code blocks */
+.dark .mdx-editor .cm-code {
+  background-color: var(--muted);
+  color: var(--foreground);
+  padding: 0.2em 0.4em;
+  border-radius: 0.2em;
+}
+
+/* Code blocks (fenced code blocks) */
+.dark .mdx-editor .cm-line.HyperMD-codeblock {
+  background-color: var(--muted);
+  color: var(--foreground);
+  padding: 0.5em;
+  border-radius: 0.3em;
+}
+
+/* Lists */
+.dark .mdx-editor .cm-list {
+  color: var(--foreground);
+}
+
+/* Quotes */
+.dark .mdx-editor .cm-quote {
+  color: var(--muted-foreground);
+  border-left-color: var(--border);
+}
+
+/* Tables - using more specific selectors that CodeMirror might generate */
+.dark .mdx-editor .cm-line:has(.HyperMD-table-row),
+.dark .mdx-editor .HyperMD-table-row {
+  border-color: var(--border);
+}
+
+.dark .mdx-editor .cm-line:has(.HyperMD-table-header),
+.dark .mdx-editor .HyperMD-table-header {
+  background-color: var(--muted);
+  color: var(--foreground);
+}
+
+/* Horizontal rules */
+.dark .mdx-editor .cm-line:has(.cm-hr),
+.dark .mdx-editor .cm-hr {
+  border-color: var(--border);
+}
+
+/* Diff source toggle */
+.dark .mdx-editor .diff-source-toggle {
+  background-color: var(--background);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.dark .mdx-editor .diff-source-toggle:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Dialogs */
+.dark .mdx-editor .mdx-editor-dialog {
+  background-color: var(--background);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.dark .mdx-editor .mdx-editor-dialog input,
+.dark .mdx-editor .mdx-editor-dialog textarea {
+  background-color: var(--background);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.dark .mdx-editor .mdx-editor-dialog button {
+  background-color: var(--background);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.dark .mdx-editor .mdx-editor-dialog button:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* --- Overrides for better dark mode contrast and surface parity --- */
+/* Ensure the editor surface uses card tokens in dark mode for readable contrast */
+.dark .mdx-editor,
+.dark .mdx-editor .cm-editor,
+.dark .mdx-editor .mdx-editor-toolbar,
+.dark .mdx-editor .mdx-editor-dialog {
+  background-color: var(--card) !important;
+  color: var(--card-foreground) !important;
+  border-color: var(--border) !important;
+}
+
+.dark .mdx-editor .mdx-editor-toolbar-item {
+  color: var(--card-foreground) !important;
+}
+
+/* Ensure the contenteditable area follows theme tokens */
+.mdx-editor [contenteditable="true"] {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+.dark .mdx-editor [contenteditable="true"] {
+  background-color: var(--card);
+  color: var(--card-foreground);
+}
+
+/* Inputs inside editor dialogs (link/image/etc.) */
+.dark .mdx-editor input,
+.dark .mdx-editor textarea,
+.dark .mdx-editor select {
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border-color: var(--border);
+}
+
+/* CodeMirror content color parity */
+.dark .mdx-editor .cm-content,
+.dark .mdx-editor .cm-line {
+  color: var(--card-foreground);
+}
+
+/* Placeholder text inside contenteditable (Lexical uses data-placeholder) */
+.mdx-editor [data-placeholder="true"] {
+  color: var(--muted-foreground);
+}
+.dark .mdx-editor [data-placeholder="true"] {
+  color: var(--muted-foreground);
+}

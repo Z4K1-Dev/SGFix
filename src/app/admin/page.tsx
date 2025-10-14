@@ -3,12 +3,17 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+
 import { ChartAreaInteractive } from '@/components/ui/chart-area-interactive'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ChartPieLayanan } from '@/components/ui/pie-chart-layanan'
+
+
+import EditBeritaForm from '@/components/edit-berita-form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
@@ -16,36 +21,36 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast as appToast } from '@/hooks/use-toast'
 import { useSocket } from '@/hooks/useSocket'
 import {
-    AlertCircle,
-    BarChart3,
-    Bell,
-    CheckCircle,
-    ChevronDown,
-    ChevronRight,
-    Clock,
-    Edit,
-    Eye,
-    FileText,
-    Home,
-    Image,
-    LayoutGrid,
-    Menu,
-    MessageSquare,
-    Moon,
-    Plus,
-    RefreshCw,
-    Send,
-    Settings,
-    Sun,
-    Trash2,
-    TrendingDown,
-    TrendingUp,
-    Wifi,
-    WifiOff,
-    X
+  AlertCircle,
+  BarChart3,
+  Bell,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Edit,
+  Eye,
+  FileText,
+  Home,
+  Image,
+  LayoutGrid,
+  Menu,
+  MessageSquare,
+  Moon,
+  Plus,
+  RefreshCw,
+  Send,
+  Settings,
+  Sun,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+  Wifi,
+  WifiOff,
+  X
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, XAxis, YAxis } from 'recharts'
 import { toast } from 'sonner'
 
 
@@ -106,6 +111,15 @@ interface Layanan {
   namaLengkap: string
   nik: string
   email?: string
+  telepon?: string
+  alamat: string
+  rt?: string
+  rw?: string
+  kelurahan?: string
+  kecamatan?: string
+  kabupaten?: string
+  provinsi?: string
+  kodePos?: string
   createdAt: string
   updatedAt: string
   balasan?: Array<{
@@ -146,6 +160,8 @@ export default function AdminPage() {
   const [aktivitasData, setAktivitasData] = useState<Aktivitas[]>([])
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
+  const [selectedLayananDetail, setSelectedLayananDetail] = useState<string | null>(null)
+  const [editingBeritaId, setEditingBeritaId] = useState<string | null>(null)
 
   // Socket integration
   const { isConnected, connectionError, notifications: realtimeNotif, clearNotifications } = useSocket('admin')
@@ -832,55 +848,54 @@ export default function AdminPage() {
                         </div>
                       </CardHeader>
                       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-                        <div
-                          className="h-[250px] w-full"
-                          style={{
-                            '--color-baru': 'var(--chart-2)',
-                            '--color-ditampung': 'var(--chart-3)',
-                            '--color-diteruskan': 'var(--chart-4)',
-                            '--color-dikerjakan': 'var(--chart-5)',
-                            '--color-selesai': 'var(--chart-1)'
-                          } as React.CSSProperties}
+                        <ChartContainer
+                          className="h-[260px] w-full"
+                          config={{
+                            jumlah: { label: 'Jumlah' },
+                            baru: { label: 'Baru', color: 'var(--chart-2)' },
+                            ditampung: { label: 'Ditampung', color: 'var(--chart-5)' },
+                            diteruskan: { label: 'Diteruskan', color: 'var(--chart-4)' },
+                            dikerjakan: { label: 'Dikerjakan', color: 'var(--chart-3)' },
+                            selesai: { label: 'Selesai', color: 'var(--chart-1)' },
+                          }}
                         >
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                              data={laporanStatusData}
-                              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                            >
-                              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                              <XAxis
-                                dataKey="name"
-                                tick={{ fontSize: 11 }}
-                                className="text-muted-foreground"
-                              />
-                              <YAxis
-                                tick={{ fontSize: 12 }}
-                                className="text-muted-foreground"
-                              />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: 'hsl(var(--card))',
-                                  border: '1px solid hsl(var(--border))',
-                                  borderRadius: '8px'
-                                }}
-                                labelStyle={{ color: 'hsl(var(--foreground))' }}
-                              />
-                              <Bar
-                                dataKey="value"
-                                radius={[4, 4, 0, 0]}
-                                name="Status"
-                              >
-                                {laporanStatusData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                                ))}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
+                          <BarChart
+                            accessibilityLayer
+                            data={[
+                              { status: 'baru', jumlah: 5, fill: 'var(--color-baru)' },
+                              { status: 'ditampung', jumlah: 3, fill: 'var(--color-ditampung)' },
+                              { status: 'diteruskan', jumlah: 5, fill: 'var(--color-diteruskan)' },
+                              { status: 'dikerjakan', jumlah: 8, fill: 'var(--color-dikerjakan)' },
+                              { status: 'selesai', jumlah: 11, fill: 'var(--color-selesai)' },
+                            ]}
+                            layout="vertical"
+                            margin={{ left: 30 }}
+                          >
+                            <YAxis
+                              dataKey="status"
+                              type="category"
+                              tickLine={false}
+                              tickMargin={10}
+                              axisLine={false}
+                              tickFormatter={(value) =>
+                                ({
+                                  baru: 'Baru',
+                                  ditampung: 'Ditampung',
+                                  diteruskan: 'Diteruskan',
+                                  dikerjakan: 'Dikerjakan',
+                                  selesai: 'Selesai',
+                                } as Record<string, string>)[value as string] || value
+                              }
+                            />
+                            <XAxis dataKey="jumlah" type="number" hide />
+                            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                            <Bar dataKey="jumlah" layout="vertical" radius={5} />
+                          </BarChart>
+                        </ChartContainer>
                         <div className="flex justify-center mt-4 text-xs text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--muted-foreground))' }}></div>
-                            <span>Total: {laporan.length || 25} laporan</span>
+                            <span>Total: 32 laporan</span>
                           </div>
                         </div>
                       </CardContent>
@@ -1075,10 +1090,6 @@ export default function AdminPage() {
           ) : (
             <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
               {/* Tab contents for non-dashboard tabs */}
-            {/* Tab Dashboard */}
-            <TabsContent value="dashboard" className="space-y-6 mt-6">
-              {/* Dashboard content is already rendered above */}
-            </TabsContent>
 
             {/* Tab Berita */}
             <TabsContent value="berita" className="space-y-6 px-6 mt-6">
@@ -1092,54 +1103,74 @@ export default function AdminPage() {
                 </Button>
               </div>
 
-              <div className="grid gap-4">
-                {berita.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Belum ada berita</p>
-                  </div>
-                ) : (
-                  berita.map((item) => (
-                    <Card key={item.id} className="cursor-pointer">
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold">{item.judul}</h3>
-                            <p className="text-muted-foreground mt-2">{item.isi.substring(0, 100)}...</p>
-                            <div className="flex items-center gap-2 mt-4">
-                              <Badge variant="secondary">{item.kategori?.nama || 'No Category'}</Badge>
-                              <Badge variant={item.published ? "default" : "outline"}>
-                                {item.published ? "Published" : "Draft"}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                // Edit functionality here
-                              }}
-                              className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
-                            >
-                              <Edit size={20} />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                // Delete functionality here
-                              }}
-                              className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
-                            >
-                              <Trash2 size={20} />
-                            </button>
-                          </div>
-                        </div>
+              {editingBeritaId ? (
+                <EditBeritaForm
+                  beritaId={editingBeritaId}
+                  onClose={() => setEditingBeritaId(null)}
+                  onSave={() => {
+                    setEditingBeritaId(null)
+                    fetchData()
+                  }}
+                />
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {berita.length === 0 ? (
+                    <Card className="md:col-span-2 lg:col-span-3">
+                      <CardContent className="text-center py-12">
+                        <FileText size={64} className="mx-auto text-muted-foreground mb-4" />
+                        <p className="text-lg font-medium text-muted-foreground">Belum ada berita</p>
+                        <p className="text-sm text-muted-foreground">Belum ada berita yang dibuat</p>
                       </CardContent>
                     </Card>
-                  ))
-                )}
-              </div>
+                  ) : (
+                    berita.map((item) => (
+                      <Card key={item.id} className="cursor-pointer">
+                        <CardHeader>
+                          <div className="flex justify-between items-start">
+                            <CardTitle className="text-lg line-clamp-2">{item.judul}</CardTitle>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  setEditingBeritaId(item.id)
+                                }}
+                                className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                                title="Edit"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  // Delete functionality here
+                                }}
+                                className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                                title="Hapus"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-muted-foreground text-sm mb-4 line-clamp-3">{item.isi.substring(0, 150)}...</p>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{item.kategori?.nama || 'No Category'}</Badge>
+                            <Badge variant={item.published ? "default" : "outline"}>
+                              {item.published ? "Published" : "Draft"}
+                            </Badge>
+                          </div>
+                          <div className="mt-3 text-xs text-muted-foreground">
+                            {new Date(item.createdAt).toLocaleDateString('id-ID')}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              )}
             </TabsContent>
 
             {/* Tab Kategori */}
@@ -1370,9 +1401,9 @@ export default function AdminPage() {
                 </Button>
               </div>
 
-              <div className="grid gap-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {layanan.map((item) => (
-                  <Card key={item.id} className="relative">
+                  <Card key={item.id} className="relative cursor-pointer" onClick={() => setSelectedLayananDetail(selectedLayananDetail === item.id ? null : item.id)}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div className="space-y-2">
@@ -1523,7 +1554,10 @@ export default function AdminPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setSelectedLayanan(selectedLayanan === item.id ? null : item.id)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedLayanan(selectedLayanan === item.id ? null : item.id)
+                            }}
                           >
                             <Edit size={16} className="mr-1" />
                             {selectedLayanan === item.id ? 'Tutup' : 'Update Status'}
@@ -1534,7 +1568,7 @@ export default function AdminPage() {
                   </Card>
                 ))}
                 {layanan.length === 0 && (
-                  <Card>
+                  <Card className="md:col-span-2 lg:col-span-3">
                     <CardContent className="text-center py-12">
                       <FileText size={64} className="mx-auto text-muted-foreground mb-4" />
                       <p className="text-lg font-medium text-muted-foreground">Belum ada layanan</p>
@@ -1543,6 +1577,181 @@ export default function AdminPage() {
                   </Card>
                 )}
               </div>
+
+              {/* Detail Layanan Modal */}
+              {selectedLayananDetail && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-background rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                    {(() => {
+                      const selectedLayananItem = layanan.find(l => l.id === selectedLayananDetail)
+                      if (!selectedLayananItem) return null
+
+                      return (
+                        <div className="p-6">
+                          <div className="flex justify-between items-start mb-6">
+                            <h2 className="text-2xl font-bold">Detail Layanan</h2>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedLayananDetail(null)}
+                            >
+                              <X size={20} />
+                            </Button>
+                          </div>
+
+                          <div className="space-y-6">
+                            {/* Informasi Utama */}
+                            <div className="space-y-4">
+                              <h3 className="text-lg font-semibold">Informasi Utama</h3>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <span className="font-medium">Judul:</span> {selectedLayananItem.judul}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Jenis Layanan:</span> {selectedLayananItem.jenisLayanan}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Status:</span>
+                                  <Badge className={`ml-2 ${getStatusColor(selectedLayananItem.status)}`}>
+                                    <div className="flex items-center gap-1">
+                                      {getStatusIcon(selectedLayananItem.status)}
+                                      {selectedLayananItem.status}
+                                    </div>
+                                  </Badge>
+                                </div>
+                                <div>
+                                  <span className="font-medium">Tanggal Dibuat:</span> {new Date(selectedLayananItem.createdAt).toLocaleDateString('id-ID')}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Informasi Pemohon */}
+                            <div className="space-y-4">
+                              <h3 className="text-lg font-semibold">Informasi Pemohon</h3>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <span className="font-medium">Nama Lengkap:</span> {selectedLayananItem.namaLengkap}
+                                </div>
+                                <div>
+                                  <span className="font-medium">NIK:</span> {selectedLayananItem.nik}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Email:</span> {selectedLayananItem.email || '-'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Telepon:</span> {selectedLayananItem.telepon || '-'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Alamat */}
+                            <div className="space-y-4">
+                              <h3 className="text-lg font-semibold">Alamat</h3>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="col-span-2">
+                                  <span className="font-medium">Alamat:</span> {selectedLayananItem.alamat}
+                                </div>
+                                <div>
+                                  <span className="font-medium">RT:</span> {selectedLayananItem.rt || '-'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">RW:</span> {selectedLayananItem.rw || '-'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Kelurahan:</span> {selectedLayananItem.kelurahan || '-'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Kecamatan:</span> {selectedLayananItem.kecamatan || '-'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Kabupaten:</span> {selectedLayananItem.kabupaten || '-'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Provinsi:</span> {selectedLayananItem.provinsi || '-'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Kode Pos:</span> {selectedLayananItem.kodePos || '-'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Balasan */}
+                            <div className="space-y-4">
+                              <h3 className="text-lg font-semibold">Riwayat Balasan</h3>
+                              <div className="space-y-2 max-h-40 overflow-y-auto">
+                                {selectedLayananItem.balasan && selectedLayananItem.balasan.length > 0 ? (
+                                  selectedLayananItem.balasan.map((balasan) => (
+                                    <div key={balasan.id} className={`p-3 rounded-lg ${balasan.dariAdmin ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-gray-900/20'}`}>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <Badge variant={balasan.dariAdmin ? "default" : "secondary"}>
+                                          {balasan.dariAdmin ? "Admin" : "User"}
+                                        </Badge>
+                                        <span className="text-sm text-muted-foreground">
+                                          {new Date(balasan.createdAt).toLocaleString('id-ID')}
+                                        </span>
+                                      </div>
+                                      <p>{balasan.isi}</p>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-muted-foreground">Belum ada balasan</p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Form Balas */}
+                            <div className="space-y-4">
+                              <h3 className="text-lg font-semibold">Tambah Balasan</h3>
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder="Kirim balasan..."
+                                  value={selectedLayanan === selectedLayananDetail ? layananBalasanForm : ''}
+                                  onChange={(e) => {
+                                    setSelectedLayanan(selectedLayananDetail)
+                                    setLayananBalasanForm(e.target.value)
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                      e.preventDefault()
+                                      handleBalasLayanan(selectedLayananDetail)
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  onClick={() => handleBalasLayanan(selectedLayananDetail)}
+                                  disabled={!layananBalasanForm.trim()}
+                                >
+                                  <Send size={18} />
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-2 pt-4 border-t">
+                              <Button
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedLayanan(selectedLayananDetail)
+                                }}
+                              >
+                                <Edit size={16} className="mr-2" />
+                                Update Status
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => setSelectedLayananDetail(null)}
+                              >
+                                Tutup
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             {/* Tab Notifikasi */}
@@ -1614,7 +1823,7 @@ export default function AdminPage() {
               </div>
             </TabsContent>
           </Tabs>
-        )}
+          )}
         </main>
       </div>
     </div>
