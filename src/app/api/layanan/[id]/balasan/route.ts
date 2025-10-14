@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   request: NextRequest,
@@ -100,6 +100,16 @@ export async function POST(
         layananId: id
       }
     })
+
+    // Emit realtime notification to admin (user sent reply)
+    const io = (globalThis as any).__io
+    if (io) {
+      io.to('admin').emit('chat-reply', {
+        pesan: `Ada balasan baru pada layanan "${layanan.judul}"`,
+        layananId: id,
+        ts: Date.now()
+      })
+    }
 
     return NextResponse.json({
       message: 'Balasan berhasil terkirim',

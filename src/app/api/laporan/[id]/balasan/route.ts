@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { notifyUser, notifyAdmin } from '@/lib/socket-utils'
+import { NextRequest, NextResponse } from 'next/server'
 
 /**
  * Menambahkan balasan pada laporan
@@ -55,13 +54,16 @@ export async function POST(
         }
       })
 
-      // Kirim notifikasi realtime ke user
-      await notifyUser({
-        judul: 'Balasan dari Admin',
-        pesan: `Admin telah membalas laporan "${laporan.judul}"`,
-        tipe: 'LAPORAN_BALASAN',
-        laporanId: id
-      })
+      // Emit realtime notification to user
+      const io = (globalThis as any).__io
+      if (io) {
+        io.to('user').emit('chat-reply', {
+          pesan: `Admin telah membalas laporan "${laporan.judul}"`,
+          laporanId: id,
+          ts: Date.now()
+        })
+      }
+
     } else {
       // Notifikasi ke admin
       await db.notifikasi.create({
@@ -75,13 +77,16 @@ export async function POST(
         }
       })
 
-      // Kirim notifikasi realtime ke admin
-      await notifyAdmin({
-        judul: 'Balasan Baru dari Masyarakat',
-        pesan: `Ada balasan baru pada laporan "${laporan.judul}"`,
-        tipe: 'LAPORAN_BALASAN',
-        laporanId: id
-      })
+      // Emit realtime notification to admin
+      const io = (globalThis as any).__io
+      if (io) {
+        io.to('admin').emit('chat-reply', {
+          pesan: `Ada balasan baru pada laporan "${laporan.judul}"`,
+          laporanId: id,
+          ts: Date.now()
+        })
+      }
+
     }
 
     return NextResponse.json(balasan, { status: 201 })

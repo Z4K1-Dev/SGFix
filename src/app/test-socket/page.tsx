@@ -1,84 +1,129 @@
 'use client'
 
-import dynamic from 'next/dynamic'
+import { useEffect, useMemo, useState } from 'react'
+import { connectSocket, getSocket } from '@/lib/socket-client'
 
-// Import komponen secara dinamik untuk menghindari error import
-const SocketDebug = dynamic(() => import('@/components/socket-debug').then(mod => ({ default: mod.SocketDebug })), {
-  ssr: false,
-  loading: () => <div className="p-4 text-center">Loading Socket Debug Component...</div>
-})
-
-/**
- * Halaman testing untuk koneksi Socket.IO
- * Menampilkan komponen debug untuk user dan admin
- */
 export default function TestSocketPage() {
+  const [role, setRole] = useState<'admin' | 'user'>('user')
+  const [socketId, setSocketId] = useState<string>('')
+  const [isConnected, setIsConnected] = useState<boolean>(false)
+  const [lastHeartbeat, setLastHeartbeat] = useState<number | null>(null)
+  const [notifs, setNotifs] = useState<Array<{ title?: string; judul?: string; message?: string; pesan?: string; ts?: number }>>([])
+  const [logs, setLogs] = useState<string[]>([])
+
+  const log = (m: string) => setLogs((l) => [new Date().toLocaleTimeString() + ' ' + m, ...l].slice(0, 200))
+
+  useEffect(() => {
+    const s = connectSocket(role)
+
+    const onConnect = () => {
+      setIsConnected(true)
+      setSocketId(s.id || '')
+      log(`[connect] id=${s.id}`)
+    }
+    const onDisconnect = (reason: any) => {
+      setIsConnected(false)
+      log(`[disconnect] reason=${reason}`)
+    }
+    const onConnectError = (err: any) => log(`[connect_error] ${err?.message}`)
+    const onHeartbeat = (data: any) => {
+      setLastHeartbeat(data?.ts || Date.now())
+      log(`[heartbeat-response] ts=${data?.ts}`)
+    }
+    const onNotif = (data: any) => {
+      setNotifs((n) => [{ ...data }, ...n].slice(0, 50))
+      log(`[notification] ${data?.title || data?.judul}: ${data?.message || data?.pesan}`)
+    }
+
+    s.on('connect', onConnect)
+    s.on('disconnect', onDisconnect)
+    s.on('connect_error', onConnectError)
+    s.on('heartbeat-response', onHeartbeat)
+    s.on('notification', onNotif)
+
+    return () => {
+      s.off('connect', onConnect)
+      s.off('disconnect', onDisconnect)
+      s.off('connect_error', onConnectError)
+      s.off('heartbeat-response', onHeartbeat)
+      s.off('notification', onNotif)
+    }
+  }, [role])
+
+  const sendHeartbeat = () => {
+    const s = getSocket()
+    if (s) {
+      s.emit('heartbeat')
+      log('[heartbeat] sent')
+    }
+  }
+
+  const sendNotif = async (room: 'admin' | 'user') => {
+    const title = `Ping untuk ${room}`
+    const message = `Waktu: ${new Date().toLocaleTimeString()}`
+    const res = await fetch('/api/test-socket', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room, title, message }),
+    })
+    const data = await res.json().catch(() => ({}))
+    log(`[api] POST /api/test-socket -> ${res.status} ${JSON.stringify(data)}`)
+  }
+
+  const statusColor = isConnected ? 'text-green-600' : 'text-red-600'
+
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-2">Socket.IO Connection Test</h1>
-          <p className="text-muted-foreground">
-            Halaman ini digunakan untuk testing koneksi Socket.IO antara client dan server.
-          </p>
-        </div>
+    <div className="p-4 space-y-4">
+      <h1 className="text-xl font-semibold">Test Socket.IO</h1>
 
-        {/* User Debug */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">User Connection Debug</h2>
-          <SocketDebug role="user" />
-        </div>
+      <div className="flex items-center gap-3">
+        <label className="text-sm">Role:</label>
+        <select
+          value={role}
+          onChange={(e) => setRole((e.target.value as 'admin' | 'user') || 'user')}
+          className="border rounded px-2 py-1"
+        >
+          <option value="user">user</option>
+          <option value="admin">admin</option>
+        </select>
+        <span className={statusColor}>
+          {isConnected ? 'Connected' : 'Disconnected'}
+        </span>
+        <span className="text-xs text-muted-foreground">id: {socketId || '-'}</span>
+      </div>
 
-        {/* Admin Debug */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Admin Connection Debug</h2>
-          <SocketDebug role="admin" />
-        </div>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={sendHeartbeat} className="px-3 py-1 rounded bg-blue-600 text-white text-sm">Heartbeat</button>
+        <button onClick={() => sendNotif('admin')} className="px-3 py-1 rounded bg-emerald-600 text-white text-sm">Kirim ke Admin</button>
+        <button onClick={() => sendNotif('user')} className="px-3 py-1 rounded bg-indigo-600 text-white text-sm">Kirim ke User</button>
+      </div>
 
-        {/* Instructions */}
-        <div className="bg-card rounded-lg p-6 border">
-          <h3 className="text-lg font-semibold mb-4">Petunjuk Penggunaan</h3>
-          <div className="space-y-2">
-            <div className="flex items-start gap-2">
-              <span className="text-primary">1.</span>
-              <p className="text-sm">
-                Komponen akan otomatis mencoba terhubung ke Socket.IO server saat dimuat
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-primary">2.</span>
-              <p className="text-sm">
-                Perhatikan status koneksi (Connected/Disconnected) pada setiap debug component
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-primary">3.</span>
-              <p className="text-sm">
-                Jika status disconnected, periksa Connection Logs untuk error message
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-primary">4.</span>
-              <p className="text-sm">
-                Gunakan tombol "Send Heartbeat" untuk test koneksi ke server
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-primary">5.</span>
-              <p className="text-sm">
-                Kirim test notification untuk memastikan real-time communication berfungsi
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-primary">6.</span>
-              <p className="text-sm">
-                Pastikan server berjalan dengan benar dan tidak ada firewall yang memblokir koneksi
-              </p>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h2 className="font-medium mb-2">Terima Notifikasi</h2>
+          <ul className="space-y-2">
+            {notifs.map((n, i) => (
+              <li key={i} className="p-2 rounded border">
+                <div className="text-sm font-medium">{n.title || n.judul}</div>
+                <div className="text-xs text-muted-foreground">{n.message || n.pesan}</div>
+                {n.ts ? <div className="text-[10px] text-muted-foreground">{new Date(n.ts).toLocaleTimeString()}</div> : null}
+              </li>
+            ))}
+            {notifs.length === 0 && <div className="text-sm text-muted-foreground">Belum ada notifikasi</div>}
+          </ul>
+        </div>
+        <div>
+          <h2 className="font-medium mb-2">Debug Log</h2>
+          <pre className="text-[11px] leading-4 p-2 rounded border max-h-[300px] overflow-auto bg-muted/30">
+            {logs.join('\n')}
+          </pre>
+          <div className="flex gap-2 mt-2">
+            <button onClick={() => setLogs([])} className="px-2 py-1 text-xs rounded border">Clear Log</button>
+            <button onClick={() => setNotifs([])} className="px-2 py-1 text-xs rounded border">Clear Notif</button>
           </div>
         </div>
       </div>
     </div>
   )
 }
+

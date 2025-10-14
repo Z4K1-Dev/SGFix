@@ -1,287 +1,63 @@
-import { io, Socket } from 'socket.io-client'
+"use client"
 
-/**
- * Socket Client Handler
- * Mengelola koneksi Socket.IO client untuk real-time communication
- */
+import { io, type Socket } from "socket.io-client"
 
-class SocketClient {
-  private socket: Socket | null = null
-  private reconnectAttempts = 0
-  private maxReconnectAttempts = 5
-  private reconnectDelay = 1000
+let socket: Socket | null = null
+let currentRole: SocketRole | undefined
 
-  /**
-   * Menghubungkan ke Socket.IO server
-   * @param token - Authentication token (optional untuk demo)
-   */
-  connect(token?: string): Promise<Socket> {
-    return new Promise((resolve, reject) => {
-      // Set timeout untuk promise
-      const timeout = setTimeout(() => {
-        reject(new Error('Socket connection timeout after 10 seconds'))
-      }, 10000)
 
-      // Disconnect existing socket if any
-      if (this.socket) {
-        this.socket.removeAllListeners()
-        this.socket.disconnect()
-        this.socket = null
-      }
+export type SocketRole = "admin" | "user"
 
-      // Gunakan URL dinamis dari current origin
-      const socketUrl = window.location.origin
+export function connectSocket(role?: SocketRole): Socket {
+  if (!socket) {
+    const baseURL = typeof window !== "undefined" ? window.location.origin : ""
 
-      console.log('Connecting to Socket.IO server:', socketUrl)
-      console.log('Socket path:', '/api/socket')
+    socket = io(baseURL, {
+      path: "/api/socket",
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      timeout: 10000,
+      withCredentials: false,
+    })
 
-      // Buat koneksi socket dengan HMR-safe configuration
-      this.socket = io(socketUrl, {
-        path: '/api/socket',
-        addTrailingSlash: false,
-        transports: ['websocket', 'polling'],
-        timeout: 20000,
-        forceNew: true,
-        reconnection: true,
-        reconnectionAttempts: this.maxReconnectAttempts,
-        reconnectionDelay: this.reconnectDelay,
-        reconnectionDelayMax: 5000, // Max 5 seconds delay between reconnections
-        // Disable HMR interference
-        autoConnect: true,
-        // Tambahkan konfigurasi CORS untuk memastikan koneksi berhasil
-        withCredentials: false,
-      })
-
-      // Handle connection success
-      this.socket.on('connect', () => {
-        console.log('Connected to Socket.IO server:', this.socket?.id)
-        this.reconnectAttempts = 0
-        
-        // Clear timeout
-        clearTimeout(timeout)
-        
-        // Join rooms (untuk demo, join semua room)
-        this.socket?.emit('join-room', 'public')
-        this.socket?.emit('join-room', 'admin')
-        
-        resolve(this.socket!)
-      })
-
-      // Handle connection error
-      this.socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error)
-        this.reconnectAttempts++
-        
-        // Clear timeout
-        clearTimeout(timeout)
-        
-        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-          console.error('Max reconnection attempts reached')
-          reject(new Error('Failed to connect to Socket.IO server'))
-        }
-      })
-
-      // Handle disconnect
-      this.socket.on('disconnect', (reason) => {
-        console.log('Disconnected from Socket.IO server:', reason)
-        
-        if (reason === 'io server disconnect') {
-          // Server memutuskan koneksi, coba reconnect
-          console.log('Attempting to reconnect...')
-          this.socket?.connect()
-        }
-      })
-
-      // Handle reconnect
-      this.socket.on('reconnect', (attemptNumber) => {
-        console.log('Reconnected to Socket.IO server after', attemptNumber, 'attempts')
-        
-        // Re-join rooms after reconnection
-        this.socket?.emit('join-room', 'public')
-        this.socket?.emit('join-room', 'admin')
-      })
-
-      // Handle reconnect error
-      this.socket.on('reconnect_error', (error) => {
-        console.error('Socket reconnection error:', error)
-      })
-
-      // Handle reconnect failed
-      this.socket.on('reconnect_failed', () => {
-        console.error('Socket reconnection failed after all attempts')
-      })
-
-      // Handle connection timeout
-      this.socket.on('connect_timeout', () => {
-        console.warn('Socket connection timeout')
-      })
+    // Debug logs
+    socket.on("connect", () => {
+      console.log("[socket-client] connected:", socket?.id)
+      // Re-join room after (re)connect to ensure membership persists
+      if (currentRole === "admin") socket!.emit("join-admin")
+      else if (currentRole === "user") socket!.emit("join-user")
+    })
+    socket.on("disconnect", (reason) => {
+      console.log("[socket-client] disconnect:", reason)
+    })
+    socket.on("connect_error", (err) => {
+      console.error("[socket-client] connect_error:", err.message)
+    })
+    socket.on("reconnect_attempt", (attempt) => {
+      console.log("[socket-client] reconnect_attempt:", attempt)
+    })
+    socket.on("reconnect_failed", () => {
+      console.warn("[socket-client] reconnect_failed")
+    })
+    socket.on("connect_timeout", () => {
+      console.warn("[socket-client] connect_timeout")
     })
   }
 
-  /**
-   * Memutuskan koneksi socket
-   */
-  disconnect(): void {
-    if (this.socket) {
-      this.socket.disconnect()
-      this.socket = null
-    }
+  // Join room based on role
+  if (role) currentRole = role
+
+  if (role === "admin") {
+    socket.emit("join-admin")
+  } else if (role === "user") {
+    socket.emit("join-user")
   }
 
-  /**
-   * Mendapatkan instance socket
-   */
-  getSocket(): Socket | null {
-    return this.socket
-  }
-
-  /**
-   * Mengecek apakah socket terhubung
-   */
-  isConnected(): boolean {
-    return this.socket?.connected || false
-  }
-
-  /**
-   * Join room
-   */
-  joinRoom(room: string): void {
-    if (this.socket?.connected) {
-      this.socket.emit('join-room', room)
-    }
-  }
-
-  /**
-   * Leave room
-   */
-  leaveRoom(room: string): void {
-    if (this.socket?.connected) {
-      this.socket.emit('leave-room', room)
-    }
-  }
-
-  /**
-   * Mengirim notifikasi
-   */
-  sendNotification(data: {
-    type: string
-    message: string
-    room?: string
-    data?: any
-  }): void {
-    if (this.socket?.connected) {
-      this.socket.emit('send-notification', data)
-    }
-  }
-
-  /**
-   * Update status layanan
-   */
-  updateLayananStatus(data: {
-    layananId: string
-    status: string
-    room?: string
-  }): void {
-    if (this.socket?.connected) {
-      this.socket.emit('update-layanan-status', data)
-    }
-  }
-
-  /**
-   * Update status laporan
-   */
-  updateLaporanStatus(data: {
-    laporanId: string
-    status: string
-    room?: string
-  }): void {
-    if (this.socket?.connected) {
-      this.socket.emit('update-laporan-status', data)
-    }
-  }
-
-  /**
-   * Mengirim balasan baru
-   */
-  sendBalasan(data: {
-    type: 'layanan' | 'laporan'
-    id: string
-    balasan: any
-    room?: string
-  }): void {
-    if (this.socket?.connected) {
-      this.socket.emit('new-balasan', data)
-    }
-  }
-
-  /**
-   * Mengirim heartbeat
-   */
-  sendHeartbeat(): void {
-    if (this.socket?.connected) {
-      this.socket.emit('heartbeat')
-    }
-  }
-
-  /**
-   * Listen untuk notifikasi
-   */
-  onNotification(callback: (data: any) => void): void {
-    if (this.socket) {
-      this.socket.on('notification', callback)
-    }
-  }
-
-  /**
-   * Listen untuk update status layanan
-   */
-  onLayananStatusUpdated(callback: (data: any) => void): void {
-    if (this.socket) {
-      this.socket.on('layanan-status-updated', callback)
-    }
-  }
-
-  /**
-   * Listen untuk update status laporan
-   */
-  onLaporanStatusUpdated(callback: (data: any) => void): void {
-    if (this.socket) {
-      this.socket.on('laporan-status-updated', callback)
-    }
-  }
-
-  /**
-   * Listen untuk balasan baru
-   */
-  onBalasanAdded(callback: (data: any) => void): void {
-    if (this.socket) {
-      this.socket.on('balasan-added', callback)
-    }
-  }
-
-  /**
-   * Listen untuk heartbeat response
-   */
-  onHeartbeatResponse(callback: (data: any) => void): void {
-    if (this.socket) {
-      this.socket.on('heartbeat-response', callback)
-    }
-  }
-
-  /**
-   * Remove listener
-   */
-  off(event: string, callback?: (data: any) => void): void {
-    if (this.socket) {
-      if (callback) {
-        this.socket.off(event, callback)
-      } else {
-        this.socket.off(event)
-      }
-    }
-  }
+  return socket
 }
 
-// Export singleton instance
-export const socketClient = new SocketClient()
-export default socketClient
+export function getSocket(): Socket | null {
+  return socket
+}
+

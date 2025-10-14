@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { notifyUser } from '@/lib/socket-utils'
+import { NextRequest, NextResponse } from 'next/server'
 
 /**
  * Update status laporan
@@ -37,13 +36,17 @@ export async function PUT(
       }
     })
 
-    // Kirim notifikasi realtime ke user
-    await notifyUser({
-      judul: 'Status Laporan Diperbarui',
-      pesan: `Status laporan "${laporan.judul}" telah diperbarui menjadi ${status}`,
-      tipe: 'LAPORAN_UPDATE',
-      laporanId: laporan.id
-    })
+    // Emit realtime notification to user
+    const io = (globalThis as any).__io
+    if (io) {
+      io.to('user').emit('laporan-status-changed', {
+        laporan: laporan.judul,
+        status: status,
+        laporanId: laporan.id,
+        ts: Date.now()
+      })
+    }
+
 
     return NextResponse.json(laporan)
   } catch (error) {

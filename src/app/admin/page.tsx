@@ -19,7 +19,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { toast as appToast } from '@/hooks/use-toast'
-import { useSocket } from '@/hooks/useSocket'
+import { playNotifSound } from '@/lib/notif-sound'
+import { connectSocket } from '@/lib/socket-client'
 import {
   AlertCircle,
   BarChart3,
@@ -52,6 +53,8 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Bar, BarChart, XAxis, YAxis } from 'recharts'
 import { toast } from 'sonner'
+
+
 
 
 // Force dynamic rendering
@@ -163,8 +166,71 @@ export default function AdminPage() {
   const [selectedLayananDetail, setSelectedLayananDetail] = useState<string | null>(null)
   const [editingBeritaId, setEditingBeritaId] = useState<string | null>(null)
 
-  // Socket integration
-  const { isConnected, connectionError, notifications: realtimeNotif, clearNotifications } = useSocket('admin')
+  // Socket integration (admin)
+  const [isConnected, setIsConnected] = useState(false)
+  const [connectionError, setConnectionError] = useState<string | null>(null)
+  const realtimeNotif: Array<{ judul?: string; title?: string; pesan?: string; message?: string }> = []
+  const clearNotifications = () => {}
+
+  // Init Socket.IO and listen for notifications
+  useEffect(() => {
+    const s = connectSocket('admin')
+
+    const handleConnect = () => setIsConnected(true)
+    const handleDisconnect = () => setIsConnected(false)
+    const handleError = (err: any) => setConnectionError(err?.message || 'Connection error')
+    const handleNotification = (data: any) => {
+      appToast({
+        title: data?.judul || data?.title || 'Notifikasi',
+        description: data?.pesan || data?.message || 'Pesan masuk',
+      })
+      void playNotifSound()
+    }
+
+    const handleChatReply = (data: any) => {
+      appToast({
+        title: 'Balasan Pesan (User)',
+        description: data?.pesan || data?.message || 'Balasan baru dari pengguna',
+      })
+      void playNotifSound()
+    }
+
+    const handleLaporanStatus = (data: any) => {
+      const status = data?.status || data?.newStatus || 'DIPERBARUI'
+      appToast({
+        title: 'Status Laporan Diubah',
+        description: `${data?.judul || data?.laporan || 'Laporan'} kini ${status}`,
+      })
+      void playNotifSound()
+    }
+
+    const handleLayananStatus = (data: any) => {
+      const status = data?.status || data?.newStatus || 'DIPERBARUI'
+      appToast({
+        title: 'Status Layanan Diubah',
+        description: `${data?.judul || data?.layanan || 'Layanan'} kini ${status}`,
+      })
+      void playNotifSound()
+    }
+
+    s.on('connect', handleConnect)
+    s.on('disconnect', handleDisconnect)
+    s.on('connect_error', handleError)
+    s.on('notification', handleNotification)
+    s.on('chat-reply', handleChatReply)
+    s.on('laporan-status-changed', handleLaporanStatus)
+    s.on('layanan-status-changed', handleLayananStatus)
+
+    return () => {
+      s.off('connect', handleConnect)
+      s.off('disconnect', handleDisconnect)
+      s.off('connect_error', handleError)
+      s.off('notification', handleNotification)
+      s.off('chat-reply', handleChatReply)
+      s.off('laporan-status-changed', handleLaporanStatus)
+      s.off('layanan-status-changed', handleLayananStatus)
+    }
+  }, [])
 
   // Toast for new realtime notifications (admin)
   // Shows only when new arrives; UI list remains on the Notifikasi tab
@@ -1403,7 +1469,7 @@ export default function AdminPage() {
 
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {layanan.map((item) => (
-                  <Card key={item.id} className="relative cursor-pointer" onClick={() => setSelectedLayananDetail(selectedLayananDetail === item.id ? null : item.id)}>
+                  <Card key={item.id} className="relative">
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div className="space-y-2">
@@ -1577,181 +1643,6 @@ export default function AdminPage() {
                   </Card>
                 )}
               </div>
-
-              {/* Detail Layanan Modal */}
-              {selectedLayananDetail && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-background rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                    {(() => {
-                      const selectedLayananItem = layanan.find(l => l.id === selectedLayananDetail)
-                      if (!selectedLayananItem) return null
-
-                      return (
-                        <div className="p-6">
-                          <div className="flex justify-between items-start mb-6">
-                            <h2 className="text-2xl font-bold">Detail Layanan</h2>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedLayananDetail(null)}
-                            >
-                              <X size={20} />
-                            </Button>
-                          </div>
-
-                          <div className="space-y-6">
-                            {/* Informasi Utama */}
-                            <div className="space-y-4">
-                              <h3 className="text-lg font-semibold">Informasi Utama</h3>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <span className="font-medium">Judul:</span> {selectedLayananItem.judul}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Jenis Layanan:</span> {selectedLayananItem.jenisLayanan}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Status:</span>
-                                  <Badge className={`ml-2 ${getStatusColor(selectedLayananItem.status)}`}>
-                                    <div className="flex items-center gap-1">
-                                      {getStatusIcon(selectedLayananItem.status)}
-                                      {selectedLayananItem.status}
-                                    </div>
-                                  </Badge>
-                                </div>
-                                <div>
-                                  <span className="font-medium">Tanggal Dibuat:</span> {new Date(selectedLayananItem.createdAt).toLocaleDateString('id-ID')}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Informasi Pemohon */}
-                            <div className="space-y-4">
-                              <h3 className="text-lg font-semibold">Informasi Pemohon</h3>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <span className="font-medium">Nama Lengkap:</span> {selectedLayananItem.namaLengkap}
-                                </div>
-                                <div>
-                                  <span className="font-medium">NIK:</span> {selectedLayananItem.nik}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Email:</span> {selectedLayananItem.email || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Telepon:</span> {selectedLayananItem.telepon || '-'}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Alamat */}
-                            <div className="space-y-4">
-                              <h3 className="text-lg font-semibold">Alamat</h3>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2">
-                                  <span className="font-medium">Alamat:</span> {selectedLayananItem.alamat}
-                                </div>
-                                <div>
-                                  <span className="font-medium">RT:</span> {selectedLayananItem.rt || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">RW:</span> {selectedLayananItem.rw || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Kelurahan:</span> {selectedLayananItem.kelurahan || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Kecamatan:</span> {selectedLayananItem.kecamatan || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Kabupaten:</span> {selectedLayananItem.kabupaten || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Provinsi:</span> {selectedLayananItem.provinsi || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Kode Pos:</span> {selectedLayananItem.kodePos || '-'}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Balasan */}
-                            <div className="space-y-4">
-                              <h3 className="text-lg font-semibold">Riwayat Balasan</h3>
-                              <div className="space-y-2 max-h-40 overflow-y-auto">
-                                {selectedLayananItem.balasan && selectedLayananItem.balasan.length > 0 ? (
-                                  selectedLayananItem.balasan.map((balasan) => (
-                                    <div key={balasan.id} className={`p-3 rounded-lg ${balasan.dariAdmin ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-gray-900/20'}`}>
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <Badge variant={balasan.dariAdmin ? "default" : "secondary"}>
-                                          {balasan.dariAdmin ? "Admin" : "User"}
-                                        </Badge>
-                                        <span className="text-sm text-muted-foreground">
-                                          {new Date(balasan.createdAt).toLocaleString('id-ID')}
-                                        </span>
-                                      </div>
-                                      <p>{balasan.isi}</p>
-                                    </div>
-                                  ))
-                                ) : (
-                                  <p className="text-muted-foreground">Belum ada balasan</p>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Form Balas */}
-                            <div className="space-y-4">
-                              <h3 className="text-lg font-semibold">Tambah Balasan</h3>
-                              <div className="flex gap-2">
-                                <Input
-                                  placeholder="Kirim balasan..."
-                                  value={selectedLayanan === selectedLayananDetail ? layananBalasanForm : ''}
-                                  onChange={(e) => {
-                                    setSelectedLayanan(selectedLayananDetail)
-                                    setLayananBalasanForm(e.target.value)
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                      e.preventDefault()
-                                      handleBalasLayanan(selectedLayananDetail)
-                                    }
-                                  }}
-                                />
-                                <Button
-                                  onClick={() => handleBalasLayanan(selectedLayananDetail)}
-                                  disabled={!layananBalasanForm.trim()}
-                                >
-                                  <Send size={18} />
-                                </Button>
-                              </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex gap-2 pt-4 border-t">
-                              <Button
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setSelectedLayanan(selectedLayananDetail)
-                                }}
-                              >
-                                <Edit size={16} className="mr-2" />
-                                Update Status
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => setSelectedLayananDetail(null)}
-                              >
-                                Tutup
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })()}
-                  </div>
-                </div>
-              )}
             </TabsContent>
 
             {/* Tab Notifikasi */}

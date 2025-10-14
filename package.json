@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nodemon --exec \"npx tsx server.ts\" --watch server.ts --watch src --ext ts,tsx,js,jsx 2>&1 | tee dev.log",
     "dev:stable": "tsx server.ts",
-    "start": "NODE_ENV=production tsx server.ts 2>&1 | tee server.log",
+    "start": "cross-env NODE_ENV=production tsx server.ts",
     "build": "next build",
     "lint": "next lint",
     "db:push": "prisma db push",
@@ -97,6 +97,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/ui": "^3.2.4",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
     "jsdom": "^27.0.0",

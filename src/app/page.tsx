@@ -5,6 +5,7 @@ import { BeritaSkeleton, SliderSkeleton, StatsCardSkeleton } from '@/components/
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { toast as appToast } from '@/hooks/use-toast'
 import {
     AlertCircle,
     BarChart3,
@@ -21,7 +22,10 @@ import {
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
+
+import { playNotifSound } from '@/lib/notif-sound'
+import { connectSocket } from '@/lib/socket-client'
+
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -91,10 +95,61 @@ export default function HomePage() {
       const timer = setTimeout(() => {
         setLoading(false)
       }, 2000) // Force loading to false after 2 seconds
-      
+
       return () => clearTimeout(timer)
     }
-  }, [mounted])
+  }
+  , [mounted])
+
+  // Socket.IO: connect as user and listen for notifications
+  useEffect(() => {
+    const s = connectSocket('user')
+
+    const handleNotif = (data: any) => {
+      appToast({
+        title: data?.judul || data?.title || 'Notifikasi',
+        description: data?.pesan || data?.message || 'Pesan masuk',
+      })
+      void playNotifSound()
+    }
+
+    const handleChatReply = (data: any) => {
+      appToast({
+        title: 'Balasan Pesan',
+        description: data?.pesan || data?.message || 'Ada balasan baru di pesan Anda',
+      })
+      void playNotifSound()
+    }
+
+    const handleLaporanStatus = (data: any) => {
+      const status = data?.status || data?.newStatus || 'DIPERBARUI'
+      appToast({
+        title: 'Status Laporan Berubah',
+        description: `${data?.judul || data?.laporan || 'Laporan'} kini ${status}`,
+      })
+      void playNotifSound()
+    }
+
+    const handleLayananStatus = (data: any) => {
+      const status = data?.status || data?.newStatus || 'DIPERBARUI'
+      appToast({
+        title: 'Status Layanan Berubah',
+        description: `${data?.judul || data?.layanan || 'Layanan'} kini ${status}`,
+      })
+      void playNotifSound()
+    }
+
+    s.on('notification', handleNotif)
+    s.on('chat-reply', handleChatReply)
+    s.on('laporan-status-changed', handleLaporanStatus)
+    s.on('layanan-status-changed', handleLayananStatus)
+    return () => {
+      s.off('notification', handleNotif)
+      s.off('chat-reply', handleChatReply)
+      s.off('laporan-status-changed', handleLaporanStatus)
+      s.off('layanan-status-changed', handleLayananStatus)
+    }
+  }, [])
 
   useEffect(() => {
     // Auto-rotate slider every 3 seconds
@@ -135,11 +190,11 @@ export default function HomePage() {
     if (typeof window === 'undefined') {
       return
     }
-    
+
     try {
       setLoading(true)
       console.log('Fetching data...')
-      
+
       const [beritaRes, laporanRes] = await Promise.all([
         fetch('/api/berita?published=true'),
         fetch('/api/laporan')
@@ -155,7 +210,7 @@ export default function HomePage() {
       } else {
         console.error('Berita API error:', beritaRes.status)
       }
-      
+
       if (laporanRes.ok) {
         const laporanData = await laporanRes.json()
         console.log('Laporan data received:', laporanData.length, 'items')
@@ -165,7 +220,7 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error('Error fetching data:', error)
-      toast.error('Gagal memuat data')
+      appToast({ title: 'Gagal memuat data', variant: 'destructive' })
     } finally {
       setLoading(false)
       console.log('Fetch completed, loading set to false')
@@ -185,9 +240,9 @@ export default function HomePage() {
 
   const handleMove = (clientX: number) => {
     if (!isDragging) return
-    
+
     setTouchEnd(clientX)
-    
+
     const offset = clientX - touchStart
     setDragOffset(offset)
     console.log('Move:', clientX, 'Offset:', offset)
@@ -195,9 +250,9 @@ export default function HomePage() {
 
   const handleEnd = () => {
     if (!isDragging) return
-    
+
     setIsDragging(false)
-    
+
     const distance = touchStart - touchEnd
     const isLeftSwipe = distance > minSwipeDistance
     const isRightSwipe = distance < -minSwipeDistance
@@ -222,7 +277,7 @@ export default function HomePage() {
     } else {
       console.log('No slide change - boundary or insufficient distance')
     }
-    
+
     // Reset drag offset after a short delay to allow smooth transition
     setTimeout(() => setDragOffset(0), 50)
   }
@@ -302,7 +357,7 @@ export default function HomePage() {
           />
         </div>
       </div>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Tab Beranda */}
         <TabsContent value="beranda" className="px-4 pb-6 mt-4">
@@ -312,7 +367,7 @@ export default function HomePage() {
               <SliderSkeleton />
             ) : (
               <div className={`relative overflow-hidden rounded-xl shadow-sm ${isDragging ? 'shadow-lg' : ''} transition-shadow duration-200`}>
-                <div 
+                <div
                   className={`relative h-48 bg-muted ${isDragging ? 'select-none' : ''}`}
                   onTouchStart={onTouchStart}
                   onTouchMove={onTouchMove}
@@ -321,16 +376,16 @@ export default function HomePage() {
                   onMouseMove={onMouseMove}
                   onMouseUp={onMouseUp}
                   onMouseLeave={onMouseUp}
-                  style={{ 
+                  style={{
                     touchAction: 'none',
                     WebkitUserSelect: 'none',
                     userSelect: 'none'
                   }}
                 >
               {/* Slides */}
-              <div 
+              <div
                 className={`flex h-full ${isDragging ? '' : 'transition-transform duration-500 ease-in-out'}`}
-                style={{ 
+                style={{
                   transform: `translateX(calc(-${currentSlide * 100}% + ${isDragging ? dragOffset : 0}px))`,
                   cursor: isDragging ? 'grabbing' : 'grab'
                 }}
@@ -385,7 +440,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-             
+
             {/* Slider Indicators */}
             <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-2">
               {[0, 1, 2].map((index) => (
@@ -463,7 +518,7 @@ export default function HomePage() {
                   <p className="text-2xl font-bold text-foreground">{!mounted || loading ? '...' : berita.length}</p>
                   <p className="text-xs text-muted-foreground">Tersedia</p>
                 </Card>
-                
+
                 <Card className="p-4 shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">

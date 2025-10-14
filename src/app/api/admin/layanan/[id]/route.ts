@@ -129,15 +129,26 @@ export async function PUT(
     }
 
     // Create notification - untuk demo, tidak perlu userId
-    // await db.notifikasi.create({
-    //   data: {
-    //     judul: notifikasiTitle,
-    //     pesan: notifikasiMessage,
-    //     tipe: notifikasiType as any,
-    //     untukAdmin: false,
-    //     layananId: params.id
-    //   }
-    // })
+    await db.notifikasi.create({
+      data: {
+        judul: notifikasiTitle,
+        pesan: notifikasiMessage,
+        tipe: notifikasiType as any,
+        untukAdmin: false,
+        layananId: id
+      }
+    })
+
+    // Emit realtime notification to user
+    const io = (globalThis as any).__io
+    if (io) {
+      io.to('user').emit('layanan-status-changed', {
+        layanan: layanan.judul,
+        status: status,
+        layananId: id,
+        ts: Date.now()
+      })
+    }
 
     return NextResponse.json({
       message: 'Status layanan berhasil diperbarui',

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { notifyAdmin } from '@/lib/socket-utils'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -70,13 +69,6 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Kirim notifikasi realtime ke admin
-    await notifyAdmin({
-      judul: 'Laporan Baru',
-      pesan: `Laporan "${judul}" telah dibuat oleh masyarakat`,
-      tipe: 'LAPORAN_BARU',
-      laporanId: laporan.id
-    })
 
     // Invalidate cache when new laporan is created
     invalidateCachePattern('/api/laporan')

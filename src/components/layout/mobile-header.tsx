@@ -4,7 +4,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { toast } from '@/hooks/use-toast'
-import { useSocket } from '@/hooks/useSocket'
+import { connectSocket, getSocket } from '@/lib/socket-client'
 import { Bell, Home, Wifi, WifiOff } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -23,7 +23,8 @@ export function MobileHeader({
   backRoute?: string
 }) {
   const router = useRouter()
-  const { isConnected, notifications: realtimeNotif } = useSocket('user')
+  const [isConnected, setIsConnected] = useState(false)
+  const realtimeNotif: Array<{ judul?: string; title?: string; pesan?: string; message?: string }> = [];
 
   // State for notification panel
   const [notifOpen, setNotifOpen] = useState(false)
@@ -47,11 +48,28 @@ export function MobileHeader({
     if (realtimeNotif.length > prevCountRef.current) {
       const latest = realtimeNotif[0]
       if (latest) {
-        toast({ title: latest.judul || 'Notifikasi baru', description: latest.pesan })
+        toast({ title: latest.judul || latest.title || 'Notifikasi baru', description: latest.pesan || latest.message })
       }
       prevCountRef.current = realtimeNotif.length
     }
-  }, [realtimeNotif, toast])
+  }, [realtimeNotif])
+
+  // Socket connection indicator: observe socket status or connect once if absent
+  useEffect(() => {
+    let s = getSocket()
+    if (!s) {
+      s = connectSocket('user')
+    }
+    setIsConnected(!!s.connected)
+    const onConnect = () => setIsConnected(true)
+    const onDisconnect = () => setIsConnected(false)
+    s.on('connect', onConnect)
+    s.on('disconnect', onDisconnect)
+    return () => {
+      s?.off('connect', onConnect)
+      s?.off('disconnect', onDisconnect)
+    }
+  }, [])
 
   // Fetch notifications when panel opens (with pagination)
   useEffect(() => {
