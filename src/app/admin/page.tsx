@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ChartPieLayanan } from '@/components/ui/pie-chart-layanan'
+import { NotificationSoundToggle } from '@/components/ui/notification-sound-toggle'
 
 
 import EditBeritaForm from '@/components/edit-berita-form'
@@ -20,6 +21,7 @@ import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { toast as appToast } from '@/hooks/use-toast'
 import { useSocket } from '@/hooks/useSocket'
+import { useGlobalSocket } from '@/hooks/useGlobalSocket'
 import {
   AlertCircle,
   BarChart3,
@@ -160,11 +162,10 @@ export default function AdminPage() {
   const [aktivitasData, setAktivitasData] = useState<Aktivitas[]>([])
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
-  const [selectedLayananDetail, setSelectedLayananDetail] = useState<string | null>(null)
   const [editingBeritaId, setEditingBeritaId] = useState<string | null>(null)
 
   // Socket integration
-  const { isConnected, connectionError, notifications: realtimeNotif, clearNotifications } = useSocket('admin')
+  const { isConnected, connectionError, notifications: realtimeNotif, clearNotifications, soundEnabled, toggleNotificationSound, playNotificationSound } = useGlobalSocket('admin')
 
   // Toast for new realtime notifications (admin)
   // Shows only when new arrives; UI list remains on the Notifikasi tab
@@ -189,7 +190,8 @@ export default function AdminPage() {
   const [balasanForm, setBalasanForm] = useState('')
   const [selectedLaporan, setSelectedLaporan] = useState<string | null>(null)
   const [selectedLayanan, setSelectedLayanan] = useState<string | null>(null)
-  const [layananBalasanForm, setLayananBalasanForm] = useState('')
+  const [layananBalasanForms, setLayananBalasanForms] = useState<Record<string, string>>({})
+  const [layananSending, setLayananSending] = useState<Record<string, boolean>>({})
   const [layananStatusForm, setLayananStatusForm] = useState({
     status: '',
     catatan: '',
@@ -388,24 +390,38 @@ export default function AdminPage() {
   }
 
   const handleBalasLayanan = async (layananId: string) => {
-    if (!layananBalasanForm.trim()) return
+    const formValue = layananBalasanForms[layananId] || ''
+    if (!formValue.trim()) return
+
+    // Set loading state
+    setLayananSending(prev => ({ ...prev, [layananId]: true }))
+    
+    // Show loading toast
+    const loadingToast = toast.loading('Mengirim pesan...')
 
     try {
       const response = await fetch(`/api/admin/layanan/${layananId}/balasan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pesan: layananBalasanForm })
+        body: JSON.stringify({ pesan: formValue })
       })
 
       if (response.ok) {
         toast.success('Balasan berhasil dikirim!')
-        setLayananBalasanForm('')
+        // Clear the form for this specific layanan
+        setLayananBalasanForms(prev => ({ ...prev, [layananId]: '' }))
         fetchData()
       } else {
-        toast.error('Gagal mengirim balasan')
+        const error = await response.json()
+        toast.error(`Gagal mengirim balasan: ${error.error || 'Unknown error'}`)
       }
     } catch (error) {
-      toast.error('Terjadi kesalahan')
+      toast.error('Terjadi kesalahan saat mengirim pesan')
+    } finally {
+      // Clear loading state
+      setLayananSending(prev => ({ ...prev, [layananId]: false }))
+      // Dismiss loading toast
+      toast.dismiss(loadingToast)
     }
   }
 
@@ -687,6 +703,13 @@ export default function AdminPage() {
                   {darkMode ? <Sun className="text-sidebar-foreground mr-2" size={28} /> : <Moon className="text-sidebar-foreground mr-2" size={28} />}
                   <span className="text-sidebar-foreground">Themes</span>
                 </Button>
+                <div className="ml-4 mt-2 px-2 py-1.5 rounded-md bg-sidebar-accent/50 border-sidebar-border/50">
+                  <NotificationSoundToggle
+                    soundEnabled={soundEnabled}
+                    onToggle={toggleNotificationSound}
+                    onTestSound={playNotificationSound}
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -1403,7 +1426,7 @@ export default function AdminPage() {
 
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {layanan.map((item) => (
-                  <Card key={item.id} className="relative cursor-pointer" onClick={() => setSelectedLayananDetail(selectedLayananDetail === item.id ? null : item.id)}>
+                  <Card key={item.id} className="relative">
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div className="space-y-2">
@@ -1530,18 +1553,19 @@ export default function AdminPage() {
                           <div className="flex gap-2">
                             <Input
                               placeholder="Kirim balasan..."
-                              value={layananBalasanForm}
-                              onChange={(e) => setLayananBalasanForm(e.target.value)}
+                              value={layananBalasanForms[item.id] || ''}
+                              onChange={(e) => setLayananBalasanForms(prev => ({ ...prev, [item.id]: e.target.value }))}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                   e.preventDefault()
                                   handleBalasLayanan(item.id)
                                 }
                               }}
+                              disabled={layananSending[item.id]}
                             />
                             <Button
                               onClick={() => handleBalasLayanan(item.id)}
-                              disabled={!layananBalasanForm.trim()}
+                              disabled={!layananBalasanForms[item.id]?.trim() || layananSending[item.id]}
                               size="sm"
                             >
                               <Send size={18} />
@@ -1554,10 +1578,7 @@ export default function AdminPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSelectedLayanan(selectedLayanan === item.id ? null : item.id)
-                            }}
+                            onClick={() => setSelectedLayanan(selectedLayanan === item.id ? null : item.id)}
                           >
                             <Edit size={16} className="mr-1" />
                             {selectedLayanan === item.id ? 'Tutup' : 'Update Status'}
@@ -1577,181 +1598,6 @@ export default function AdminPage() {
                   </Card>
                 )}
               </div>
-
-              {/* Detail Layanan Modal */}
-              {selectedLayananDetail && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-background rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                    {(() => {
-                      const selectedLayananItem = layanan.find(l => l.id === selectedLayananDetail)
-                      if (!selectedLayananItem) return null
-
-                      return (
-                        <div className="p-6">
-                          <div className="flex justify-between items-start mb-6">
-                            <h2 className="text-2xl font-bold">Detail Layanan</h2>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedLayananDetail(null)}
-                            >
-                              <X size={20} />
-                            </Button>
-                          </div>
-
-                          <div className="space-y-6">
-                            {/* Informasi Utama */}
-                            <div className="space-y-4">
-                              <h3 className="text-lg font-semibold">Informasi Utama</h3>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <span className="font-medium">Judul:</span> {selectedLayananItem.judul}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Jenis Layanan:</span> {selectedLayananItem.jenisLayanan}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Status:</span>
-                                  <Badge className={`ml-2 ${getStatusColor(selectedLayananItem.status)}`}>
-                                    <div className="flex items-center gap-1">
-                                      {getStatusIcon(selectedLayananItem.status)}
-                                      {selectedLayananItem.status}
-                                    </div>
-                                  </Badge>
-                                </div>
-                                <div>
-                                  <span className="font-medium">Tanggal Dibuat:</span> {new Date(selectedLayananItem.createdAt).toLocaleDateString('id-ID')}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Informasi Pemohon */}
-                            <div className="space-y-4">
-                              <h3 className="text-lg font-semibold">Informasi Pemohon</h3>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <span className="font-medium">Nama Lengkap:</span> {selectedLayananItem.namaLengkap}
-                                </div>
-                                <div>
-                                  <span className="font-medium">NIK:</span> {selectedLayananItem.nik}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Email:</span> {selectedLayananItem.email || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Telepon:</span> {selectedLayananItem.telepon || '-'}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Alamat */}
-                            <div className="space-y-4">
-                              <h3 className="text-lg font-semibold">Alamat</h3>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2">
-                                  <span className="font-medium">Alamat:</span> {selectedLayananItem.alamat}
-                                </div>
-                                <div>
-                                  <span className="font-medium">RT:</span> {selectedLayananItem.rt || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">RW:</span> {selectedLayananItem.rw || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Kelurahan:</span> {selectedLayananItem.kelurahan || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Kecamatan:</span> {selectedLayananItem.kecamatan || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Kabupaten:</span> {selectedLayananItem.kabupaten || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Provinsi:</span> {selectedLayananItem.provinsi || '-'}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Kode Pos:</span> {selectedLayananItem.kodePos || '-'}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Balasan */}
-                            <div className="space-y-4">
-                              <h3 className="text-lg font-semibold">Riwayat Balasan</h3>
-                              <div className="space-y-2 max-h-40 overflow-y-auto">
-                                {selectedLayananItem.balasan && selectedLayananItem.balasan.length > 0 ? (
-                                  selectedLayananItem.balasan.map((balasan) => (
-                                    <div key={balasan.id} className={`p-3 rounded-lg ${balasan.dariAdmin ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-gray-900/20'}`}>
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <Badge variant={balasan.dariAdmin ? "default" : "secondary"}>
-                                          {balasan.dariAdmin ? "Admin" : "User"}
-                                        </Badge>
-                                        <span className="text-sm text-muted-foreground">
-                                          {new Date(balasan.createdAt).toLocaleString('id-ID')}
-                                        </span>
-                                      </div>
-                                      <p>{balasan.isi}</p>
-                                    </div>
-                                  ))
-                                ) : (
-                                  <p className="text-muted-foreground">Belum ada balasan</p>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Form Balas */}
-                            <div className="space-y-4">
-                              <h3 className="text-lg font-semibold">Tambah Balasan</h3>
-                              <div className="flex gap-2">
-                                <Input
-                                  placeholder="Kirim balasan..."
-                                  value={selectedLayanan === selectedLayananDetail ? layananBalasanForm : ''}
-                                  onChange={(e) => {
-                                    setSelectedLayanan(selectedLayananDetail)
-                                    setLayananBalasanForm(e.target.value)
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                      e.preventDefault()
-                                      handleBalasLayanan(selectedLayananDetail)
-                                    }
-                                  }}
-                                />
-                                <Button
-                                  onClick={() => handleBalasLayanan(selectedLayananDetail)}
-                                  disabled={!layananBalasanForm.trim()}
-                                >
-                                  <Send size={18} />
-                                </Button>
-                              </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex gap-2 pt-4 border-t">
-                              <Button
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setSelectedLayanan(selectedLayananDetail)
-                                }}
-                              >
-                                <Edit size={16} className="mr-2" />
-                                Update Status
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => setSelectedLayananDetail(null)}
-                              >
-                                Tutup
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })()}
-                  </div>
-                </div>
-              )}
             </TabsContent>
 
             {/* Tab Notifikasi */}

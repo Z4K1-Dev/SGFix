@@ -60,7 +60,8 @@ export async function POST(
         judul: 'Balasan dari Admin',
         pesan: `Admin telah membalas laporan "${laporan.judul}"`,
         tipe: 'LAPORAN_BALASAN',
-        laporanId: id
+        laporanId: id,
+        balasanId: balasan.id
       })
     } else {
       // Notifikasi ke admin
@@ -80,7 +81,8 @@ export async function POST(
         judul: 'Balasan Baru dari Masyarakat',
         pesan: `Ada balasan baru pada laporan "${laporan.judul}"`,
         tipe: 'LAPORAN_BALASAN',
-        laporanId: id
+        laporanId: id,
+        balasanId: balasan.id
       })
     }
 

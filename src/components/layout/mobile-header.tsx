@@ -1,19 +1,20 @@
 'use client'
-
+ 
 import { ThemeToggle } from '@/components/theme-toggle'
+import { NotificationSoundToggle } from '@/components/ui/notification-sound-toggle'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { toast } from '@/hooks/use-toast'
-import { useSocket } from '@/hooks/useSocket'
+import { useGlobalSocket } from '@/hooks/useGlobalSocket'
 import { Bell, Home, Wifi, WifiOff } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-
+ 
 /**
  * Komponen header untuk aplikasi mobile
  * Menampilkan logo, judul, notifikasi, dan status koneksi
  */
-export function MobileHeader({ 
+export function MobileHeader({
   title = 'Portal SmartGov',
   showBackButton = false,
   backRoute = '/'
@@ -23,13 +24,13 @@ export function MobileHeader({
   backRoute?: string
 }) {
   const router = useRouter()
-  const { isConnected, notifications: realtimeNotif } = useSocket('user')
-
-  // State for notification panel
+  const { isConnected, notifications: realtimeNotif, soundEnabled, toggleNotificationSound, playNotificationSound } = useGlobalSocket('user')
+ 
+ // State for notification panel
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifikasi, setNotifikasi] = useState<Array<{ id: string; judul: string; pesan: string; tipe?: string; createdAt?: string; beritaId?: string | null; laporanId?: string | null; layananId?: string | null; dibaca?: boolean }>>([])
   const prevCountRef = useRef(0)
-
+ 
   // Filters & pagination
   const [notifFilter, setNotifFilter] = useState<'semua' | 'berita' | 'laporan' | 'layanan'>('semua')
   const [page, setPage] = useState(1)
@@ -37,11 +38,11 @@ export function MobileHeader({
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
-
+ 
   // global unread count for badge
   const [globalUnread, setGlobalUnread] = useState<number | null>(null)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
-
+ 
   // Toast only for new incoming notifications (realtime)
   useEffect(() => {
     if (realtimeNotif.length > prevCountRef.current) {
@@ -52,7 +53,7 @@ export function MobileHeader({
       prevCountRef.current = realtimeNotif.length
     }
   }, [realtimeNotif, toast])
-
+ 
   // Fetch notifications when panel opens (with pagination)
   useEffect(() => {
     if (!notifOpen) return
@@ -74,7 +75,7 @@ export function MobileHeader({
       }
     })()
   }, [notifOpen])
-
+ 
   // Poll unread count periodically for badge freshness
   useEffect(() => {
     let mounted = true
@@ -91,7 +92,7 @@ export function MobileHeader({
     const id = setInterval(fetchCount, 45000)
     return () => { mounted = false; clearInterval(id) }
   }, [])
-
+ 
   // Infinite scroll with IntersectionObserver
   useEffect(() => {
     if (!notifOpen || !hasMore) return
@@ -107,7 +108,7 @@ export function MobileHeader({
     observer.observe(el)
     return () => observer.disconnect()
   }, [notifOpen, hasMore])
-
+ 
   const loadMore = async () => {
     if (loadingMore || !hasMore) return
     setLoadingMore(true)
@@ -127,10 +128,10 @@ export function MobileHeader({
       setLoadingMore(false)
     }
   }
-
+ 
   const unreadCount = useMemo(() => notifikasi.filter(n => !n.dibaca).length, [notifikasi])
   const badgeCount = globalUnread ?? unreadCount
-
+ 
   const formatRelative = (iso?: string) => {
     if (!iso) return ''
     const now = Date.now()
@@ -144,7 +145,7 @@ export function MobileHeader({
     const d = Math.floor(h / 24)
     return `${d}h lalu`
   }
-
+ 
   const linkForNotif = (n: { beritaId?: string | null; laporanId?: string | null; layananId?: string | null; tipe?: string }) => {
     if (n.beritaId) return `/berita/${n.beritaId}`
     if (n.laporanId) return `/laporan/${n.laporanId}`
@@ -164,7 +165,7 @@ export function MobileHeader({
       return true
     })
   }, [notifikasi, notifFilter])
-
+ 
   const handleBack = () => {
     if (window.history.length > 2) {
       router.back()
@@ -172,13 +173,13 @@ export function MobileHeader({
       router.push(backRoute)
     }
   }
-
+ 
   return (
     <header className="bg-primary text-primary-foreground p-3 shadow-md sticky top-0 z-40">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {showBackButton && (
-            <button 
+            <button
               onClick={handleBack}
               className="inline-flex items-center justify-center rounded-md hover:bg-primary-foreground/20 h-8 w-8 p-0 text-primary-foreground"
             >
@@ -208,7 +209,7 @@ export function MobileHeader({
                 </span>
               )}
             </button>
-
+ 
             <SheetContent side="right" className="w-full max-w-sm p-0">
               <SheetHeader className="p-4">
                 <div className="flex items-center justify-between gap-3">
@@ -240,20 +241,27 @@ export function MobileHeader({
                 </div>
               </SheetHeader>
               <div className="px-4 pb-4 max-h-[70vh] overflow-y-auto space-y-2">
-                <div className="pb-2 sticky top-0 bg-background z-10">
-                  <Select value={notifFilter} onValueChange={(v: any) => setNotifFilter(v)}>
-                    <SelectTrigger className="h-8 w-full">
-                      <SelectValue placeholder="Filter notifikasi" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="semua">Semua</SelectItem>
-                      <SelectItem value="berita">Berita</SelectItem>
-                      <SelectItem value="laporan">Laporan</SelectItem>
-                      <SelectItem value="layanan">Layanan</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="pb-2 sticky top-0 bg-background z-10 border-b">
+                  <div className="flex items-center justify-between">
+                    <Select value={notifFilter} onValueChange={(v: any) => setNotifFilter(v)}>
+                      <SelectTrigger className="h-8 w-full">
+                        <SelectValue placeholder="Filter notifikasi" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="semua">Semua</SelectItem>
+                        <SelectItem value="berita">Berita</SelectItem>
+                        <SelectItem value="laporan">Laporan</SelectItem>
+                        <SelectItem value="layanan">Layanan</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <NotificationSoundToggle
+                      soundEnabled={soundEnabled}
+                      onToggle={toggleNotificationSound}
+                      onTestSound={playNotificationSound}
+                    />
+                  </div>
                 </div>
-
+ 
                 {loading ? (
                   <div className="text-sm text-muted-foreground py-8 text-center">Memuat...</div>
                 ) : filteredNotifikasi.length === 0 ? (
@@ -289,7 +297,7 @@ export function MobileHeader({
                         </div>
                       </button>
                     ))}
-
+ 
                     <div ref={sentinelRef} className="h-6" />
                   </>
                 )}

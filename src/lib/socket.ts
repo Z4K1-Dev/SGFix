@@ -1,7 +1,22 @@
 import { Server } from 'socket.io';
 import { db } from '@/lib/db';
 
+// Global Socket.IO server instance
+let ioServer: Server | null = null;
+
+/**
+ * Get Socket.IO server instance
+ */
+export const getSocketServer = (): Server => {
+  if (!ioServer) {
+    throw new Error('Socket.IO server not initialized. Call setupSocket first.');
+  }
+  return ioServer;
+};
+
 export const setupSocket = (io: Server) => {
+  // Store server instance globally
+  ioServer = io;
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
     

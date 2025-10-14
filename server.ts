@@ -2,6 +2,7 @@
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import next from 'next';
+import { setupSocket, getSocketServer } from './src/lib/socket';
 
 const dev = process.env.NODE_ENV !== 'production';
 const currentPort = parseInt(process.env.PORT || '3000', 10);
@@ -57,6 +58,9 @@ async function createCustomServer() {
       maxHttpBufferSize: 1e8, // 100 MB
       allowEIO3: true, // Support older versions of Engine.IO
     });
+
+    // Setup socket handlers and store server instance globally
+    setupSocket(io);
 
     // Socket connection handler
     io.on('connection', (socket) => {
@@ -164,7 +168,16 @@ async function createCustomServer() {
       
       // Handle disconnect
       socket.on('disconnect', (reason) => {
-        console.log(`Client disconnected: ${socket.id}, reason: ${reason}`);
+        console.log('=== SERVER SOCKET DISCONNECT DEBUG ===')
+        console.log(`Client disconnected: ${socket.id}, reason: ${reason}`)
+        console.log('Disconnect time:', new Date().toISOString())
+        console.log('Remaining connected clients:', io.engine.clientsCount)
+        console.log('Disconnect details:', {
+          reason,
+          wasConnected: socket.connected,
+          rooms: Array.from(socket.rooms),
+          transport: socket.conn.transport.name
+        })
       });
       
       // Handle error

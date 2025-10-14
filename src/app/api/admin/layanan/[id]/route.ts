@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { StatusLayanan } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
+import { notifyUser } from '@/lib/socket-utils'
 
 export async function GET(
   request: NextRequest,
@@ -129,15 +130,29 @@ export async function PUT(
     }
 
     // Create notification - untuk demo, tidak perlu userId
-    // await db.notifikasi.create({
-    //   data: {
-    //     judul: notifikasiTitle,
-    //     pesan: notifikasiMessage,
-    //     tipe: notifikasiType as any,
-    //     untukAdmin: false,
-    //     layananId: params.id
-    //   }
-    // })
+    const notifikasi = await db.notifikasi.create({
+      data: {
+        judul: notifikasiTitle,
+        pesan: notifikasiMessage,
+        tipe: notifikasiType as any,
+        untukAdmin: false,
+        layananId: id
+      }
+    })
+
+    // Kirim notifikasi realtime ke user
+    await notifyUser({
+      judul: notifikasiTitle,
+      pesan: notifikasiMessage,
+      tipe: notifikasiType,
+      layananId: id
+    })
+
+    console.log('Status layanan notification sent:', {
+      layananId: id,
+      status: status,
+      notifikasiId: notifikasi.id
+    })
 
     return NextResponse.json({
       message: 'Status layanan berhasil diperbarui',

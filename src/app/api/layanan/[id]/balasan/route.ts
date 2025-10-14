@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { Server } from 'socket.io'
 
 export async function GET(
   request: NextRequest,
@@ -92,14 +93,60 @@ export async function POST(
     })
 
     // Create notification - untuk demo, tidak perlu userId
-    await db.notifikasi.create({
+    const notifikasi = await db.notifikasi.create({
       data: {
         judul: `Balasan terkirim untuk ${layanan.judul}`,
-        pesan: `Balasan Anda telah terkirim dan akan diproses oleh admin`,
+        pesan: `Balasan: ${pesan.trim()}`,
         tipe: 'LAYANAN_BALASAN' as any,
         layananId: id
+        // balasanId: balasan.id // Remove for now to avoid foreign key constraint
       }
     })
+
+    // Send real-time notification via Socket.IO
+    try {
+      // Get Socket.IO server instance
+      const { getSocketServer } = await import('@/lib/socket')
+      const io: Server = getSocketServer()
+      
+      if (io) {
+        // Send to admin room
+        io.to('admin').emit('notification', {
+          id: notifikasi.id,
+          judul: notifikasi.judul,
+          pesan: notifikasi.pesan,
+          tipe: notifikasi.tipe,
+          data: {
+            layananId: id,
+            balasanId: balasan.id,
+            dariAdmin: false
+          },
+          timestamp: new Date().toISOString()
+        })
+
+        // Send balasan-added event for real-time updates
+        io.to('admin').emit('balasan-added', {
+          type: 'layanan',
+          id: id,
+          balasan: {
+            id: balasan.id,
+            isi: balasan.isi,
+            dariAdmin: false,
+            createdAt: balasan.createdAt
+          },
+          timestamp: new Date().toISOString()
+        })
+
+        console.log('Real-time notification sent for layanan balasan:', {
+          layananId: id,
+          balasanId: balasan.id,
+          notifikasiId: notifikasi.id
+        })
+      }
+    } catch (socketError) {
+      console.error('Failed to send Socket.IO notification:', socketError)
+      // Continue with response even if socket fails
+    }
 
     return NextResponse.json({
       message: 'Balasan berhasil terkirim',
