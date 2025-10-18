@@ -1,7 +1,6 @@
 "use client"
 
 import { MobileLayout } from "@/components/layout/mobile-layout"
-import { BeritaSkeleton } from "@/components/loading-skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,13 +24,11 @@ interface Berita {
 
 export default function BeritaPage() {
   const [berita, setBerita] = useState<Berita[]>([])
-  const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
     const fetchBerita = async () => {
       try {
-        setLoading(true)
         const res = await fetch('/api/berita?published=true')
         if (res.ok) {
           const data = await res.json()
@@ -41,8 +38,6 @@ export default function BeritaPage() {
         }
       } catch (e) {
         toast.error('Terjadi kesalahan koneksi')
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -52,59 +47,51 @@ export default function BeritaPage() {
   return (
     <MobileLayout title="Berita" activeTab="berita">
       <div className="px-4 pb-6 mt-4 space-y-4">
-        {loading ? (
-          <>
-            <BeritaSkeleton />
-            <BeritaSkeleton />
-            <BeritaSkeleton />
-          </>
-        ) : (
-          berita.map((item) => (
-            <Card
-              key={item.id}
-              className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer"
-              onClick={() => router.push(`/berita/${item.id}`)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-base font-semibold text-foreground line-clamp-2">
-                      {item.judul}
-                    </CardTitle>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {item.kategori.nama}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </span>
-                    </div>
+        {berita.map((item) => (
+          <Card
+            key={item.id}
+            className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer"
+            onClick={() => router.push(`/berita/${item.id}`)}
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle className="text-base font-semibold text-foreground line-clamp-2">
+                    {item.judul}
+                  </CardTitle>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {item.kategori.nama}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(item.createdAt).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </span>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{item.isi}</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full active:shadow-none active:scale-[0.98] transition-all duration-200"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    router.push(`/berita/${item.id}`)
-                  }}
-                >
-                  Baca Selengkapnya
-                </Button>
-              </CardContent>
-            </Card>
-          ))
-        )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{item.isi}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full active:shadow-none active:scale-[0.98] transition-all duration-200"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  router.push(`/berita/${item.id}`)
+                }}
+              >
+                Baca Selengkapnya
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
 
-        {berita.length === 0 && !loading && (
+        {berita.length === 0 && (
           <Card className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
             <CardContent className="text-center py-12">
               <FileText size={64} />

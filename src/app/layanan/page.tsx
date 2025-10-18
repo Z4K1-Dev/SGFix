@@ -2,7 +2,6 @@
 
 import { JenisLayananSelector, MultiStepForm, StatusTracker } from '@/components/layanan'
 import { MobileLayout } from '@/components/layout/mobile-layout'
-import { LayananSkeleton } from '@/components/loading-skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -40,7 +39,6 @@ export default function LayananPage() {
   const [layananList, setLayananList] = useState<LayananItem[]>([])
   const [filteredLayanan, setFilteredLayanan] = useState<LayananItem[]>([])
   const [selectedLayanan, setSelectedLayanan] = useState<LayananItem | null>(null)
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [mounted, setMounted] = useState(false)
@@ -76,7 +74,6 @@ export default function LayananPage() {
 
   const fetchLayanan = async () => {
     try {
-      setLoading(true)
       const response = await fetch('/api/layanan')
       if (!response.ok) throw new Error('Failed to fetch layanan')
       
@@ -89,8 +86,6 @@ export default function LayananPage() {
         description: 'Gagal memuat data layanan',
         variant: 'destructive'
       })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -101,8 +96,6 @@ export default function LayananPage() {
 
   const handleAjukanLayanan = async (formData: any) => {
     try {
-      setLoading(true)
-      
       // Prepare data for API
       const submitData = {
         judul: `Pengajuan ${getJenisLayananLabel(selectedJenisLayanan!)}`,
@@ -141,8 +134,6 @@ export default function LayananPage() {
         description: error.message || 'Gagal mengajukan layanan',
         variant: 'destructive'
       })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -300,13 +291,7 @@ export default function LayananPage() {
             </div>
 
             {/* Layanan List */}
-            {loading ? (
-              <div className="space-y-4">
-                <LayananSkeleton />
-                <LayananSkeleton />
-                <LayananSkeleton />
-              </div>
-            ) : filteredLayanan.length > 0 ? (
+            {filteredLayanan.length > 0 ? (
               <div className="space-y-4">
                 {filteredLayanan.map((item) => (
                   <Card
@@ -404,7 +389,6 @@ export default function LayananPage() {
                   jenisLayanan={getJenisLayananLabel(selectedJenisLayanan)}
                   onSubmit={handleAjukanLayanan}
                   onCancel={handleBatal}
-                  isLoading={loading}
                 />
               </div>
             )}
