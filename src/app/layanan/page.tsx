@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast'
 import { ArrowLeft, CheckCircle, Clock, Eye, FileText, History, Plus, Search, XCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { pageCache } from '@/lib/cache-manager'
 
 interface LayananItem {
   id: string
@@ -54,6 +55,33 @@ export default function LayananPage() {
     }
   }, [mounted])
 
+  // Listen untuk cache updates dan invalidation
+  useEffect(() => {
+    // Listen untuk cache updates
+    const handleCacheUpdate = (event: CustomEvent) => {
+      if (event.detail.key === '/layanan') {
+        setLayananList((event.detail.data as any).data || [])
+      }
+    }
+
+    // Listen untuk cache invalidation
+    const handleCacheInvalidate = (event: CustomEvent) => {
+      if (event.detail.key === '/layanan') {
+        fetchLayanan() // Refetch otomatis saat cache di-invalidate
+      }
+    }
+
+    // Setup event listeners
+    window.addEventListener('cache-updated', handleCacheUpdate as EventListener)
+    window.addEventListener('cache-invalidated', handleCacheInvalidate as EventListener)
+
+    // Cleanup event listeners
+    return () => {
+      window.removeEventListener('cache-updated', handleCacheUpdate as EventListener)
+      window.removeEventListener('cache-invalidated', handleCacheInvalidate as EventListener)
+    }
+  }, [])
+
   useEffect(() => {
     // Filter layanan based on search query and status
     let filtered = layananList
@@ -75,11 +103,22 @@ export default function LayananPage() {
 
   const fetchLayanan = async () => {
     try {
+      // Coba ambil dari cache terlebih dahulu
+      const cached = pageCache.get('/layanan')
+      if (cached) {
+        setLayananList((cached as any).data || [])
+        setIsDataLoaded(true)
+        return
+      }
+
+      // Fetch baru jika tidak ada cache
       const response = await fetch('/api/layanan')
       if (!response.ok) throw new Error('Failed to fetch layanan')
       
       const data = await response.json()
       setLayananList(data.data || [])
+      // Simpan ke cache dengan TTL 60 menit
+      pageCache.set('/layanan', data, 60 * 60 * 1000)
     } catch (error) {
       console.error('Error fetching layanan:', error)
       toast({
@@ -226,51 +265,6 @@ export default function LayananPage() {
     return null
   }
 
-  // Jangan render tab "daftar" sampai data tersedia
-  if (activeTab === 'daftar' && !isDataLoaded) {
-    return (
-      <MobileLayout
-        title="Layanan"
-        showBackButton={true}
-        backRoute="/"
-        activeTab="layanan"
-        onTabChange={handleTabChange}
-      >
-        <div className="px-4 py-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-auto p-1">
-              <TabsTrigger value="daftar" className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
-                <History className="h-4 w-4" />
-                <span>Daftar</span>
-              </TabsTrigger>
-              <TabsTrigger value="pilih" className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
-                <Plus className="h-4 w-4" />
-                <span>Baru</span>
-              </TabsTrigger>
-              <TabsTrigger value="form" disabled={!selectedJenisLayanan} className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
-                <FileText className="h-4 w-4" />
-                <span>Form</span>
-              </TabsTrigger>
-              <TabsTrigger value="detail" disabled={!selectedLayanan} className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
-                <FileText className="h-4 w-4" />
-                <span>Detail</span>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="daftar" className="mt-4">
-              <div className="px-4 pb-6 mt-4 flex items-center justify-center min-h-[200px]">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Memuat data...</p>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </MobileLayout>
-    )
-  }
-
   return (
     <MobileLayout
       title="Layanan"
@@ -339,9 +333,10 @@ export default function LayananPage() {
             </div>
 
             {/* Layanan List */}
-            {filteredLayanan.length > 0 ? (
-              <div className="space-y-4">
-                {filteredLayanan.map((item) => (
+            <div className={`transition-opacity duration-300 ${isDataLoaded ? 'opacity-100' : 'opacity-0'}`}>
+              {filteredLayanan.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredLayanan.map((item) => (
                   <Card
                     key={item.id}
                     className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer"
@@ -409,7 +404,8 @@ export default function LayananPage() {
                   </Button>
                 )}
               </div>
-            )}
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="pilih" className="mt-4">

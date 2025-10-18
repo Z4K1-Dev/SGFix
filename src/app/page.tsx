@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react'
 
 import { playNotifSound } from '@/lib/notif-sound'
 import { connectSocket } from '@/lib/socket-client'
+import { prefetchPageData, invalidatePageCache, refetchPageData } from '@/lib/cache-manager'
 
 
 // Force dynamic rendering
@@ -101,11 +102,44 @@ export default function HomePage() {
   }
   , [mounted])
 
+  // Prefetch data setelah home loading selesai
+  useEffect(() => {
+    if (!loading && mounted) {
+      // Prefetch semua halaman utama
+      Promise.all([
+        prefetchPageData('/berita', '/api/berita?published=true'),
+        prefetchPageData('/laporan', '/api/laporan'),
+        prefetchPageData('/layanan', '/api/layanan')
+      ]).then(() => {
+        console.log('✅ All pages prefetched successfully')
+      }).catch(error => {
+        console.error('❌ Prefetch failed:', error)
+      })
+    }
+  }, [loading, mounted])
+
   // Socket.IO: connect as user and listen for notifications
   useEffect(() => {
     const s = connectSocket('user')
 
     const handleNotif = (data: any) => {
+      // Update cache berdasarkan tipe notifikasi
+      if (data.tipe === 'BERITA_BARU') {
+        invalidatePageCache('/berita')
+        refetchPageData('/berita', '/api/berita?published=true')
+      }
+      
+      if (data.tipe === 'LAPORAN_BARU' || data.tipe === 'LAPORAN_UPDATE') {
+        invalidatePageCache('/laporan')
+        refetchPageData('/laporan', '/api/laporan')
+      }
+      
+      if (data.tipe === 'LAYANAN_BARU' || data.tipe === 'LAYANAN_UPDATE') {
+        invalidatePageCache('/layanan')
+        refetchPageData('/layanan', '/api/layanan')
+      }
+      
+      // Show notification
       appToast({
         title: data?.judul || data?.title || 'Notifikasi',
         description: data?.pesan || data?.message || 'Pesan masuk',
@@ -123,6 +157,10 @@ export default function HomePage() {
 
     const handleLaporanStatus = (data: any) => {
       const status = data?.status || data?.newStatus || 'DIPERBARUI'
+      // Invalidate cache laporan saat status berubah
+      invalidatePageCache('/laporan')
+      refetchPageData('/laporan', '/api/laporan')
+      
       appToast({
         title: 'Status Laporan Berubah',
         description: `${data?.judul || data?.laporan || 'Laporan'} kini ${status}`,
@@ -132,6 +170,10 @@ export default function HomePage() {
 
     const handleLayananStatus = (data: any) => {
       const status = data?.status || data?.newStatus || 'DIPERBARUI'
+      // Invalidate cache layanan saat status berubah
+      invalidatePageCache('/layanan')
+      refetchPageData('/layanan', '/api/layanan')
+      
       appToast({
         title: 'Status Layanan Berubah',
         description: `${data?.judul || data?.layanan || 'Layanan'} kini ${status}`,

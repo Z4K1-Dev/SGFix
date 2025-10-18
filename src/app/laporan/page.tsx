@@ -8,6 +8,7 @@ import { AlertCircle, Camera, CheckCircle, Clock, MessageSquare } from "lucide-r
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { pageCache } from "@/lib/cache-manager"
 
 interface Laporan {
   id: string
@@ -44,12 +45,26 @@ export default function LaporanPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const fetchLaporan = async () => {
+    /**
+     * Memuat data laporan dari cache atau fetch baru jika tidak ada/expired
+     */
+    const loadLaporan = async () => {
       try {
+        // Coba ambil dari cache terlebih dahulu
+        const cached = pageCache.get('/laporan')
+        if (cached) {
+          setLaporan(cached as Laporan[])
+          setIsDataLoaded(true)
+          return
+        }
+        
+        // Fetch baru jika tidak ada cache
         const res = await fetch('/api/laporan')
         if (res.ok) {
           const data = await res.json()
-          setLaporan(data)
+          setLaporan(data as Laporan[])
+          // Simpan ke cache dengan TTL 60 menit
+          pageCache.set('/laporan', data, 60 * 60 * 1000)
         } else {
           toast.error('Gagal memuat laporan')
         }
@@ -60,26 +75,37 @@ export default function LaporanPage() {
       }
     }
 
-    fetchLaporan()
-  }, [])
+    // Load data awal
+    loadLaporan()
 
-  // Jangan render apapun sampai data tersedia
-  if (!isDataLoaded) {
-    return (
-      <MobileLayout title="Laporan" activeTab="laporan">
-        <div className="px-4 pb-6 mt-4 flex items-center justify-center min-h-[200px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Memuat data...</p>
-          </div>
-        </div>
-      </MobileLayout>
-    )
-  }
+    // Listen untuk cache updates
+    const handleCacheUpdate = (event: CustomEvent) => {
+      if (event.detail.key === '/laporan') {
+        setLaporan(event.detail.data as Laporan[])
+      }
+    }
+
+    // Listen untuk cache invalidation
+    const handleCacheInvalidate = (event: CustomEvent) => {
+      if (event.detail.key === '/laporan') {
+        loadLaporan() // Refetch otomatis saat cache di-invalidate
+      }
+    }
+
+    // Setup event listeners
+    window.addEventListener('cache-updated', handleCacheUpdate as EventListener)
+    window.addEventListener('cache-invalidated', handleCacheInvalidate as EventListener)
+
+    // Cleanup event listeners
+    return () => {
+      window.removeEventListener('cache-updated', handleCacheUpdate as EventListener)
+      window.removeEventListener('cache-invalidated', handleCacheInvalidate as EventListener)
+    }
+  }, [])
 
   return (
     <MobileLayout title="Laporan" activeTab="laporan">
-      <div className="px-4 pb-6 mt-4 space-y-4">
+      <div className={`px-4 pb-6 mt-4 space-y-4 transition-opacity duration-300 ${isDataLoaded ? 'opacity-100' : 'opacity-0'}`}>
         {laporan.map((item) => (
           <Card key={item.id} className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
             <CardHeader className="pb-3">
