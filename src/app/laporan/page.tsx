@@ -40,6 +40,7 @@ const getStatusIcon = (status: string) => {
 
 export default function LaporanPage() {
   const [laporan, setLaporan] = useState<Laporan[]>([])
+  const [isDataLoaded, setIsDataLoaded] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -54,11 +55,27 @@ export default function LaporanPage() {
         }
       } catch (e) {
         toast.error('Terjadi kesalahan koneksi')
+      } finally {
+        setIsDataLoaded(true)
       }
     }
 
     fetchLaporan()
   }, [])
+
+  // Jangan render apapun sampai data tersedia
+  if (!isDataLoaded) {
+    return (
+      <MobileLayout title="Laporan" activeTab="laporan">
+        <div className="px-4 pb-6 mt-4 flex items-center justify-center min-h-[200px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Memuat data...</p>
+          </div>
+        </div>
+      </MobileLayout>
+    )
+  }
 
   return (
     <MobileLayout title="Laporan" activeTab="laporan">

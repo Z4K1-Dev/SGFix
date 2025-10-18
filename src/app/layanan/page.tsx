@@ -42,6 +42,7 @@ export default function LayananPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [mounted, setMounted] = useState(false)
+  const [isDataLoaded, setIsDataLoaded] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -86,6 +87,8 @@ export default function LayananPage() {
         description: 'Gagal memuat data layanan',
         variant: 'destructive'
       })
+    } finally {
+      setIsDataLoaded(true)
     }
   }
 
@@ -221,6 +224,51 @@ export default function LayananPage() {
 
   if (!mounted) {
     return null
+  }
+
+  // Jangan render tab "daftar" sampai data tersedia
+  if (activeTab === 'daftar' && !isDataLoaded) {
+    return (
+      <MobileLayout
+        title="Layanan"
+        showBackButton={true}
+        backRoute="/"
+        activeTab="layanan"
+        onTabChange={handleTabChange}
+      >
+        <div className="px-4 py-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+              <TabsTrigger value="daftar" className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+                <History className="h-4 w-4" />
+                <span>Daftar</span>
+              </TabsTrigger>
+              <TabsTrigger value="pilih" className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+                <Plus className="h-4 w-4" />
+                <span>Baru</span>
+              </TabsTrigger>
+              <TabsTrigger value="form" disabled={!selectedJenisLayanan} className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+                <FileText className="h-4 w-4" />
+                <span>Form</span>
+              </TabsTrigger>
+              <TabsTrigger value="detail" disabled={!selectedLayanan} className="flex flex-col items-center space-y-1 py-2 px-1 text-xs">
+                <FileText className="h-4 w-4" />
+                <span>Detail</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="daftar" className="mt-4">
+              <div className="px-4 pb-6 mt-4 flex items-center justify-center min-h-[200px]">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Memuat data...</p>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </MobileLayout>
+    )
   }
 
   return (
