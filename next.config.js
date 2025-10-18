@@ -7,9 +7,14 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Disable Next.js Image Optimization untuk menghindari masalah Sharp
+  images: {
+    unoptimized: true,
+  },
   // Allow cross-origin requests for preview environment
  allowedDevOrigins: [
-    '*.space.z.ai'
+    '*.space.z.ai',
+    '*.jaga24.com'
   ],
   // Configure webpack for both dev and production
  webpack: (config, { dev, isServer }) => {

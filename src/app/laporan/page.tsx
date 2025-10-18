@@ -101,12 +101,13 @@ export default function LaporanPage() {
               <CardContent>
                 {item.foto && (
                   <div className="relative w-full h-32 bg-muted rounded-xl mb-3 overflow-hidden">
-                    <Image
+                    <img
                       src={item.foto?.startsWith('http') || item.foto?.startsWith('/') ? item.foto : `/${item.foto}`}
                       alt={item.judul}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 768px"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder-image.png'
+                      }}
                     />
                   </div>
                 )}
