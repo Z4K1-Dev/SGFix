@@ -44,7 +44,7 @@ interface Berita {
   createdAt: string
 }
 
-interface Laporan {
+interface Pengaduan {
   id: string
   judul: string
   keterangan: string
@@ -55,7 +55,7 @@ interface Laporan {
 
 export default function HomePage() {
   const [berita, setBerita] = useState<Berita[]>([])
-  const [laporan, setLaporan] = useState<Laporan[]>([])
+  const [pengaduan, setPengaduan] = useState<Pengaduan[]>([])
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState('beranda')
@@ -74,7 +74,7 @@ export default function HomePage() {
 
   const handleTabChange = (index: number | null) => {
     if (index === null) return
-    const routes: (string | null)[] = ["/", "/berita", "/laporan", "/layanan", null, "/profile"]
+    const routes: (string | null)[] = ["/", "/berita", "/pengaduan", "/layanan", null, "/profile"]
     const target = routes[index]
     if (!target) return
     if (target === "/") {
@@ -108,7 +108,7 @@ export default function HomePage() {
       // Prefetch semua halaman utama
       Promise.all([
         prefetchPageData('/berita', '/api/berita?published=true'),
-        prefetchPageData('/laporan', '/api/laporan'),
+        prefetchPageData('/pengaduan', '/api/pengaduan'),
         prefetchPageData('/layanan', '/api/layanan')
       ]).then(() => {
         console.log('✅ All pages prefetched successfully')
@@ -129,9 +129,9 @@ export default function HomePage() {
         refetchPageData('/berita', '/api/berita?published=true')
       }
       
-      if (data.tipe === 'LAPORAN_BARU' || data.tipe === 'LAPORAN_UPDATE') {
-        invalidatePageCache('/laporan')
-        refetchPageData('/laporan', '/api/laporan')
+      if (data.tipe === 'PENGADUAN_BARU' || data.tipe === 'PENGADUAN_UPDATE') {
+        invalidatePageCache('/pengaduan')
+        refetchPageData('/pengaduan', '/api/pengaduan')
       }
       
       if (data.tipe === 'LAYANAN_BARU' || data.tipe === 'LAYANAN_UPDATE') {
@@ -155,15 +155,15 @@ export default function HomePage() {
       void playNotifSound()
     }
 
-    const handleLaporanStatus = (data: any) => {
+    const handlePengaduanStatus = (data: any) => {
       const status = data?.status || data?.newStatus || 'DIPERBARUI'
-      // Invalidate cache laporan saat status berubah
-      invalidatePageCache('/laporan')
-      refetchPageData('/laporan', '/api/laporan')
+      // Invalidate cache pengaduan saat status berubah
+      invalidatePageCache('/pengaduan')
+      refetchPageData('/pengaduan', '/api/pengaduan')
       
       appToast({
-        title: 'Status Laporan Berubah',
-        description: `${data?.judul || data?.laporan || 'Laporan'} kini ${status}`,
+        title: 'Status Pengaduan Berubah',
+        description: `${data?.judul || data?.pengaduan || 'Pengaduan'} kini ${status}`,
       })
       void playNotifSound()
     }
@@ -183,12 +183,12 @@ export default function HomePage() {
 
     s.on('notification', handleNotif)
     s.on('chat-reply', handleChatReply)
-    s.on('laporan-status-changed', handleLaporanStatus)
+    s.on('pengaduan-status-changed', handlePengaduanStatus)
     s.on('layanan-status-changed', handleLayananStatus)
     return () => {
       s.off('notification', handleNotif)
       s.off('chat-reply', handleChatReply)
-      s.off('laporan-status-changed', handleLaporanStatus)
+      s.off('pengaduan-status-changed', handlePengaduanStatus)
       s.off('layanan-status-changed', handleLayananStatus)
     }
   }, [])
@@ -237,13 +237,13 @@ export default function HomePage() {
       setLoading(true)
       console.log('Fetching data...')
 
-      const [beritaRes, laporanRes] = await Promise.all([
+      const [beritaRes, pengaduanRes] = await Promise.all([
         fetch('/api/berita?published=true'),
-        fetch('/api/laporan')
+        fetch('/api/pengaduan')
       ])
 
       console.log('Berita response status:', beritaRes.status)
-      console.log('Laporan response status:', laporanRes.status)
+      console.log('Pengaduan response status:', pengaduanRes.status)
 
       if (beritaRes.ok) {
         const beritaData = await beritaRes.json()
@@ -253,12 +253,12 @@ export default function HomePage() {
         console.error('Berita API error:', beritaRes.status)
       }
 
-      if (laporanRes.ok) {
-        const laporanData = await laporanRes.json()
-        console.log('Laporan data received:', laporanData.length, 'items')
-        setLaporan(laporanData)
+      if (pengaduanRes.ok) {
+        const pengaduanData = await pengaduanRes.json()
+        console.log('Pengaduan data received:', pengaduanData.length, 'items')
+        setPengaduan(pengaduanData)
       } else {
-        console.error('Laporan API error:', laporanRes.status)
+        console.error('Pengaduan API error:', pengaduanRes.status)
       }
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -566,9 +566,9 @@ export default function HomePage() {
                     <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
                       <MessageSquare size={20} />
                     </div>
-                    <span className="text-sm text-muted-foreground font-medium">Laporan</span>
+                    <span className="text-sm text-muted-foreground font-medium">Pengaduan</span>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">{laporan.length}</p>
+                  <p className="text-2xl font-bold text-foreground">{pengaduan.length}</p>
                   <p className="text-xs text-muted-foreground">Diterima</p>
                 </Card>
               </>
@@ -583,10 +583,10 @@ export default function HomePage() {
             <CardContent className="space-y-3">
               <Button
                 className="w-full justify-start h-12 bg-primary/10 text-primary border border-primary/20 active:shadow-none transition-all duration-200"
-                onClick={() => window.location.href = '/buat-laporan'}
+                onClick={() => window.location.href = '/buat-pengaduan'}
               >
                 <Camera className="mr-3" size={20} />
-                Buat Laporan
+                Buat Pengaduan
                 <ChevronRight className="ml-auto" size={16} />
               </Button>
               <Button className="w-full justify-start h-12 bg-secondary text-secondary-foreground border border-border active:shadow-none transition-all duration-200" onClick={() => window.location.href = '/layanan'}>

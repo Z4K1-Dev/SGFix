@@ -19,7 +19,7 @@ export function BeritaSkeleton() {
   )
 }
 
-export function LaporanSkeleton() {
+export function PengaduanSkeleton() {
   return (
     <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
       <div className="flex gap-3">
@@ -263,7 +263,7 @@ export function BeritaDetailSkeleton() {
   )
 }
 
-export function LaporanDetailSkeleton() {
+export function PengaduanDetailSkeleton() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-card rounded-xl shadow-sm border border-border">

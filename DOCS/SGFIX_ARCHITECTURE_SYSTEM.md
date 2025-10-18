@@ -2,7 +2,7 @@
 
 ## Gambaran Umum
 
-SGFix (SmartGov Fix) adalah platform pemerintahan digital yang menyediakan layanan pengajuan layanan publik, pelaporan masyarakat, dan sistem informasi berita. Aplikasi ini dibangun menggunakan teknologi modern seperti Next.js 15, TypeScript, dan Socket.IO untuk komunikasi real-time.
+SGFix (SmartGov Fix) adalah platform pemerintahan digital yang menyediakan layanan pengajuan layanan publik, pepengaduan masyarakat, dan sistem informasi berita. Aplikasi ini dibangun menggunakan teknologi modern seperti Next.js 15, TypeScript, dan Socket.IO untuk komunikasi real-time.
 
 ## Arsitektur Sistem
 
@@ -27,12 +27,12 @@ SGFix/
 │   │   ├── api/                # API Routes
 │   │   │   ├── admin/          # Admin API routes
 │   │   │   ├── berita/         # Berita API routes
-│   │   │   ├── laporan/        # Laporan API routes
+│   │   │   ├── pengaduan/        # Pengaduan API routes
 │   │   │   └── layanan/        # Layanan API routes
 │   │   ├── layout.tsx          # Root layout
 │   │   ├── page.tsx            # Homepage
 │   │   ├── layanan/            # Layanan pages
-│   │   └── laporan/            # Laporan pages
+│   │   └── pengaduan/            # Pengaduan pages
 │   ├── components/             # React components
 │   │   ├── layout/             # Layout components
 │   │   ├── layanan/            # Layanan-specific components
@@ -55,10 +55,10 @@ SGFix/
 - **Komunikasi Real-time**: Sistem balasan antara pengguna dan admin
 - **Jenis Layanan**: KTP, Akta, KK, Surat, dan lainnya
 
-#### B. Sistem Laporan (Laporan)
-- **Pengajuan Laporan**: Formulir pelaporan dengan foto
-- **Status Laporan**: Pelacakan status laporan masyarakat
-- **Geolokasi**: Dukungan pelaporan berbasis lokasi
+#### B. Sistem Pengaduan (Pengaduan)
+- **Pengajuan Pengaduan**: Formulir pepengaduan dengan foto
+- **Status Pengaduan**: Pelacakan status pengaduan masyarakat
+- **Geolokasi**: Dukungan pepengaduan berbasis lokasi
 
 #### C. Sistem Berita (Berita)
 - **Manajemen Berita**: Pembuatan dan pengelolaan berita
@@ -67,7 +67,7 @@ SGFix/
 
 #### D. Sistem Real-time (Socket.IO)
 - **Notifikasi Real-time**: Pengiriman notifikasi langsung
-- **Update Status**: Update status layanan dan laporan secara real-time
+- **Update Status**: Update status layanan dan pengaduan secara real-time
 - **Chat Balasan**: Sistem komunikasi antara pengguna dan admin
 
 ## Desain Database
@@ -91,14 +91,14 @@ SGFix/
  - `isi` (string): Isi balasan
  - `dariAdmin` (boolean): Indikator apakah balasan dari admin
 
-#### 3. Laporan
-- **Deskripsi**: Menyimpan laporan dari masyarakat
+#### 3. Pengaduan
+- **Deskripsi**: Menyimpan pengaduan dari masyarakat
 - **Relasi**: Banyak ke Balasan, Notifikasi
 - **Field Utama**:
-  - `judul` (string): Judul laporan
- - `keterangan` (string): Detail laporan
-  - `foto` (string): URL foto laporan
-  - `status` (enum): Status laporan (BARU, DITAMPUNG, DITERUSKAN, DIKERJAKAN, SELESAI)
+  - `judul` (string): Judul pengaduan
+ - `keterangan` (string): Detail pengaduan
+  - `foto` (string): URL foto pengaduan
+  - `status` (enum): Status pengaduan (BARU, DITAMPUNG, DITERUSKAN, DIKERJAKAN, SELESAI)
 
 #### 4. Berita
 - **Deskripsi**: Menyimpan informasi berita
@@ -114,7 +114,7 @@ SGFix/
 ### 1. Struktur Komponen
 - **UI Components**: Komponen dasar dari shadcn/ui
 - **Layout Components**: Komponen struktur halaman
-- **Feature Components**: Komponen spesifik fitur (layanan, laporan, berita)
+- **Feature Components**: Komponen spesifik fitur (layanan, pengaduan, berita)
 - **Hook Components**: Logika bisnis dan data fetching
 
 ### 2. Manajemen State
@@ -124,7 +124,7 @@ SGFix/
 
 ### 3. Routing
 - **Next.js App Router**: Sistem routing berbasis file
-- **Dynamic Routes**: Rute dinamis untuk detail layanan/laporan
+- **Dynamic Routes**: Rute dinamis untuk detail layanan/pengaduan
 - **Client-side Navigation**: Navigasi antar halaman
 
 ## Arsitektur Backend
@@ -152,10 +152,10 @@ SGFix/
 - **Status Tracking**: Pelacakan status pengajuan
 - **Komunikasi**: Sistem balasan antara pengguna dan admin
 
-### 2. Sistem Laporan
-- **Formulir Laporan**: Formulir pelaporan dengan foto dan lokasi
-- **Status Tracking**: Pelacakan status laporan
-- **Geolokasi**: Dukungan pelaporan berbasis lokasi
+### 2. Sistem Pengaduan
+- **Formulir Pengaduan**: Formulir pepengaduan dengan foto dan lokasi
+- **Status Tracking**: Pelacakan status pengaduan
+- **Geolokasi**: Dukungan pepengaduan berbasis lokasi
 
 ### 3. Sistem Berita
 - **Manajemen Berita**: Pembuatan dan pengelolaan berita
@@ -229,4 +229,4 @@ SGFix/
 
 ## Kesimpulan
 
-SGFix adalah platform pemerintahan digital yang komprehensif dengan arsitektur modular dan skalabel. Sistem ini menyediakan berbagai fitur penting untuk pemerintahan digital termasuk layanan publik, pelaporan masyarakat, dan sistem informasi berita, semuanya dengan dukungan komunikasi real-time dan antarmuka yang ramah pengguna.
+SGFix adalah platform pemerintahan digital yang komprehensif dengan arsitektur modular dan skalabel. Sistem ini menyediakan berbagai fitur penting untuk pemerintahan digital termasuk layanan publik, pepengaduan masyarakat, dan sistem informasi berita, semuanya dengan dukungan komunikasi real-time dan antarmuka yang ramah pengguna.

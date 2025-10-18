@@ -2,7 +2,7 @@
 
 ## 📋 Overview
 
-Implementasi sistem prefetch dan cache management telah berhasil diselesaikan sesuai dengan rencana di [`prefetch.md`](prefetch.md). Sistem ini dirancang untuk meningkatkan performa navigasi antar halaman (berita, laporan, layanan) dengan fitur TTL 60 menit, memory limit, error handling, dan real-time cache synchronization.
+Implementasi sistem prefetch dan cache management telah berhasil diselesaikan sesuai dengan rencana di [`prefetch.md`](prefetch.md). Sistem ini dirancang untuk meningkatkan performa navigasi antar halaman (berita, pengaduan, layanan) dengan fitur TTL 60 menit, memory limit, error handling, dan real-time cache synchronization.
 
 ## ✅ Completed Features
 
@@ -26,7 +26,7 @@ Implementasi sistem prefetch dan cache management telah berhasil diselesaikan se
 - **✅ Event Listeners**: Real-time cache sync
 - **✅ Auto Refetch**: Otomatis refetch saat cache di-invalidate
 
-#### Laporan Page (`src/app/laporan/page.tsx`)
+#### Pengaduan Page (`src/app/pengaduan/page.tsx`)
 - **✅ Cache-first Loading**: Prioritas cache untuk instant navigation
 - **✅ Event Listeners**: Real-time cache sync
 - **✅ Auto Refetch**: Otomatis refetch saat cache di-invalidate
@@ -68,7 +68,7 @@ src/
 ├── app/
 │   ├── page.tsx               # Updated with prefetch & cache invalidation
 │   ├── berita/page.tsx        # Updated with cache sync
-│   ├── laporan/page.tsx       # Updated with cache sync
+│   ├── pengaduan/page.tsx       # Updated with cache sync
 │   ├── layanan/page.tsx       # Updated with cache sync
 │   └── test-cache/page.tsx    # Interactive test interface (220 lines)
 └── IMPLEMENTATION_SUMMARY.md  # This summary
@@ -120,7 +120,7 @@ src/
   MAX_ITEMS: 50,                      // Maksimum items
   CLEANUP_INTERVAL: 5 * 60 * 1000,    // 5 menit
   PREFETCH_PAGES: [
-    '/berita', '/laporan', '/layanan'
+    '/berita', '/pengaduan', '/layanan'
   ]
 }
 ```

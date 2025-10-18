@@ -10,7 +10,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { pageCache } from "@/lib/cache-manager"
 
-interface Laporan {
+interface Pengaduan {
   id: string
   judul: string
   keterangan: string
@@ -39,34 +39,34 @@ const getStatusIcon = (status: string) => {
   }
 }
 
-export default function LaporanPage() {
-  const [laporan, setLaporan] = useState<Laporan[]>([])
+export default function PengaduanPage() {
+  const [pengaduan, setPengaduan] = useState<Pengaduan[]>([])
   const [isDataLoaded, setIsDataLoaded] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     /**
-     * Memuat data laporan dari cache atau fetch baru jika tidak ada/expired
+     * Memuat data pengaduan dari cache atau fetch baru jika tidak ada/expired
      */
-    const loadLaporan = async () => {
+    const loadPengaduan = async () => {
       try {
         // Coba ambil dari cache terlebih dahulu
-        const cached = pageCache.get('/laporan')
+        const cached = pageCache.get('/pengaduan')
         if (cached) {
-          setLaporan(cached as Laporan[])
+          setPengaduan(cached as Pengaduan[])
           setIsDataLoaded(true)
           return
         }
         
         // Fetch baru jika tidak ada cache
-        const res = await fetch('/api/laporan')
+        const res = await fetch('/api/pengaduan')
         if (res.ok) {
           const data = await res.json()
-          setLaporan(data as Laporan[])
+          setPengaduan(data as Pengaduan[])
           // Simpan ke cache dengan TTL 60 menit
-          pageCache.set('/laporan', data, 60 * 60 * 1000)
+          pageCache.set('/pengaduan', data, 60 * 60 * 1000)
         } else {
-          toast.error('Gagal memuat laporan')
+          toast.error('Gagal memuat pengaduan')
         }
       } catch (e) {
         toast.error('Terjadi kesalahan koneksi')
@@ -76,19 +76,19 @@ export default function LaporanPage() {
     }
 
     // Load data awal
-    loadLaporan()
+    loadPengaduan()
 
     // Listen untuk cache updates
     const handleCacheUpdate = (event: CustomEvent) => {
-      if (event.detail.key === '/laporan') {
-        setLaporan(event.detail.data as Laporan[])
+      if (event.detail.key === '/pengaduan') {
+        setPengaduan(event.detail.data as Pengaduan[])
       }
     }
 
     // Listen untuk cache invalidation
     const handleCacheInvalidate = (event: CustomEvent) => {
-      if (event.detail.key === '/laporan') {
-        loadLaporan() // Refetch otomatis saat cache di-invalidate
+      if (event.detail.key === '/pengaduan') {
+        loadPengaduan() // Refetch otomatis saat cache di-invalidate
       }
     }
 
@@ -104,9 +104,9 @@ export default function LaporanPage() {
   }, [])
 
   return (
-    <MobileLayout title="Laporan" activeTab="laporan">
+    <MobileLayout title="Pengaduan" activeTab="pengaduan">
       <div className={`px-4 pb-6 mt-4 space-y-4 transition-opacity duration-300 ${isDataLoaded ? 'opacity-100' : 'opacity-0'}`}>
-        {laporan.map((item) => (
+        {pengaduan.map((item) => (
           <Card key={item.id} className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
@@ -146,7 +146,7 @@ export default function LaporanPage() {
                 variant="outline"
                 size="sm"
                 className="w-full active:shadow-none active:scale-[0.98] transition-all duration-200"
-                onClick={() => router.push(`/laporan/${item.id}`)}
+                onClick={() => router.push(`/pengaduan/${item.id}`)}
               >
                 Lihat Detail
               </Button>
@@ -154,15 +154,15 @@ export default function LaporanPage() {
           </Card>
         ))}
 
-        {laporan.length === 0 && (
+        {pengaduan.length === 0 && (
           <Card className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
             <CardContent className="text-center py-12">
               <MessageSquare size={64} />
-              <p className="text-base text-muted-foreground font-medium">Belum ada laporan</p>
-              <p className="text-sm text-muted-foreground mt-1">Buat laporan pertama Anda</p>
-              <Button className="mt-4 bg-primary text-primary-foreground" onClick={() => router.push('/buat-laporan')}>
+              <p className="text-base text-muted-foreground font-medium">Belum ada pengaduan</p>
+              <p className="text-sm text-muted-foreground mt-1">Buat pengaduan pertama Anda</p>
+              <Button className="mt-4 bg-primary text-primary-foreground" onClick={() => router.push('/buat-pengaduan')}>
                 <Camera className="mr-2" size={16} />
-                Buat Laporan Baru
+                Buat Pengaduan Baru
               </Button>
             </CardContent>
           </Card>

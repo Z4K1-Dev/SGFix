@@ -77,14 +77,14 @@ const FileText = ({ className = "w-5 h-5" }) => (
   </svg>
 );
 
-const Laporan = ({ className = "w-5 h-5" }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="32" 
-    height="32" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
+const Pengaduan = ({ className = "w-5 h-5" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="32"
+    height="32"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
     strokeWidth={1.75}
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -218,7 +218,7 @@ export default function Tabs2({ onChange }: { onChange?: (index: number | null) 
   const TABS: TabItem[] = [
     { title: "Home", icon: HomeIcon },
     { title: "Berita", icon: FileText },
-    { title: "Laporan", icon: Laporan },
+    { title: "Pengaduan", icon: Pengaduan },
     { type: "separator" },
     { title: "Profile", icon: UserIcon },
   ];

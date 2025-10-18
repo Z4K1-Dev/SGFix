@@ -44,7 +44,7 @@ model Berita {
   @@index([likes])
 }
 
-model Laporan {
+model Pengaduan {
   id         String       @id @default(cuid())
   judul      String
   keterangan String
@@ -64,37 +64,37 @@ model Laporan {
 }
 
 model Balasan {
-  id         String       @id @default(cuid())
-  laporanId  String
-  isi        String
-  dariAdmin  Boolean      @default(false)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  laporan    Laporan      @relation(fields: [laporanId], references: [id], onDelete: Cascade)
-  notifikasi Notifikasi[]
+  id           String       @id @default(cuid())
+  pengaduanId  String
+  isi          String
+  dariAdmin    Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  pengaduan    Pengaduan    @relation(fields: [pengaduanId], references: [id], onDelete: Cascade)
+  notifikasi   Notifikasi[]
 
-  @@index([laporanId])
+  @@index([pengaduanId])
   @@index([createdAt])
   @@index([dariAdmin])
-  @@index([laporanId, createdAt])
+  @@index([pengaduanId, createdAt])
 }
 
 model Notifikasi {
-  id         String    @id @default(cuid())
-  judul      String
-  pesan      String
-  tipe       TipeNotif
-  untukAdmin Boolean   @default(false)
-  dibaca     Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  beritaId   String?
-  laporanId  String?
-  layananId  String?
-  balasanId  String?
-  balasan    Balasan?  @relation(fields: [balasanId], references: [id], onDelete: Cascade)
-  laporan    Laporan?  @relation(fields: [laporanId], references: [id], onDelete: Cascade)
-  berita     Berita?   @relation(fields: [beritaId], references: [id], onDelete: Cascade)
-  layanan    Layanan?  @relation(fields: [layananId], references: [id], onDelete: Cascade)
+  id           String    @id @default(cuid())
+  judul        String
+  pesan        String
+  tipe         TipeNotif
+  untukAdmin   Boolean   @default(false)
+  dibaca       Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  beritaId     String?
+  pengaduanId  String?
+  layananId    String?
+  balasanId    String?
+  balasan      Balasan?  @relation(fields: [balasanId], references: [id], onDelete: Cascade)
+  pengaduan    Pengaduan?  @relation(fields: [pengaduanId], references: [id], onDelete: Cascade)
+  berita       Berita?   @relation(fields: [beritaId], references: [id], onDelete: Cascade)
+  layanan      Layanan?  @relation(fields: [layananId], references: [id], onDelete: Cascade)
 
   @@index([untukAdmin])
   @@index([dibaca])
@@ -102,7 +102,7 @@ model Notifikasi {
   @@index([createdAt])
   @@index([untukAdmin, dibaca])
   @@index([beritaId])
-  @@index([laporanId])
+  @@index([pengaduanId])
   @@index([layananId])
   @@index([balasanId])
 }
@@ -207,9 +207,9 @@ enum JenisKelaminAlias {
 enum TipeNotif {
   BERITA_BARU
   BERITA_UPDATE
-  LAPORAN_BARU
-  LAPORAN_UPDATE
-  LAPORAN_BALASAN
+  PENGADUAN_BARU
+  PENGADUAN_UPDATE
+  PENGADUAN_BALASAN
   LAYANAN_BARU
   LAYANAN_UPDATE
   LAYANAN_BALASAN

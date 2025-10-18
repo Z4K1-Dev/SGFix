@@ -103,9 +103,9 @@ export const beritaQueries = {
   }
 }
 
-// Optimized laporan queries
-export const laporanQueries = {
-  // Get laporan with pagination and status filtering
+// Optimized pengaduan queries
+export const pengaduanQueries = {
+  // Get pengaduan with pagination and status filtering
   getWithPagination: async (page: number = 1, limit: number = 10, status?: string) => {
     const skip = (page - 1) * limit
     const where: any = {}
@@ -115,7 +115,7 @@ export const laporanQueries = {
     }
 
     const [data, total] = await Promise.all([
-      db.laporan.findMany({
+      db.pengaduan.findMany({
         where,
         include: {
           balasan: {
@@ -130,7 +130,7 @@ export const laporanQueries = {
         skip,
         take: limit
       }),
-      db.laporan.count({ where })
+      db.pengaduan.count({ where })
     ])
 
     return {
@@ -142,9 +142,9 @@ export const laporanQueries = {
     }
   },
 
-  // Get laporan by ID with all related data
+  // Get pengaduan by ID with all related data
   getById: async (id: string) => {
-    return db.laporan.findUnique({
+    return db.pengaduan.findUnique({
       where: { id },
       include: {
         balasan: {
@@ -156,15 +156,15 @@ export const laporanQueries = {
     })
   },
 
-  // Get laporan statistics
+  // Get pengaduan statistics
   getStats: async () => {
     const stats = await Promise.all([
-      db.laporan.count({ where: { status: 'BARU' } }),
-      db.laporan.count({ where: { status: 'DITAMPUNG' } }),
-      db.laporan.count({ where: { status: 'DITERUSKAN' } }),
-      db.laporan.count({ where: { status: 'DIKERJAKAN' } }),
-      db.laporan.count({ where: { status: 'SELESAI' } }),
-      db.laporan.count()
+      db.pengaduan.count({ where: { status: 'BARU' } }),
+      db.pengaduan.count({ where: { status: 'DITAMPUNG' } }),
+      db.pengaduan.count({ where: { status: 'DITERUSKAN' } }),
+      db.pengaduan.count({ where: { status: 'DIKERJAKAN' } }),
+      db.pengaduan.count({ where: { status: 'SELESAI' } }),
+      db.pengaduan.count()
     ])
 
     return {
@@ -302,7 +302,7 @@ export const batchOperations = {
     tipe: string
     untukAdmin: boolean
     beritaId?: string
-    laporanId?: string
+    pengaduanId?: string
     balasanId?: string
   }>) => {
     const operations = notifications.map(notification =>
@@ -313,7 +313,7 @@ export const batchOperations = {
           tipe: notification.tipe as any, // Cast to any to bypass type checking
           untukAdmin: notification.untukAdmin,
           ...(notification.beritaId && { beritaId: notification.beritaId }),
-          ...(notification.laporanId && { laporanId: notification.laporanId }),
+          ...(notification.pengaduanId && { pengaduanId: notification.pengaduanId }),
           ...(notification.balasanId && { balasanId: notification.balasanId })
         }
       })

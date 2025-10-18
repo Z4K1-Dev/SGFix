@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
- * Menambahkan balasan pada laporan
+ * Menambahkan balasan pada pengaduan
  */
 export async function POST(
   request: NextRequest,
@@ -20,21 +20,21 @@ export async function POST(
       )
     }
 
-    // Ambil data laporan untuk notifikasi
-    const laporan = await db.laporan.findUnique({
+    // Ambil data pengaduan untuk notifikasi
+    const pengaduan = await db.pengaduan.findUnique({
       where: { id }
     })
 
-    if (!laporan) {
+    if (!pengaduan) {
       return NextResponse.json(
-        { error: 'Laporan tidak ditemukan' },
+        { error: 'Pengaduan tidak ditemukan' },
         { status: 404 }
       )
     }
 
     const balasan = await db.balasan.create({
       data: {
-        laporanId: id,
+        pengaduanId: id,
         isi,
         dariAdmin
       }
@@ -46,10 +46,10 @@ export async function POST(
       await db.notifikasi.create({
         data: {
           judul: 'Balasan dari Admin',
-          pesan: `Admin telah membalas laporan "${laporan.judul}"`,
-          tipe: 'LAPORAN_BALASAN',
+          pesan: `Admin telah membalas pengaduan "${pengaduan.judul}"`,
+          tipe: 'PENGADUAN_BALASAN',
           untukAdmin: false,
-          laporanId: id,
+          pengaduanId: id,
           balasanId: balasan.id
         }
       })
@@ -58,8 +58,8 @@ export async function POST(
       const io = (globalThis as any).__io
       if (io) {
         io.to('user').emit('chat-reply', {
-          pesan: `Admin telah membalas laporan "${laporan.judul}"`,
-          laporanId: id,
+          pesan: `Admin telah membalas pengaduan "${pengaduan.judul}"`,
+          pengaduanId: id,
           ts: Date.now()
         })
       }
@@ -69,10 +69,10 @@ export async function POST(
       await db.notifikasi.create({
         data: {
           judul: 'Balasan Baru dari Masyarakat',
-          pesan: `Ada balasan baru pada laporan "${laporan.judul}"`,
-          tipe: 'LAPORAN_BALASAN',
+          pesan: `Ada balasan baru pada pengaduan "${pengaduan.judul}"`,
+          tipe: 'PENGADUAN_BALASAN',
           untukAdmin: true,
-          laporanId: id,
+          pengaduanId: id,
           balasanId: balasan.id
         }
       })
@@ -81,8 +81,8 @@ export async function POST(
       const io = (globalThis as any).__io
       if (io) {
         io.to('admin').emit('chat-reply', {
-          pesan: `Ada balasan baru pada laporan "${laporan.judul}"`,
-          laporanId: id,
+          pesan: `Ada balasan baru pada pengaduan "${pengaduan.judul}"`,
+          pengaduanId: id,
           ts: Date.now()
         })
       }

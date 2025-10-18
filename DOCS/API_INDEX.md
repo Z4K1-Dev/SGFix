@@ -40,7 +40,7 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 | Endpoint | Cache Duration | Cache Key Pattern | Invalidation |
 |----------|----------------|-------------------|--------------|
 | `GET /api/berita` | 5 minutes | `berita:list:${params}` | On POST/PUT/DELETE |
-| `GET /api/laporan` | 3 minutes | `laporan:list:${params}` | On POST/PUT/DELETE |
+| `GET /api/pengaduan` | 3 minutes | `pengaduan:list:${params}` | On POST/PUT/DELETE |
 | `GET /api/layanan` | 3 minutes | `layanan:list:${params}` | On POST/PUT/DELETE |
 | `GET /api/kategori` | No cache | - | - |
 | `GET /api/notifikasi` | No cache | - | On create |
@@ -250,8 +250,8 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 
 ---
 
-### 📝 **Laporan API**
-#### `GET /api/laporan`
+### 📝 **Pengaduan API**
+#### `GET /api/pengaduan`
 **Purpose**: Retrieve paginated list of reports
 
 **Query Parameters**:
@@ -299,7 +299,7 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 
 ---
 
-#### `POST /api/laporan`
+#### `POST /api/pengaduan`
 **Purpose**: Create new report
 
 **Request Body**:
@@ -317,8 +317,8 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 ```json
 {
   "id": "lap123abc",
-  "judul": "Laporan Baru",
-  "keterangan": "Deskripsi laporan...",
+  "judul": "Pengaduan Baru",
+  "keterangan": "Deskripsi pengaduan...",
   "foto": "https://example.com/photo.jpg",
   "status": "BARU",
   "createdAt": "2025-06-17T10:00:00Z"
@@ -328,11 +328,11 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 **Side Effects**: 
 - ✅ Creates notification for admin users
 - ✅ Sends real-time socket notification
-- ✅ Invalidates `laporan:*` cache keys
+- ✅ Invalidates `pengaduan:*` cache keys
 
 ---
 
-#### `GET /api/laporan/[id]`
+#### `GET /api/pengaduan/[id]`
 **Purpose**: Retrieve single report with all details
 
 **Path Parameters**:
@@ -342,7 +342,7 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 ```json
 {
   "id": "lap123abc",
-  "judul": "Laporan Spesifik",
+  "judul": "Pengaduan Spesifik",
   "keterangan": "Deskripsi lengkap...",
   "foto": "https://example.com/photo.jpg",
   "latitude": -6.200000,
@@ -361,9 +361,9 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
   "notifikasi": [
     {
       "id": "not123",
-      "judul": "Laporan Diterima",
-      "pesan": "Laporan Anda sedang ditangani",
-      "tipe": "LAPORAN_UPDATE",
+      "judul": "Pengaduan Diterima",
+      "pesan": "Pengaduan Anda sedang ditangani",
+      "tipe": "PENGADUAN_UPDATE",
       "createdAt": "2025-06-17T11:0:00Z"
     }
  ]
@@ -372,7 +372,7 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 
 ---
 
-#### `PUT /api/laporan/[id]`
+#### `PUT /api/pengaduan/[id]`
 **Purpose**: Update existing report
 
 **Path Parameters**:
@@ -390,23 +390,23 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 ```
 
 **Side Effects**: 
-- ✅ Invalidates `laporan:*` cache keys
+- ✅ Invalidates `pengaduan:*` cache keys
 
 ---
 
-#### `DELETE /api/laporan/[id]`
+#### `DELETE /api/pengaduan/[id]`
 **Purpose**: Delete report
 
 **Path Parameters**:
 - `id`: Report ID
 
 **Side Effects**: 
-- ✅ Invalidates `laporan:*` cache keys
+- ✅ Invalidates `pengaduan:*` cache keys
 - ✅ Cascades delete related notifications and replies
 
 ---
 
-#### `PUT /api/laporan/[id]/status`
+#### `PUT /api/pengaduan/[id]/status`
 **Purpose**: Update report status
 
 **Path Parameters**:
@@ -422,11 +422,11 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 **Side Effects**: 
 - ✅ Creates status change notification
 - ✅ Sends real-time socket notification
-- ✅ Invalidates `laporan:*` cache keys
+- ✅ Invalidates `pengaduan:*` cache keys
 
 ---
 
-#### `POST /api/laporan/[id]/balasan`
+#### `POST /api/pengaduan/[id]/balasan`
 **Purpose**: Add reply to report
 
 **Path Parameters**:
@@ -444,21 +444,21 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 ```json
 {
   "id": "bal123",
-  "isi": "Balasan untuk laporan",
+  "isi": "Balasan untuk pengaduan",
   "dariAdmin": true,
   "createdAt": "2025-06-17T11:00:00Z",
-  "laporanId": "lap123abc"
+  "pengaduanId": "lap123abc"
 }
 ```
 
 **Side Effects**: 
 - ✅ Creates notification for report creator
 - ✅ Sends real-time socket notification
-- ✅ Invalidates `laporan:*` cache keys
+- ✅ Invalidates `pengaduan:*` cache keys
 
 ---
 
-#### `GET /api/laporan/optimized`
+#### `GET /api/pengaduan/optimized`
 **Purpose**: Optimized endpoint for reports with performance enhancements
 
 **Query Parameters**:
@@ -912,9 +912,9 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 [
   {
     "id": "not123",
-    "judul": "Laporan Baru",
-    "pesan": "Laporan 'Jalan Rusak' telah dibuat",
-    "tipe": "LAPORAN_BARU",
+    "judul": "Pengaduan Baru",
+    "pesan": "Pengaduan 'Jalan Rusak' telah dibuat",
+    "tipe": "PENGADUAN_BARU",
     "untukAdmin": true,
     "dibaca": false,
     "createdAt": "2025-06-17T10:00:00Z"
@@ -932,10 +932,10 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 {
   judul: string,                   // Required - Notification title
   pesan: string,                   // Required - Notification message
-  tipe: "BERITA_BARU" | "BERITA_UPDATE" | "LAPORAN_BARU" | "LAPORAN_UPDATE" | "LAPORAN_BALASAN" | "LAYANAN_BARU" | "LAYANAN_UPDATE" | "LAYANAN_BALASAN", // Required - Notification type
+  tipe: "BERITA_BARU" | "BERITA_UPDATE" | "PENGADUAN_BARU" | "PENGADUAN_UPDATE" | "PENGADUAN_BALASAN" | "LAYANAN_BARU" | "LAYANAN_UPDATE" | "LAYANAN_BALASAN", // Required - Notification type
  untukAdmin?: boolean,            // Default: false
   beritaId?: string,               // Optional - Related news ID
- laporanId?: string,              // Optional - Related report ID
+ pengaduanId?: string,              // Optional - Related report ID
  layananId?: string,              // Optional - Related service ID
   balasanId?: string               // Optional - Related reply ID
 }
@@ -977,7 +977,7 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
   "created": {
     "kategori": 5,
     "berita": 20,
-    "laporan": 15,
+    "pengaduan": 15,
     "layanan": 10
   }
 }
@@ -1058,7 +1058,7 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
     "week": 12,
     "month": 45
   },
-  "laporan": {
+  "pengaduan": {
     "today": 8,
     "week": 32,
     "month": 128
@@ -1106,11 +1106,11 @@ SGFix Project provides RESTful APIs with caching, pagination, and real-time capa
 | `join-room` | Client → Server | Join specific room | `room: string` |
 | `leave-room` | Client → Server | Leave specific room | `room: string` |
 | `notification` | Server → Client | Push notification | `Notification` |
-| `laporan-update` | Server → Client | Report status update | `{ laporanId, status, timestamp }` |
+| `pengaduan-update` | Server → Client | Report status update | `{ pengaduanId, status, timestamp }` |
 | `layanan-update` | Server → Client | Service status update | `{ layananId, status, timestamp }` |
 | `berita-update` | Server → Client | News update | `Berita` |
 | `send-notification` | Client → Server | Send notification | `{ type, message, room? }` |
-| `update-laporan-status` | Client → Server | Update report status | `{ laporanId, status, room? }` |
+| `update-pengaduan-status` | Client → Server | Update report status | `{ pengaduanId, status, room? }` |
 | `update-layanan-status` | Client → Server | Update service status | `{ layananId, status, room? }` |
 | `new-balasan` | Client → Server | New reply to report/service | `{ type, id, balasan, room? }` |
 | `heartbeat` | Client → Server | Keep-alive signal | - |
@@ -1135,7 +1135,7 @@ socket.on('notification', (data) => {
 })
 
 // Listen for report status updates
-socket.on('laporan-status-updated', (data) => {
+socket.on('pengaduan-status-updated', (data) => {
   console.log('Report status updated:', data)
 })
 
@@ -1181,17 +1181,17 @@ socket.on('layanan-status-updated', (data) => {
 | Endpoint | Avg Response | Cache Hit Rate | Status |
 |----------|--------------|----------------|--------|
 | `GET /api/berita` | ~10ms | 85% | ✅ Excellent |
-| `GET /api/laporan` | ~120ms | 80% | ✅ Excellent |
+| `GET /api/pengaduan` | ~120ms | 80% | ✅ Excellent |
 | `GET /api/layanan` | ~130ms | 80% | ✅ Excellent |
 | `POST /api/berita` | ~200ms | N/A | ✅ Good |
-| `POST /api/laporan` | ~250ms | N/A | ✅ Good |
+| `POST /api/pengaduan` | ~250ms | N/A | ✅ Good |
 | `POST /api/layanan` | ~300ms | N/A | ✅ Good |
 
 ### 🗄️ **Database Performance**
 | Query | Avg Time | Index Used | Optimization |
 |-------|----------|------------|--------------|
 | Berita list | ~25ms | ✅ published, createdAt | Composite index |
-| Laporan list | ~30ms | ✅ status, createdAt | Composite index |
+| Pengaduan list | ~30ms | ✅ status, createdAt | Composite index |
 | Layanan list | ~35ms | ✅ jenisLayanan, status, createdAt | Composite index |
 | Category filter | ~15ms | ✅ kategoriId | Single index |
 | Status filter | ~20ms | ✅ status | Single index |
@@ -1205,8 +1205,8 @@ socket.on('layanan-status-updated', (data) => {
 # Test berita API
 curl "http://localhost:3000/api/berita?published=true&page=1&limit=5"
 
-# Test laporan API
-curl "http://localhost:3000/api/laporan?status=BARU&page=1"
+# Test pengaduan API
+curl "http://localhost:3000/api/pengaduan?status=BARU&page=1"
 
 # Test layanan API
 curl "http://localhost:3000/api/layanan?status=DITERIMA&page=1"
@@ -1216,10 +1216,10 @@ curl -X POST "http://localhost:3000/api/berita" \
   -H "Content-Type: application/json" \
   -d '{"judul":"Test","isi":"Content","kategoriId":"cat123"}'
 
-# Create new laporan
-curl -X POST "http://localhost:3000/api/laporan" \
+# Create new pengaduan
+curl -X POST "http://localhost:3000/api/pengaduan" \
   -H "Content-Type: application/json" \
-  -d '{"judul":"Test Laporan","keterangan":"Deskripsi laporan"}'
+  -d '{"judul":"Test Pengaduan","keterangan":"Deskripsi pengaduan"}'
 
 # Create new layanan
 curl -X POST "http://localhost:3000/api/layanan" \

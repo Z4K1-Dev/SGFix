@@ -33,7 +33,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error generating monitoring report:', error);
     return NextResponse.json(
-      { error: 'Gagal mengambil laporan monitoring' },
+      { error: 'Gagal mengambil pengaduan monitoring' },
       { status: 500 }
     );
   }

@@ -186,7 +186,7 @@ export async function monitoredQuery<T>(
   
   console.log('\n🚀 Next steps:');
   console.log('   1. Jalankan npm run dev untuk testing');
-  console.log('   2. Gunakan /api/berita/optimized dan /api/laporan/optimized');
+  console.log('   2. Gunakan /api/berita/optimized dan /api/pengaduan/optimized');
   console.log('   3. Monitor performa dengan dbMonitor.getStats()');
   console.log('   4. Cek logs untuk slow queries');
   

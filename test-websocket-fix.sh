@@ -38,7 +38,7 @@ fi
 
 echo
 echo "4. Testing API endpoints..."
-for endpoint in "/api/berita" "/api/kategori" "/api/laporan" "/api/notifikasi"; do
+for endpoint in "/api/berita" "/api/kategori" "/api/pengaduan" "/api/notifikasi"; do
     if curl -s -I "http://localhost:3000$endpoint" | grep -q "200 OK"; then
         echo "✅ $endpoint working"
     else

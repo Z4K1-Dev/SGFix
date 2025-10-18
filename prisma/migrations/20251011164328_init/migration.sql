@@ -25,7 +25,7 @@ CREATE TABLE "Berita" (
 );
 
 -- CreateTable
-CREATE TABLE "Laporan" (
+CREATE TABLE "Pengaduan" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "judul" TEXT NOT NULL,
     "keterangan" TEXT NOT NULL,
@@ -40,12 +40,12 @@ CREATE TABLE "Laporan" (
 -- CreateTable
 CREATE TABLE "Balasan" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "laporanId" TEXT NOT NULL,
+    "pengaduanId" TEXT NOT NULL,
     "isi" TEXT NOT NULL,
     "dariAdmin" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "Balasan_laporanId_fkey" FOREIGN KEY ("laporanId") REFERENCES "Laporan" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "Balasan_pengaduanId_fkey" FOREIGN KEY ("pengaduanId") REFERENCES "Pengaduan" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -58,11 +58,11 @@ CREATE TABLE "Notifikasi" (
     "dibaca" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "beritaId" TEXT,
-    "laporanId" TEXT,
+    "pengaduanId" TEXT,
     "layananId" TEXT,
     "balasanId" TEXT,
     CONSTRAINT "Notifikasi_balasanId_fkey" FOREIGN KEY ("balasanId") REFERENCES "Balasan" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "Notifikasi_laporanId_fkey" FOREIGN KEY ("laporanId") REFERENCES "Laporan" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Notifikasi_pengaduanId_fkey" FOREIGN KEY ("pengaduanId") REFERENCES "Pengaduan" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Notifikasi_beritaId_fkey" FOREIGN KEY ("beritaId") REFERENCES "Berita" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Notifikasi_layananId_fkey" FOREIGN KEY ("layananId") REFERENCES "Layanan" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -137,19 +137,19 @@ CREATE INDEX "Berita_views_idx" ON "Berita"("views");
 CREATE INDEX "Berita_likes_idx" ON "Berita"("likes");
 
 -- CreateIndex
-CREATE INDEX "Laporan_status_idx" ON "Laporan"("status");
+CREATE INDEX "Pengaduan_status_idx" ON "Pengaduan"("status");
 
 -- CreateIndex
-CREATE INDEX "Laporan_createdAt_idx" ON "Laporan"("createdAt");
+CREATE INDEX "Pengaduan_createdAt_idx" ON "Pengaduan"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "Laporan_status_createdAt_idx" ON "Laporan"("status", "createdAt");
+CREATE INDEX "Pengaduan_status_createdAt_idx" ON "Pengaduan"("status", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "Laporan_latitude_longitude_idx" ON "Laporan"("latitude", "longitude");
+CREATE INDEX "Pengaduan_latitude_longitude_idx" ON "Pengaduan"("latitude", "longitude");
 
 -- CreateIndex
-CREATE INDEX "Balasan_laporanId_idx" ON "Balasan"("laporanId");
+CREATE INDEX "Balasan_pengaduanId_idx" ON "Balasan"("pengaduanId");
 
 -- CreateIndex
 CREATE INDEX "Balasan_createdAt_idx" ON "Balasan"("createdAt");
@@ -158,7 +158,7 @@ CREATE INDEX "Balasan_createdAt_idx" ON "Balasan"("createdAt");
 CREATE INDEX "Balasan_dariAdmin_idx" ON "Balasan"("dariAdmin");
 
 -- CreateIndex
-CREATE INDEX "Balasan_laporanId_createdAt_idx" ON "Balasan"("laporanId", "createdAt");
+CREATE INDEX "Balasan_pengaduanId_createdAt_idx" ON "Balasan"("pengaduanId", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "Notifikasi_untukAdmin_idx" ON "Notifikasi"("untukAdmin");
@@ -179,7 +179,7 @@ CREATE INDEX "Notifikasi_untukAdmin_dibaca_idx" ON "Notifikasi"("untukAdmin", "d
 CREATE INDEX "Notifikasi_beritaId_idx" ON "Notifikasi"("beritaId");
 
 -- CreateIndex
-CREATE INDEX "Notifikasi_laporanId_idx" ON "Notifikasi"("laporanId");
+CREATE INDEX "Notifikasi_pengaduanId_idx" ON "Notifikasi"("pengaduanId");
 
 -- CreateIndex
 CREATE INDEX "Notifikasi_layananId_idx" ON "Notifikasi"("layananId");

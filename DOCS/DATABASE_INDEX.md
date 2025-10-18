@@ -18,7 +18,7 @@ SGFix Project uses **SQLite** with **Prisma ORM** for optimal performance. The s
        └──────────────────────┼───────────────────────┘
                               │
                     ┌─────────────┐
-                    │   Laporan   │◄──────┐
+                    │   Pengaduan   │◄──────┐
                     └─────────────┘       │
                               │           │
                     ┌─────────────┐       │
@@ -39,7 +39,7 @@ SGFix Project uses **SQLite** with **Prisma ORM** for optimal performance. The s
 |-------|---------|----------------|-------------|
 | **Kategori** | News categories | 5-20 | Static |
 | **Berita** | News articles | 100-1000 | Medium |
-| **Laporan** | Public reports | 500-5000 | High |
+| **Pengaduan** | Public reports | 500-5000 | High |
 | **Balasan** | Report replies | 1000-10000 | High |
 | **Layanan** | Government service applications | 500-5000 | High |
 | **BalasanLayanan** | Service application replies | 1000-10000 | High |
@@ -113,9 +113,9 @@ CREATE INDEX idx_berita_published_views ON Berita(published, views);
 
 ---
 
-### 📝 **Laporan** (Reports)
+### 📝 **Pengaduan** (Reports)
 ```sql
-CREATE TABLE Laporan (
+CREATE TABLE Pengaduan (
   id          TEXT PRIMARY KEY,
   judul       TEXT NOT NULL,        -- Report title
   keterangan  TEXT NOT NULL,        -- Report description
@@ -145,12 +145,12 @@ enum Status {
 **Indexes**:
 ```sql
 -- Performance indexes
-CREATE INDEX idx_laporan_status ON Laporan(status);
-CREATE INDEX idx_laporan_created ON Laporan(createdAt);
-CREATE INDEX idx_laporan_location ON Laporan(latitude, longitude);
+CREATE INDEX idx_pengaduan_status ON Pengaduan(status);
+CREATE INDEX idx_pengaduan_created ON Pengaduan(createdAt);
+CREATE INDEX idx_pengaduan_location ON Pengaduan(latitude, longitude);
 
 -- Composite indexes for common queries
-CREATE INDEX idx_laporan_status_created ON Laporan(status, createdAt);
+CREATE INDEX idx_pengaduan_status_created ON Pengaduan(status, createdAt);
 ```
 
 **Query Optimization**:
@@ -165,13 +165,13 @@ CREATE INDEX idx_laporan_status_created ON Laporan(status, createdAt);
 ```sql
 CREATE TABLE Balasan (
   id          TEXT PRIMARY KEY,
-  laporanId   TEXT NOT NULL,       -- Foreign key to Laporan
+  pengaduanId   TEXT NOT NULL,       -- Foreign key to Pengaduan
   isi         TEXT NOT NULL,        -- Reply content
   dariAdmin   BOOLEAN DEFAULT FALSE,-- Admin reply flag
   createdAt   DATETIME DEFAULT CURRENT_TIMESTAMP,
   updatedAt   DATETIME DEFAULT CURRENT_TIMESTAMP,
   
-  FOREIGN KEY (laporanId) REFERENCES Laporan(id) ON DELETE CASCADE
+  FOREIGN KEY (pengaduanId) REFERENCES Pengaduan(id) ON DELETE CASCADE
 );
 ```
 
@@ -181,13 +181,13 @@ CREATE TABLE Balasan (
 **Indexes**:
 ```sql
 -- Performance indexes
-CREATE INDEX idx_balasan_laporan ON Balasan(laporanId);
+CREATE INDEX idx_balasan_pengaduan ON Balasan(pengaduanId);
 CREATE INDEX idx_balasan_created ON Balasan(createdAt);
 CREATE INDEX idx_balasan_admin ON Balasan(dariAdmin);
 ```
 
 **Query Optimization**:
-- ✅ **Report replies**: `WHERE laporanId = ? ORDER BY createdAt`
+- ✅ **Report replies**: `WHERE pengaduanId = ? ORDER BY createdAt`
 - ✅ **Admin responses**: `WHERE dariAdmin = true`
 - ✅ **Recent activity**: `ORDER BY createdAt DESC`
 
@@ -327,12 +327,12 @@ CREATE TABLE Notifikasi (
   
   -- Optional foreign keys
   beritaId    TEXT,                 -- Related news
-  laporanId   TEXT,                 -- Related report
+  pengaduanId   TEXT,                 -- Related report
   layananId   TEXT,                 -- Related service
   balasanId   TEXT,                 -- Related reply
   
   FOREIGN KEY (beritaId) REFERENCES Berita(id) ON DELETE CASCADE,
-  FOREIGN KEY (laporanId) REFERENCES Laporan(id) ON DELETE CASCADE,
+  FOREIGN KEY (pengaduanId) REFERENCES Pengaduan(id) ON DELETE CASCADE,
   FOREIGN KEY (layananId) REFERENCES Layanan(id) ON DELETE CASCADE,
   FOREIGN KEY (balasanId) REFERENCES Balasan(id) ON DELETE CASCADE
 );
@@ -346,9 +346,9 @@ CREATE TABLE Notifikasi (
 enum TipeNotif {
   BERITA_BARU      = 'BERITA_BARU',      -- New news article
   BERITA_UPDATE    = 'BERITA_UPDATE',    -- News updated
-  LAPORAN_BARU     = 'LAPORAN_BARU',     -- New report
-  LAPORAN_UPDATE   = 'LAPORAN_UPDATE',   -- Report updated
-  LAPORAN_BALASAN  = 'LAPORAN_BALASAN',   -- New reply to report
+  PENGADUAN_BARU     = 'PENGADUAN_BARU',     -- New report
+  PENGADUAN_UPDATE   = 'PENGADUAN_UPDATE',   -- Report updated
+  PENGADUAN_BALASAN  = 'PENGADUAN_BALASAN',   -- New reply to report
   LAYANAN_BARU     = 'LAYANAN_BARU',     -- New service application
   LAYANAN_UPDATE   = 'LAYANAN_UPDATE',   -- Service application updated
   LAYANAN_BALASAN  = 'LAYANAN_BALASAN'   -- New reply to service application
@@ -398,13 +398,13 @@ LIMIT 5;
 ```sql
 -- Optimized query
 SELECT l.*, COUNT(b.id) as balasan_count
-FROM Laporan l
-LEFT JOIN Balasan b ON l.id = b.laporanId
+FROM Pengaduan l
+LEFT JOIN Balasan b ON l.id = b.pengaduanId
 WHERE l.status != 'SELESAI'
 GROUP BY l.id
 ORDER BY l.status ASC, l.createdAt DESC;
 
--- Uses indexes: idx_laporan_status_created, idx_balasan_laporan
+-- Uses indexes: idx_pengaduan_status_created, idx_balasan_pengaduan
 ```
 
 #### 3. **Admin Service Dashboard**
@@ -478,7 +478,7 @@ LIMIT 10;
 |-------|---------|-----------|--------------|
 | **Kategori** | 5-20 | <0.1 | Static |
 | **Berita** | 100-1000 | 1-10 | 10-20% |
-| **Laporan** | 500-5000 | 5-50 | 20-30% |
+| **Pengaduan** | 500-5000 | 5-50 | 20-30% |
 | **Balasan** | 1000-10000 | 2-20 | 25-35% |
 | **Layanan** | 500-5000 | 5-50 | 20-30% |
 | **BalasanLayanan** | 1000-10000 | 2-20 | 25-35% |
@@ -494,9 +494,9 @@ LIMIT 10;
 ALTER TABLE Berita ADD CONSTRAINT fk_berita_kategori 
   FOREIGN KEY (kategoriId) REFERENCES Kategori(id) ON DELETE CASCADE;
 
--- Laporan → Balasan (One-to-Many)
-ALTER TABLE Balasan ADD CONSTRAINT fk_balasan_laporan 
-  FOREIGN KEY (laporanId) REFERENCES Laporan(id) ON DELETE CASCADE;
+-- Pengaduan → Balasan (One-to-Many)
+ALTER TABLE Balasan ADD CONSTRAINT fk_balasan_pengaduan 
+  FOREIGN KEY (pengaduanId) REFERENCES Pengaduan(id) ON DELETE CASCADE;
 
 -- Layanan → BalasanLayanan (One-to-Many)
 ALTER TABLE BalasanLayanan ADD CONSTRAINT fk_balasan_layanan 
@@ -505,8 +505,8 @@ ALTER TABLE BalasanLayanan ADD CONSTRAINT fk_balasan_layanan
 -- Notifikasi → All tables (Polymorphic)
 ALTER TABLE Notifikasi ADD CONSTRAINT fk_notifikasi_berita 
   FOREIGN KEY (beritaId) REFERENCES Berita(id) ON DELETE CASCADE;
-ALTER TABLE Notifikasi ADD CONSTRAINT fk_notifikasi_laporan 
-  FOREIGN KEY (laporanId) REFERENCES Laporan(id) ON DELETE CASCADE;
+ALTER TABLE Notifikasi ADD CONSTRAINT fk_notifikasi_pengaduan 
+  FOREIGN KEY (pengaduanId) REFERENCES Pengaduan(id) ON DELETE CASCADE;
 ALTER TABLE Notifikasi ADD CONSTRAINT fk_notifikasi_layanan 
   FOREIGN KEY (layananId) REFERENCES Layanan(id) ON DELETE CASCADE;
 ALTER TABLE Notifikasi ADD CONSTRAINT fk_notifikasi_balasan 
@@ -522,8 +522,8 @@ JOIN Kategori k ON b.kategoriId = k.id;
 
 -- Reports with Replies
 SELECT l.*, COUNT(b.id) as reply_count
-FROM Laporan l
-LEFT JOIN Balasan b ON l.id = b.laporanId
+FROM Pengaduan l
+LEFT JOIN Balasan b ON l.id = b.pengaduanId
 GROUP BY l.id;
 
 -- Services with Replies
@@ -537,7 +537,7 @@ SELECT n.*,
        COALESCE(ber.judul, lap.judul, lay.judul) as related_title
 FROM Notifikasi n
 LEFT JOIN Berita ber ON n.beritaId = ber.id
-LEFT JOIN Laporan lap ON n.laporanId = lap.id
+LEFT JOIN Pengaduan lap ON n.pengaduanId = lap.id
 LEFT JOIN Layanan lay ON n.layananId = lay.id;
 ```
 
@@ -561,8 +561,8 @@ WHERE createdAt < datetime('now', '-6 months');
 
 -- Archive old reports (older than 1 year, completed)
 -- Move to separate archive table
-INSERT INTO Laporan_Archive 
-SELECT * FROM Laporan 
+INSERT INTO Pengaduan_Archive 
+SELECT * FROM Pengaduan 
 WHERE status = 'SELESAI' 
 AND createdAt < datetime('now', '-1 year');
 

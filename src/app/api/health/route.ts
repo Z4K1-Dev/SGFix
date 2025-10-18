@@ -12,7 +12,7 @@ export async function GET() {
     // Check if tables exist
     const tables = await db.$queryRaw`
       SELECT name FROM sqlite_master
-      WHERE type='table' AND name IN ('Layanan', 'BalasanLayanan', 'Kategori', 'Berita', 'Laporan', 'Balasan')
+      WHERE type='table' AND name IN ('Layanan', 'BalasanLayanan', 'Kategori', 'Berita', 'Pengaduan', 'Balasan')
     `
     
     // Check Prisma models
@@ -21,7 +21,7 @@ export async function GET() {
       balasanLayanan: !!db.balasanLayanan,
       kategori: !!db.kategori,
       berita: !!db.berita,
-      laporan: !!db.laporan,
+      pengaduan: !!db.pengaduan,
       balasan: !!db.balasan
     }
     

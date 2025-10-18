@@ -25,8 +25,8 @@ export async function POST(req: Request) {
       case 'chat-reply':
         payload = { message, ts: Date.now() }
         break
-      case 'laporan-status-changed':
-        payload = { laporan: entity || 'Laporan', status: status || 'DIKERJAKAN', ts: Date.now() }
+      case 'pengaduan-status-changed':
+        payload = { pengaduan: entity || 'Pengaduan', status: status || 'DIKERJAKAN', ts: Date.now() }
         break
       case 'layanan-status-changed':
         payload = { layanan: entity || 'Layanan', status: status || 'DIPROSES', ts: Date.now() }

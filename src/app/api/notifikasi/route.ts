@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         berita: { select: { judul: true } },
-        laporan: { select: { judul: true } },
+        pengaduan: { select: { judul: true } },
         balasan: { select: { isi: true } }
       },
       orderBy: { createdAt: 'desc' },

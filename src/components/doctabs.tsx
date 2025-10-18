@@ -73,17 +73,17 @@ const FileText = ({ className = "w-5 h-5" }) => (
     <path d="M16 17H8"/>
   </svg>
 );
-const Laporan = ({ className = "w-5 h-5" }) => (
-<svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="32" 
-    height="32" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    stroke-width="1.75" 
-    stroke-linecap="round" 
-    stroke-linejoin="round" 
+const Pengaduan = ({ className = "w-5 h-5" }) => (
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="32"
+    height="32"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.75"
+    stroke-linecap="round"
+    stroke-linejoin="round"
     className={className}
   >
     <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/>
@@ -148,7 +148,7 @@ function ExpandedTabs({ tabs, className, onChange, activeTab }: ExpandedTabsProp
   useEffect(() => {
     // Set active tab based on activeTab prop
     if (activeTab) {
-      const tabMap = ['beranda', 'berita', 'laporan', 'layanan', null, 'profile'];
+      const tabMap = ['beranda', 'berita', 'pengaduan', 'layanan', null, 'profile'];
       const index = tabMap.indexOf(activeTab);
       if (index !== -1) {
         setSelected(index);
@@ -242,7 +242,7 @@ export default function Tabs2({ onChange, activeTab }: { onChange?: (index: numb
   const TABS: TabItem[] = [
     { title: "Home", icon: HomeIcon },
     { title: "Berita", icon: FileText },
-    { title: "Laporan", icon: Laporan },
+    { title: "Pengaduan", icon: Pengaduan },
     { title: "Layanan", icon: LayananIcon },
     { type: "separator" },
     { title: "Profile", icon: UserIcon },

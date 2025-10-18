@@ -36,7 +36,7 @@ SGFix Project has been comprehensively optimized for performance across all laye
 │ Query                   │ Before   │ After    │ Improvement │
 ├─────────────────────────┼──────────┼──────────┼─────────────┤
 │ Berita List (published) │ 200ms    │ 25ms     │ 87% faster  │
-│ Laporan List (status)   │ 250ms    │ 30ms     │ 88% faster  │
+│ Pengaduan List (status)   │ 250ms    │ 30ms     │ 88% faster  │
 │ Layanan List (status)   │ 280ms    │ 35ms     │ 87% faster  │
 │ Category Filter         │ 180ms    │ 15ms     │ 92% faster  │
 │ Notification Query      │ 150ms    │ 20ms     │ 87% faster  │
@@ -66,10 +66,10 @@ SGFix Project has been comprehensively optimized for performance across all laye
 │ Endpoint                │ Before   │ After    │ Improvement │
 ├─────────────────────────┼──────────┼──────────┼─────────────┤
 │ GET /api/berita         │ 800ms    │ 100ms    │ 87% faster  │
-│ GET /api/laporan        │ 900ms    │ 120ms    │ 87% faster  │
+│ GET /api/pengaduan        │ 900ms    │ 120ms    │ 87% faster  │
 │ GET /api/layanan        │ 950ms    │ 140ms    │ 85% faster  │
 │ POST /api/berita        │ 600ms    │ 200ms    │ 67% faster  │
-│ POST /api/laporan       │ 700ms    │ 250ms    │ 64% faster  │
+│ POST /api/pengaduan       │ 700ms    │ 250ms    │ 64% faster  │
 │ POST /api/layanan       │ 750ms    │ 300ms    │ 60% faster  │
 │ GET /api/kategori       │ 150ms    │ 50ms     │ 67% faster  │
 │ GET /api/admin/layanan  │ 800ms    │ 150ms    │ 81% faster  │
@@ -219,7 +219,7 @@ const alertThresholds = {
    ```sql
    -- 25 performance indexes added
    CREATE INDEX idx_berita_published_created ON Berita(published, createdAt);
-   CREATE INDEX idx_laporan_status_created ON Laporan(status, createdAt);
+   CREATE INDEX idx_pengaduan_status_created ON Pengaduan(status, createdAt);
    CREATE INDEX idx_layanan_status_created ON Layanan(status, createdAt);
    CREATE INDEX idx_layanan_jenis_status ON Layanan(jenisLayanan, status);
    CREATE INDEX idx_notifikasi_admin_dibaca ON Notifikasi(untukAdmin, dibaca);

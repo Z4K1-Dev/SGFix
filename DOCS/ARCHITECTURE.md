@@ -124,7 +124,7 @@ SGFix is a comprehensive Next.js 15 application designed for government digital 
 │                   Data Layer                                │
 ├─────────────────────────────────────────────────────┤
 │  SQLite Database with Prisma ORM                           │
-│  ├── Tables: Kategori, Berita, Laporan, Balasan,           │
+│  ├── Tables: Kategori, Berita, Pengaduan, Balasan,           │
 │  │          Notifikasi, Layanan, BalasanLayanan            │
 │  ├── Indexes: 25+ performance indexes                      │
 │  └── Relationships: Foreign keys with cascade delete       │
@@ -172,11 +172,11 @@ CREATE INDEX idx_berita_published_created ON Berita(published, createdAt);
 CREATE INDEX idx_berita_views ON Berita(views);
 CREATE INDEX idx_berita_published_views ON Berita(published, views);
 
--- Laporan Table Indexes
-CREATE INDEX idx_laporan_status ON Laporan(status);
-CREATE INDEX idx_laporan_created ON Laporan(createdAt);
-CREATE INDEX idx_laporan_status_created ON Laporan(status, createdAt);
-CREATE INDEX idx_laporan_location ON Laporan(latitude, longitude);
+-- Pengaduan Table Indexes
+CREATE INDEX idx_pengaduan_status ON Pengaduan(status);
+CREATE INDEX idx_pengaduan_created ON Pengaduan(createdAt);
+CREATE INDEX idx_pengaduan_status_created ON Pengaduan(status, createdAt);
+CREATE INDEX idx_pengaduan_location ON Pengaduan(latitude, longitude);
 
 -- Layanan Table Indexes
 CREATE INDEX idx_layanan_jenis ON Layanan(jenisLayanan);
@@ -187,7 +187,7 @@ CREATE INDEX idx_layanan_nik ON Layanan(nik);
 
 -- Additional indexes for related tables
 CREATE INDEX idx_notifikasi_untuk_dibaca ON Notifikasi(untukAdmin, dibaca);
-CREATE INDEX idx_balasan_laporan_created ON Balasan(laporanId, createdAt);
+CREATE INDEX idx_balasan_pengaduan_created ON Balasan(pengaduanId, createdAt);
 ```
 
 ### 🚀 **API Layer Optimizations**
@@ -262,7 +262,7 @@ const LazyLoad = ({ children, enabled = true, rootMargin = '50px' }) => {
        └──────────────┼───────────────────────┘
                               │
                     ┌─────────────┐
-                    │   Laporan   │◄──────┐
+                    │   Pengaduan   │◄──────┐
                     └─────────────┘       │
                               │           │
                     ┌─────────────┐       │
@@ -327,9 +327,9 @@ model Berita {
 }
 ```
 
-#### **Laporan** (Reports)
+#### **Pengaduan** (Reports)
 ```prisma
-model Laporan {
+model Pengaduan {
   id         String       @id @default(cuid())
   judul      String
  keterangan String
@@ -353,18 +353,18 @@ model Laporan {
 ```prisma
 model Balasan {
   id         String       @id @default(cuid())
-  laporanId  String
+  pengaduanId  String
  isi        String
  dariAdmin  Boolean      @default(false)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
-  laporan    Laporan      @relation(fields: [laporanId], references: [id], onDelete: Cascade)
+  pengaduan    Pengaduan      @relation(fields: [pengaduanId], references: [id], onDelete: Cascade)
  notifikasi Notifikasi[]
 
-  @@index([laporanId])
+  @@index([pengaduanId])
   @@index([createdAt])
   @@index([dariAdmin])
-  @@index([laporanId, createdAt])
+  @@index([pengaduanId, createdAt])
 }
 ```
 
@@ -435,13 +435,13 @@ model Notifikasi {
   dibaca     Boolean   @default(false)
  createdAt  DateTime  @default(now())
   beritaId   String?
-  laporanId  String?
+  pengaduanId  String?
  layananId  String?
   balasanId  String?
 
  // Relations
   balasan    Balasan?  @relation(fields: [balasanId], references: [id], onDelete: Cascade)
-  laporan    Laporan?  @relation(fields: [laporanId], references: [id], onDelete: Cascade)
+  pengaduan    Pengaduan?  @relation(fields: [pengaduanId], references: [id], onDelete: Cascade)
   berita     Berita?   @relation(fields: [beritaId], references: [id], onDelete: Cascade)
   layanan    Layanan?  @relation(fields: [layananId], references: [id], onDelete: Cascade)
 
@@ -451,7 +451,7 @@ model Notifikasi {
   @@index([createdAt])
   @@index([untukAdmin, dibaca])
   @@index([beritaId])
-  @@index([laporanId])
+  @@index([pengaduanId])
   @@index([layananId])
   @@index([balasanId])
 }
@@ -503,9 +503,9 @@ enum JenisKelamin {
 enum TipeNotif {
   BERITA_BARU
   BERITA_UPDATE
-  LAPORAN_BARU
-  LAPORAN_UPDATE
-  LAPORAN_BALASAN
+  PENGADUAN_BARU
+  PENGADUAN_UPDATE
+  PENGADUAN_BALASAN
   LAYANAN_BARU
   LAYANAN_UPDATE
   LAYANAN_BALASAN
@@ -537,16 +537,16 @@ PUT    /api/berita/[id]/view # Increment view count
 GET    /api/berita/optimized # Optimized news endpoint
 ```
 
-#### **Laporan API**
+#### **Pengaduan API**
 ```
-GET    /api/laporan          # List reports with pagination
-POST   /api/laporan          # Create new report
-GET    /api/laporan/[id]     # Get single report
-PUT    /api/laporan/[id]     # Update report
-DELETE /api/laporan/[id]     # Delete report
-PUT    /api/laporan/[id]/status # Update report status
-POST   /api/laporan/[id]/balasan # Add reply to report
-GET    /api/laporan/optimized # Optimized reports endpoint
+GET    /api/pengaduan          # List reports with pagination
+POST   /api/pengaduan          # Create new report
+GET    /api/pengaduan/[id]     # Get single report
+PUT    /api/pengaduan/[id]     # Update report
+DELETE /api/pengaduan/[id]     # Delete report
+PUT    /api/pengaduan/[id]/status # Update report status
+POST   /api/pengaduan/[id]/balasan # Add reply to report
+GET    /api/pengaduan/optimized # Optimized reports endpoint
 ```
 
 #### **Layanan API**
@@ -650,9 +650,9 @@ src/
 │   │   └── 📄 [slug]/page.tsx
 │   ├── 📁 tambah-berita/      # Add news form
 │   │   └── 📄 page.tsx
-│   ├── 📁 laporan/            # Report pages
+│   ├── 📁 pengaduan/            # Report pages
 │   │   └── 📄 [id]/page.tsx
-│   ├── 📁 buat-laporan/       # Create report page
+│   ├── 📁 buat-pengaduan/       # Create report page
 │   │   └── 📄 page.tsx
 │   └── 📁 layanan/            # Service pages
 │       ├── 📄 page.tsx
@@ -666,7 +666,7 @@ src/
 │   │   └── 📄 status-tracker.tsx
 │   ├── 📁 lazy/               # Performance-optimized components
 │   │   ├── 📄 berita-card.tsx
-│   │   └── 📄 laporan-card.tsx
+│   │   └── 📄 pengaduan-card.tsx
 │   ├── 📁 virtualized/        # Virtual scrolling components
 │   │   └── 📄 virtual-list.tsx
 │   ├── 📄 doctabs.tsx         # Custom tabs component
@@ -765,9 +765,9 @@ socket.on('notification', (data: Notification) => {
   setNotifications(prev => [data, ...prev])
 })
 
-socket.on('laporan-status-updated', (data) => {
+socket.on('pengaduan-status-updated', (data) => {
   // Handle report status updates
- updateReportStatus(data.laporanId, data.status)
+ updateReportStatus(data.pengaduanId, data.status)
 })
 
 socket.on('layanan-status-updated', (data) => {
@@ -785,16 +785,16 @@ socket.on('disconnect', (reason) => {
 // Notification broadcasting
 io.to('admin').emit('notification', {
   id: Date.now(),
-  judul: 'Laporan Baru',
-  pesan: `Laporan "${judul}" telah dibuat`,
-  tipe: 'LAPORAN_BARU',
-  laporanId: laporan.id,
+  judul: 'Pengaduan Baru',
+  pesan: `Pengaduan "${judul}" telah dibuat`,
+  tipe: 'PENGADUAN_BARU',
+  pengaduanId: pengaduan.id,
   timestamp: new Date().toISOString()
 })
 
 // Status updates
-io.emit('laporan-status-updated', {
-  laporanId: id,
+io.emit('pengaduan-status-updated', {
+  pengaduanId: id,
   status: newStatus,
   timestamp: new Date().toISOString()
 })
@@ -1096,7 +1096,7 @@ const alertThresholds = {
 ### 📈 **Recent Activity**
 ```
 ✅ GET /api/berita - 200 OK (1492 bytes)
-✅ GET /api/laporan - 200 OK (4047 bytes)
+✅ GET /api/pengaduan - 200 OK (4047 bytes)
 ✅ GET /api/layanan - 200 OK (3881 bytes)
 ✅ GET /api/kategori - 200 OK (554 bytes)
 ✅ POST /api/seed - 200 OK (38 bytes)

@@ -6,11 +6,11 @@ export const dynamic = 'force-dynamic'
 import { cache, generateCacheKey, invalidateCachePattern } from '@/lib/cache'
 
 /**
- * Mendapatkan daftar laporan
+ * Mendapatkan daftar pengaduan
  */
 export async function GET() {
   try {
-    const laporan = await db.laporan.findMany({
+    const pengaduan = await db.pengaduan.findMany({
       include: {
         balasan: {
           orderBy: {
@@ -23,18 +23,18 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json(laporan)
+    return NextResponse.json(pengaduan)
   } catch (error) {
-    console.error('Error fetching laporan:', error)
+    console.error('Error fetching pengaduan:', error)
     return NextResponse.json(
-      { error: 'Gagal mengambil laporan' },
+      { error: 'Gagal mengambil pengaduan' },
       { status: 500 }
     )
   }
 }
 
 /**
- * Membuat laporan baru
+ * Membuat pengaduan baru
  */
 export async function POST(request: NextRequest) {
   try {
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const laporan = await db.laporan.create({
+    const pengaduan = await db.pengaduan.create({
       data: {
         judul,
         keterangan,
@@ -61,23 +61,23 @@ export async function POST(request: NextRequest) {
     // Buat notifikasi untuk admin
     await db.notifikasi.create({
       data: {
-        judul: 'Laporan Baru',
-        pesan: `Laporan "${judul}" telah dibuat oleh masyarakat`,
-        tipe: 'LAPORAN_BARU',
+        judul: 'Pengaduan Baru',
+        pesan: `Pengaduan "${judul}" telah dibuat oleh masyarakat`,
+        tipe: 'PENGADUAN_BARU',
         untukAdmin: true,
-        laporanId: laporan.id
+        pengaduanId: pengaduan.id
       }
     })
 
 
-    // Invalidate cache when new laporan is created
-    invalidateCachePattern('/api/laporan')
+    // Invalidate cache when new pengaduan is created
+    invalidateCachePattern('/api/pengaduan')
 
-    return NextResponse.json(laporan, { status: 201 })
+    return NextResponse.json(pengaduan, { status: 201 })
   } catch (error) {
-    console.error('Error creating laporan:', error)
+    console.error('Error creating pengaduan:', error)
     return NextResponse.json(
-      { error: 'Gagal membuat laporan' },
+      { error: 'Gagal membuat pengaduan' },
       { status: 500 }
     )
   }

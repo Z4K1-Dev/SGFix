@@ -3,17 +3,27 @@
  * Memudahkan import dan penggunaan cache management
  */
 
-// Export dari cache manager
-export {
-  CacheManager,
-  pageCache,
-  prefetchPageData,
-  invalidatePageCache,
-  refetchPageData,
-  setupCacheCleanup,
-  getCacheStats,
-  getSoonToExpirePages
+// Import dari cache manager
+import {
+  CacheManager as _CacheManager,
+  pageCache as _pageCache,
+  prefetchPageData as _prefetchPageData,
+  invalidatePageCache as _invalidatePageCache,
+  refetchPageData as _refetchPageData,
+  setupCacheCleanup as _setupCacheCleanup,
+  getCacheStats as _getCacheStats,
+  getSoonToExpirePages as _getSoonToExpirePages
 } from './cache-manager'
+
+// Re-export untuk kemudahan
+export const CacheManager = _CacheManager
+export const pageCache = _pageCache
+export const prefetchPageData = _prefetchPageData
+export const invalidatePageCache = _invalidatePageCache
+export const refetchPageData = _refetchPageData
+export const setupCacheCleanup = _setupCacheCleanup
+export const getCacheStats = _getCacheStats
+export const getSoonToExpirePages = _getSoonToExpirePages
 
 // Export custom hooks
 export {
@@ -69,7 +79,7 @@ export const CACHE_CONFIG = {
   CLEANUP_INTERVAL: 5 * 60 * 1000, // 5 menit
   PREFETCH_PAGES: [
     { cacheKey: '/berita', apiEndpoint: '/api/berita?published=true' },
-    { cacheKey: '/laporan', apiEndpoint: '/api/laporan' },
+    { cacheKey: '/pengaduan', apiEndpoint: '/api/pengaduan' },
     { cacheKey: '/layanan', apiEndpoint: '/api/layanan' }
   ]
 } as const

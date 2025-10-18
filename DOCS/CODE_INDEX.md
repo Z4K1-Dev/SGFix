@@ -16,8 +16,8 @@
 │   │   ├── 📁 admin/             # Admin dashboard
 │   │   ├── 📁 berita/            # News pages
 │   │   ├── 📁 tambah-berita/     # Add news form
-│   │   ├── 📁 laporan/           # Report pages
-│   │   ├── 📁 buat-laporan/      # Create report page
+│   │   ├── 📁 pengaduan/           # Report pages
+│   │   ├── 📁 buat-pengaduan/      # Create report page
 │   │   ├── 📁 layanan/           # Service pages
 │   │   │   ├── 📄 page.tsx       # Service listing page
 │   │   │   ├── 📄 [id]/page.tsx  # Service detail page
@@ -26,7 +26,7 @@
 │   │       ├── 📁 admin/         # Admin API routes
 │   │       │   └── 📁 layanan/   # Admin service API
 │   │       ├── 📁 berita/        # News API
-│   │       ├── 📁 laporan/       # Reports API
+│   │       ├── 📁 pengaduan/       # Reports API
 │   │       ├── 📁 layanan/       # Services API
 │   │       ├── 📁 kategori/      # Categories API
 │   │       ├── 📁 notifikasi/    # Notifications API
@@ -43,7 +43,7 @@
 │   │   │   └── 📄 status-tracker.tsx # Status tracking component
 │   │   ├── 📁 lazy/              # Performance-optimized components
 │   │   │   ├── 📄 berita-card.tsx # Lazy news card
-│   │   │   └── 📄 laporan-card.tsx # Lazy report card
+│   │   │   └── 📄 pengaduan-card.tsx # Lazy report card
 │   │   ├── 📁 virtualized/       # Virtual scrolling components
 │   │   │   └── 📄 virtual-list.tsx # Virtual list component
 │   │   ├── 📄 doctabs.tsx        # Custom tabs component
@@ -89,7 +89,7 @@
 |------|--------------|---------|
 | `prisma/schema.prisma` | **25+ new indexes** for optimal queries | **90% faster queries** |
 | `src/app/api/berita/route.ts` | **Pagination + caching** | **80% faster API** |
-| `src/app/api/laporan/route.ts` | **Optimized includes + caching** | **75% faster API** |
+| `src/app/api/pengaduan/route.ts` | **Optimized includes + caching** | **75% faster API** |
 | `src/app/api/layanan/route.ts` | **Optimized joins + caching** | **70% faster API** |
 | `src/lib/db-optimized.ts` | **Custom query optimizations** | **50% faster complex queries** |
 
@@ -97,7 +97,7 @@
 | Component | Cache Duration | Cache Type |
 |-----------|----------------|------------|
 | **Berita API** | 5 minutes | Memory cache |
-| **Laporan API** | 3 minutes | Memory cache |
+| **Pengaduan API** | 3 minutes | Memory cache |
 | **Layanan API** | 3 minutes | Memory cache |
 | **Images** | Lazy loading | Component cache |
 | **Socket Connections** | Connection pooling | Connection cache |
@@ -123,8 +123,8 @@
 | **Admin Dashboard** | `src/app/admin/page.tsx` | Admin interface | ⭐⭐⭐⭐ Good |
 | **News Detail** | `src/app/berita/[slug]/page.tsx` | Single news view | ⭐⭐⭐ Standard |
 | **Add News** | `src/app/tambah-berita/page.tsx` | News creation form | ⭐⭐⭐ Standard |
-| **Report Detail** | `src/app/laporan/[id]/page.tsx` | Single report view | ⭐⭐⭐⭐ Good |
-| **Create Report** | `src/app/buat-laporan/page.tsx` | Report creation form | ⭐⭐⭐⭐ Good |
+| **Report Detail** | `src/app/pengaduan/[id]/page.tsx` | Single report view | ⭐⭐⭐⭐ Good |
+| **Create Report** | `src/app/buat-pengaduan/page.tsx` | Report creation form | ⭐⭐⭐⭐ Good |
 | **Service List** | `src/app/layanan/page.tsx` | Service listing page | ⭐⭐⭐⭐ Good |
 | **Service Detail** | `src/app/layanan/[id]/page.tsx` | Single service view | ⭐⭐⭐⭐ Good |
 | **Service Reply** | `src/app/layanan/[id]/balasan/page.tsx` | Service reply page | ⭐⭐⭐⭐ Good |
@@ -133,7 +133,7 @@
 | Route | Method | Purpose | Cached | Pagination |
 |-------|--------|---------|--------|------------|
 | `/api/berita` | GET, POST, PUT, DELETE | News CRUD | ✅ 5min | ✅ Yes |
-| `/api/laporan` | GET, POST, PUT, DELETE | Reports CRUD | ✅ 3min | ✅ Yes |
+| `/api/pengaduan` | GET, POST, PUT, DELETE | Reports CRUD | ✅ 3min | ✅ Yes |
 | `/api/layanan` | GET, POST, PUT, DELETE | Services CRUD | ✅ 3min | ✅ Yes |
 | `/api/admin/layanan` | GET, PUT | Admin services | ✅ 3min | ✅ Yes |
 | `/api/kategori` | GET, POST, PUT, DELETE | Categories | ❌ No |
@@ -181,10 +181,10 @@ Kategori (1) ←→ (N) Berita (1) ←→ (N) Notifikasi
     │                   │
     └── kategoriId   └── beritaId
 
-Laporan (1) ←→ (N) Balasan (1) ←→ (N) Notifikasi
+Pengaduan (1) ←→ (N) Balasan (1) ←→ (N) Notifikasi
     ↑                   ↑
     │                   │
-    └── laporanId   └── balasanId
+    └── pengaduanId   └── balasanId
 
 Layanan (1) ←→ (N) BalasanLayanan (1) ←→ (N) Notifikasi
     ↑                        ↑
@@ -196,9 +196,9 @@ Layanan (1) ←→ (N) BalasanLayanan (1) ←→ (N) Notifikasi
 | Table | Indexes | Query Optimization |
 |-------|---------|-------------------|
 | **Berita** | 7 indexes | Filter by published, category, date, views |
-| **Laporan** | 5 indexes | Filter by status, date, location |
+| **Pengaduan** | 5 indexes | Filter by status, date, location |
 | **Layanan** | 6 indexes | Filter by jenisLayanan, status, date, nik |
-| **Balasan** | 4 indexes | Join by laporanId, sort by date |
+| **Balasan** | 4 indexes | Join by pengaduanId, sort by date |
 | **BalasanLayanan** | 4 indexes | Join by layananId, sort by date |
 | **Notifikasi** | 8 indexes | Filter by admin, read status, type, various IDs |
 

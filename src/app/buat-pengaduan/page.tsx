@@ -21,7 +21,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
-interface LaporanData {
+interface PengaduanData {
   judul: string
   keterangan: string
   foto: string | null
@@ -37,10 +37,10 @@ const steps = [
   { id: 5, title: 'Kirim', icon: CheckCircle }
 ]
 
-export default function BuatLaporanPage() {
+export default function BuatPengaduanPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState<LaporanData>({
+  const [formData, setFormData] = useState<PengaduanData>({
     judul: '',
     keterangan: '',
     foto: null,
@@ -53,7 +53,7 @@ export default function BuatLaporanPage() {
 
   const progress = ((currentStep - 1) / (steps.length - 1)) * 100
 
-  const updateFormData = (field: keyof LaporanData, value: any) => {
+  const updateFormData = (field: keyof PengaduanData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -134,7 +134,7 @@ export default function BuatLaporanPage() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch('/api/laporan', {
+      const response = await fetch('/api/pengaduan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ export default function BuatLaporanPage() {
       })
 
       if (response.ok) {
-        toast.success('Laporan berhasil dikirim!')
+        toast.success('Pengaduan berhasil dikirim!')
         // Reset form
         setFormData({
           judul: '',
@@ -154,16 +154,16 @@ export default function BuatLaporanPage() {
         })
         setCurrentStep(1)
         
-        // Redirect ke halaman laporan
+        // Redirect ke halaman pengaduan
         setTimeout(() => {
           window.location.href = '/'
         }, 2000)
       } else {
         const error = await response.json()
-        toast.error(error.error || 'Gagal mengirim laporan')
+        toast.error(error.error || 'Gagal mengirim pengaduan')
       }
     } catch (error) {
-      toast.error('Terjadi kesalahan saat mengirim laporan')
+      toast.error('Terjadi kesalahan saat mengirim pengaduan')
     } finally {
       setIsSubmitting(false)
     }
@@ -193,12 +193,12 @@ export default function BuatLaporanPage() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Judul Laporan *
+                Judul Pengaduan *
               </label>
               <Input
                 value={formData.judul}
                 onChange={(e) => updateFormData('judul', e.target.value)}
-                placeholder="Masukkan judul laporan"
+                placeholder="Masukkan judul pengaduan"
                 className="w-full"
               />
             </div>
@@ -209,7 +209,7 @@ export default function BuatLaporanPage() {
               <Textarea
                 value={formData.keterangan}
                 onChange={(e) => updateFormData('keterangan', e.target.value)}
-                placeholder="Jelaskan detail laporan Anda"
+                placeholder="Jelaskan detail pengaduan Anda"
                 className="w-full min-h-[120px]"
               />
             </div>
@@ -323,7 +323,7 @@ export default function BuatLaporanPage() {
       case 4:
         return (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold">Preview Laporan</h3>
+            <h3 className="text-lg font-semibold">Preview Pengaduan</h3>
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">{formData.judul || 'Tanpa Judul'}</CardTitle>
@@ -333,18 +333,18 @@ export default function BuatLaporanPage() {
                   <h4 className="font-medium mb-2">Keterangan:</h4>
                   <p className="text-foreground">{formData.keterangan || 'Tidak ada keterangan'}</p>
                 </div>
-                
+               
                 {formData.foto && (
                   <div>
                     <h4 className="font-medium mb-2">Foto:</h4>
                     <img
                       src={formData.foto?.startsWith('http') || formData.foto?.startsWith('/') ? formData.foto : `/${formData.foto}`}
-                      alt="Foto laporan"
+                      alt="Foto pengaduan"
                       className="max-w-full h-48 object-cover rounded-lg"
                     />
                   </div>
                 )}
-                
+               
                 {formData.latitude && formData.longitude && (
                   <div>
                     <h4 className="font-medium mb-2">Lokasi:</h4>
@@ -365,7 +365,7 @@ export default function BuatLaporanPage() {
             <CheckCircle className="w-16 h-16 mx-auto text-green-500" />
             <h3 className="text-xl font-semibold">Siap Dikirim!</h3>
             <p className="text-muted-foreground">
-              Laporan Anda sudah siap untuk dikirim. Pastikan semua data sudah benar.
+              Pengaduan Anda sudah siap untuk dikirim. Pastikan semua data sudah benar.
             </p>
             <div className="space-y-2">
               <Badge variant="secondary" className="mr-2">
@@ -391,15 +391,15 @@ export default function BuatLaporanPage() {
 
   return (
     <MobileLayout
-      title="Buat Laporan"
+      title="Buat Pengaduan"
       showBackButton={true}
       backRoute="/"
-      activeTab="laporan"
+      activeTab="pengaduan"
       onTabChange={(index) => {
         if (index === null) return
-        const routes = ["/", "/berita", "/laporan", "/layanan", null, "/profile"]
+        const routes = ["/", "/berita", "/pengaduan", "/layanan", null, "/profile"]
         const target = routes[index]
-        if (!target || target === "/laporan") return
+        if (!target || target === "/pengaduan") return
         router.push(target)
       }}
     >
@@ -472,7 +472,7 @@ export default function BuatLaporanPage() {
                   disabled={!canProceed || isSubmitting}
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  {isSubmitting ? 'Mengirim...' : 'Kirim Laporan'}
+                  {isSubmitting ? 'Mengirim...' : 'Kirim Pengaduan'}
                   <CheckCircle className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
@@ -497,7 +497,7 @@ export default function BuatLaporanPage() {
               <ul className="list-disc list-inside space-y-1">
                 <li>Judul dan keterangan wajib diisi</li>
                 <li>Foto dan lokasi opsional tapi sangat membantu</li>
-                <li> pastikan foto jelas dan relevan dengan laporan</li>
+                <li> pastikan foto jelas dan relevan dengan pengaduan</li>
                 <li>Aktifkan lokasi untuk akurasi yang lebih baik</li>
               </ul>
             </div>

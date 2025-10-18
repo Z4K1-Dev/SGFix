@@ -40,7 +40,7 @@ export function MobileLayout({
 
   const handleTabChange = (index: number | null) => {
     if (index === null) return
-    const routes: (string | null)[] = ["/", "/berita", "/laporan", "/layanan", null, "/profile"]
+    const routes: (string | null)[] = ["/", "/berita", "/pengaduan", "/layanan", null, "/profile"]
     const target = routes[index]
     if (target) {
       router.push(target)

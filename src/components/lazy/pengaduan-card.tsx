@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { MessageSquare, Camera, AlertCircle, Clock, CheckCircle } from 'lucide-react'
 import { Suspense } from 'react'
 
-interface Laporan {
+interface Pengaduan {
   id: string
   judul: string
   keterangan: string
@@ -15,13 +15,13 @@ interface Laporan {
   createdAt: string
 }
 
-interface LaporanCardProps {
-  item: Laporan
+interface PengaduanCardProps {
+  item: Pengaduan
   onClick: (id: string) => void
 }
 
 // Loading skeleton component
-const LaporanCardSkeleton = () => (
+const PengaduanCardSkeleton = () => (
   <Card className="border-0 shadow-sm bg-card">
     <CardHeader className="pb-3">
       <div className="animate-pulse">
@@ -40,7 +40,7 @@ const LaporanCardSkeleton = () => (
   </Card>
 )
 
-function LaporanCardContent({ item, onClick }: LaporanCardProps) {
+function PengaduanCardContent({ item, onClick }: PengaduanCardProps) {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       BARU: 'bg-blue-100 text-blue-800 border-blue-200',
@@ -105,10 +105,10 @@ function LaporanCardContent({ item, onClick }: LaporanCardProps) {
   )
 }
 
-export default function LaporanCard(props: LaporanCardProps) {
+export default function PengaduanCard(props: PengaduanCardProps) {
   return (
-    <Suspense fallback={<LaporanCardSkeleton />}>
-      <LaporanCardContent {...props} />
+    <Suspense fallback={<PengaduanCardSkeleton />}>
+      <PengaduanCardContent {...props} />
     </Suspense>
   )
 }

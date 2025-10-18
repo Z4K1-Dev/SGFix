@@ -28,11 +28,11 @@ export function MobileHeader({
 
   // State for notification panel
   const [notifOpen, setNotifOpen] = useState(false)
-  const [notifikasi, setNotifikasi] = useState<Array<{ id: string; judul: string; pesan: string; tipe?: string; createdAt?: string; beritaId?: string | null; laporanId?: string | null; layananId?: string | null; dibaca?: boolean }>>([])
+  const [notifikasi, setNotifikasi] = useState<Array<{ id: string; judul: string; pesan: string; tipe?: string; createdAt?: string; beritaId?: string | null; pengaduanId?: string | null; layananId?: string | null; dibaca?: boolean }>>([])
   const prevCountRef = useRef(0)
 
   // Filters & pagination
-  const [notifFilter, setNotifFilter] = useState<'semua' | 'berita' | 'laporan' | 'layanan'>('semua')
+  const [notifFilter, setNotifFilter] = useState<'semua' | 'berita' | 'pengaduan' | 'layanan'>('semua')
   const [page, setPage] = useState(1)
   const LIMIT = 20
   const [loading, setLoading] = useState(false)
@@ -163,12 +163,12 @@ export function MobileHeader({
     return `${d}h lalu`
   }
 
-  const linkForNotif = (n: { beritaId?: string | null; laporanId?: string | null; layananId?: string | null; tipe?: string }) => {
+  const linkForNotif = (n: { beritaId?: string | null; pengaduanId?: string | null; layananId?: string | null; tipe?: string }) => {
     if (n.beritaId) return `/berita/${n.beritaId}`
-    if (n.laporanId) return `/laporan/${n.laporanId}`
+    if (n.pengaduanId) return `/pengaduan/${n.pengaduanId}`
     if (n.layananId) return `/layanan/${n.layananId}`
     if (n.tipe?.includes('BERITA')) return '/berita'
-    if (n.tipe?.includes('LAPORAN')) return '/laporan'
+    if (n.tipe?.includes('PENGADUAN')) return '/pengaduan'
     if (n.tipe?.includes('LAYANAN')) return '/layanan'
     return '/'
   }
@@ -177,7 +177,7 @@ export function MobileHeader({
     return notifikasi.filter((n) => {
       if (!n.tipe) return false
       if (notifFilter === 'berita') return n.tipe.includes('BERITA')
-      if (notifFilter === 'laporan') return n.tipe.includes('LAPORAN')
+      if (notifFilter === 'pengaduan') return n.tipe.includes('PENGADUAN')
       if (notifFilter === 'layanan') return n.tipe.includes('LAYANAN')
       return true
     })
@@ -266,7 +266,7 @@ export function MobileHeader({
                     <SelectContent>
                       <SelectItem value="semua">Semua</SelectItem>
                       <SelectItem value="berita">Berita</SelectItem>
-                      <SelectItem value="laporan">Laporan</SelectItem>
+                      <SelectItem value="pengaduan">Pengaduan</SelectItem>
                       <SelectItem value="layanan">Layanan</SelectItem>
                     </SelectContent>
                   </Select>

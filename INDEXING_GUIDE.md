@@ -25,17 +25,17 @@ Index yang telah ditambahkan:
 - `@@index([views])` - untuk sorting berdasarkan views
 - `@@index([likes])` - untuk sorting berdasarkan likes
 
-#### Tabel Laporan
+#### Tabel Pengaduan
 - `@@index([status])` - untuk filter berdasarkan status
 - `@@index([createdAt])` - untuk sorting berdasarkan waktu
 - `@@index([status, createdAt])` - untuk query kombinasi
 - `@@index([latitude, longitude])` - untuk query lokasi
 
 #### Tabel Balasan
-- `@@index([laporanId])` - untuk join dengan laporan
+- `@@index([pengaduanId])` - untuk join dengan pengaduan
 - `@@index([createdAt])` - untuk sorting berdasarkan waktu
 - `@@index([dariAdmin])` - untuk filter balasan admin
-- `@@index([laporanId, createdAt])` - untuk query kombinasi
+- `@@index([pengaduanId, createdAt])` - untuk query kombinasi
 
 #### Tabel Notifikasi
 - `@@index([untukAdmin])` - untuk filter notifikasi admin
@@ -44,7 +44,7 @@ Index yang telah ditambahkan:
 - `@@index([createdAt])` - untuk sorting berdasarkan waktu
 - `@@index([untukAdmin, dibaca])` - untuk query kombinasi
 - `@@index([beritaId])` - untuk join dengan berita
-- `@@index([laporanId])` - untuk join dengan laporan
+- `@@index([pengaduanId])` - untuk join dengan pengaduan
 - `@@index([balasanId])` - untuk join dengan balasan
 
 ### 2. API Caching
@@ -99,7 +99,7 @@ const searchResult = await beritaQueries.search('query', 1, 10)
 
 **Files:**
 - `src/components/lazy/berita-card.tsx`
-- `src/components/lazy/laporan-card.tsx`
+- `src/components/lazy/pengaduan-card.tsx`
 - `src/hooks/useInfiniteScroll.ts`
 
 Fitur lazy loading:
@@ -142,7 +142,7 @@ npm run db:push
 
 Gunakan endpoint yang dioptimalkan:
 - `/api/berita/optimized` - untuk berita dengan pagination
-- `/api/laporan/optimized` - untuk laporan dengan pagination
+- `/api/pengaduan/optimized` - untuk pengaduan dengan pagination
 
 ### Monitoring Performa
 
@@ -204,7 +204,7 @@ const { data, loading, hasMore, lastElementRef } = useInfiniteScroll({
 
 ### Cache TTL Settings
 - Berita: 2 menit
-- Laporan: 1 menit
+- Pengaduan: 1 menit
 - Notifikasi: 30 detik
 
 ### Monitoring Thresholds

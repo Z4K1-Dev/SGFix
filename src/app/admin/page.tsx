@@ -22,33 +22,33 @@ import { toast as appToast } from '@/hooks/use-toast'
 import { playNotifSound } from '@/lib/notif-sound'
 import { connectSocket } from '@/lib/socket-client'
 import {
-  AlertCircle,
-  BarChart3,
-  Bell,
-  CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  Edit,
-  Eye,
-  FileText,
-  Home,
-  Image,
-  LayoutGrid,
-  Menu,
-  MessageSquare,
-  Moon,
-  Plus,
-  RefreshCw,
-  Send,
-  Settings,
-  Sun,
-  Trash2,
-  TrendingDown,
-  TrendingUp,
-  Wifi,
-  WifiOff,
-  X
+    AlertCircle,
+    BarChart3,
+    Bell,
+    CheckCircle,
+    ChevronDown,
+    ChevronRight,
+    Clock,
+    Edit,
+    Eye,
+    FileText,
+    Home,
+    Image,
+    LayoutGrid,
+    Menu,
+    MessageSquare,
+    Moon,
+    Plus,
+    RefreshCw,
+    Send,
+    Settings,
+    Sun,
+    Trash2,
+    TrendingDown,
+    TrendingUp,
+    Wifi,
+    WifiOff,
+    X
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Bar, BarChart, XAxis, YAxis } from 'recharts'
@@ -79,7 +79,7 @@ interface Kategori {
   deskripsi?: string
 }
 
-interface Laporan {
+interface Pengaduan {
   id: string
   judul: string
   keterangan: string
@@ -151,7 +151,7 @@ interface Aktivitas {
 export default function AdminPage() {
   const [berita, setBerita] = useState<Berita[]>([])
   const [kategori, setKategori] = useState<Kategori[]>([])
-  const [laporan, setLaporan] = useState<Laporan[]>([])
+  const [pengaduan, setPengaduan] = useState<Pengaduan[]>([])
   const [layanan, setLayanan] = useState<Layanan[]>([])
   const [notifikasi, setNotifikasi] = useState<Notifikasi[]>([])
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -195,11 +195,11 @@ export default function AdminPage() {
       void playNotifSound()
     }
 
-    const handleLaporanStatus = (data: any) => {
+    const handlePengaduanStatus = (data: any) => {
       const status = data?.status || data?.newStatus || 'DIPERBARUI'
       appToast({
-        title: 'Status Laporan Diubah',
-        description: `${data?.judul || data?.laporan || 'Laporan'} kini ${status}`,
+        title: 'Status Pengaduan Diubah',
+        description: `${data?.judul || data?.pengaduan || 'Pengaduan'} kini ${status}`,
       })
       void playNotifSound()
     }
@@ -218,7 +218,7 @@ export default function AdminPage() {
     s.on('connect_error', handleError)
     s.on('notification', handleNotification)
     s.on('chat-reply', handleChatReply)
-    s.on('laporan-status-changed', handleLaporanStatus)
+    s.on('pengaduan-status-changed', handlePengaduanStatus)
     s.on('layanan-status-changed', handleLayananStatus)
 
     return () => {
@@ -227,7 +227,7 @@ export default function AdminPage() {
       s.off('connect_error', handleError)
       s.off('notification', handleNotification)
       s.off('chat-reply', handleChatReply)
-      s.off('laporan-status-changed', handleLaporanStatus)
+      s.off('pengaduan-status-changed', handlePengaduanStatus)
       s.off('layanan-status-changed', handleLayananStatus)
     }
   }, [])
@@ -253,7 +253,7 @@ export default function AdminPage() {
     deskripsi: ''
   })
   const [balasanForm, setBalasanForm] = useState('')
-  const [selectedLaporan, setSelectedLaporan] = useState<string | null>(null)
+  const [selectedPengaduan, setSelectedPengaduan] = useState<string | null>(null)
   const [selectedLayanan, setSelectedLayanan] = useState<string | null>(null)
   const [layananBalasanForm, setLayananBalasanForm] = useState('')
   const [layananStatusForm, setLayananStatusForm] = useState({
@@ -265,16 +265,16 @@ export default function AdminPage() {
   const [notifFilter, setNotifFilter] = useState('semua')
 
   // Memoized data for charts
-  const laporanStatusData = useMemo(() => {
+  const pengaduanStatusData = useMemo(() => {
     const data = [
-      { name: 'Baru', value: laporan.filter(l => l.status === 'BARU').length || 5, fill: 'var(--chart-2)' },
-      { name: 'Ditampung', value: laporan.filter(l => l.status === 'DITAMPUNG').length || 3, fill: 'var(--chart-3)' },
-      { name: 'Diteruskan', value: laporan.filter(l => l.status === 'DITERUSKAN').length || 2, fill: 'var(--chart-4)' },
-      { name: 'Dikerjakan', value: laporan.filter(l => l.status === 'DIKERJAKAN').length || 3, fill: 'var(--chart-1)' },
-      { name: 'Selesai', value: laporan.filter(l => l.status === 'SELESAI').length || 8, fill: 'var(--chart-5)' }
+      { name: 'Baru', value: pengaduan.filter(p => p.status === 'BARU').length || 5, fill: 'var(--chart-2)' },
+      { name: 'Ditampung', value: pengaduan.filter(p => p.status === 'DITAMPUNG').length || 3, fill: 'var(--chart-3)' },
+      { name: 'Diteruskan', value: pengaduan.filter(p => p.status === 'DITERUSKAN').length || 2, fill: 'var(--chart-4)' },
+      { name: 'Dikerjakan', value: pengaduan.filter(p => p.status === 'DIKERJAKAN').length || 3, fill: 'var(--chart-1)' },
+      { name: 'Selesai', value: pengaduan.filter(p => p.status === 'SELESAI').length || 8, fill: 'var(--chart-5)' }
     ]
     return data
-  }, [laporan])
+  }, [pengaduan])
 
   const layananStatusData = useMemo(() => {
     const data = [
@@ -326,10 +326,10 @@ export default function AdminPage() {
     }
 
     try {
-      const [beritaRes, kategoriRes, laporanRes, layananRes, notifRes] = await Promise.all([
+      const [beritaRes, kategoriRes, pengaduanRes, layananRes, notifRes] = await Promise.all([
         fetch('/api/berita'),
         fetch('/api/kategori'),
-        fetch('/api/laporan'),
+        fetch('/api/pengaduan'),
         fetch('/api/admin/layanan'),
         fetch('/api/notifikasi')
       ])
@@ -344,9 +344,9 @@ export default function AdminPage() {
         setKategori(kategoriData)
       }
 
-      if (laporanRes.ok) {
-        const laporanData = await laporanRes.json()
-        setLaporan(laporanData)
+      if (pengaduanRes.ok) {
+        const pengaduanData = await pengaduanRes.json()
+        setPengaduan(pengaduanData)
       }
 
       if (layananRes.ok) {
@@ -390,16 +390,16 @@ export default function AdminPage() {
     }
   }
 
-  const handleUpdateStatusLaporan = async (laporanId: string, status: string) => {
+  const handleUpdateStatusPengaduan = async (pengaduanId: string, status: string) => {
     try {
-      const response = await fetch(`/api/laporan/${laporanId}/status`, {
+      const response = await fetch(`/api/pengaduan/${pengaduanId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       })
 
       if (response.ok) {
-        toast.success('Status laporan berhasil diperbarui!')
+        toast.success('Status pengaduan berhasil diperbarui!')
         fetchData()
       } else {
         toast.error('Gagal memperbarui status')
@@ -409,11 +409,11 @@ export default function AdminPage() {
     }
   }
 
-  const handleBalasLaporan = async (laporanId: string) => {
+  const handleBalasPengaduan = async (pengaduanId: string) => {
     if (!balasanForm.trim()) return
 
     try {
-      const response = await fetch(`/api/laporan/${laporanId}/balasan`, {
+      const response = await fetch(`/api/pengaduan/${pengaduanId}/balasan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isi: balasanForm, dariAdmin: true })
@@ -528,8 +528,8 @@ export default function AdminPage() {
     return notifikasi.filter(notif => {
       if (notifFilter === 'berita') {
         return notif.tipe.includes('BERITA')
-      } else if (notifFilter === 'laporan') {
-        return notif.tipe.includes('LAPORAN')
+      } else if (notifFilter === 'pengaduan') {
+        return notif.tipe.includes('PENGADUAN')
       } else if (notifFilter === 'layanan') {
         return notif.tipe.includes('LAYANAN')
       }
@@ -544,14 +544,14 @@ export default function AdminPage() {
       date: string
       pengunjung: number
       berita: number
-      laporan: number
+      pengaduan: number
     }> = []
 
     if (chartPeriod === '7days') {
       // Last 7 days - use deterministic data
       const visitorData = [350, 420, 380, 450, 500, 480, 520]
       const beritaData = [3, 5, 4, 6, 8, 7, 9]
-      const laporanData = [2, 3, 4, 3, 5, 4, 6]
+      const pengaduanData = [2, 3, 4, 3, 5, 4, 6]
 
       for (let i = 6; i >= 0; i--) {
         const date = new Date(now)
@@ -560,14 +560,14 @@ export default function AdminPage() {
           date: date.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' }),
           pengunjung: visitorData[6 - i],
           berita: beritaData[6 - i],
-          laporan: laporanData[6 - i]
+          pengaduan: pengaduanData[6 - i]
         })
       }
     } else if (chartPeriod === '30days') {
       // Last 30 days (grouped by week) - use deterministic data
       const visitorData = [2000, 2500, 3000, 2800]
       const beritaData = [15, 25, 30, 28]
-      const laporanData = [10, 15, 20, 18]
+      const pengaduanData = [10, 15, 20, 18]
 
       for (let i = 3; i >= 0; i--) {
         const weekStart = new Date(now)
@@ -579,7 +579,7 @@ export default function AdminPage() {
           date: `Minggu ${4 - i}`,
           pengunjung: visitorData[3 - i],
           berita: beritaData[3 - i],
-          laporan: laporanData[3 - i]
+          pengaduan: pengaduanData[3 - i]
         })
       }
     } else {
@@ -587,7 +587,7 @@ export default function AdminPage() {
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
       const visitorData = [8000, 10000, 12000]
       const beritaData = [50, 100, 150]
-      const laporanData = [30, 60, 90]
+      const pengaduanData = [30, 60, 90]
 
       for (let i = 2; i >= 0; i--) {
         const month = new Date(now)
@@ -596,7 +596,7 @@ export default function AdminPage() {
           date: months[month.getMonth()],
           pengunjung: visitorData[2 - i],
           berita: beritaData[2 - i],
-          laporan: laporanData[2 - i]
+          pengaduan: pengaduanData[2 - i]
         })
       }
     }
@@ -612,7 +612,7 @@ export default function AdminPage() {
   // Generate dummy aktivitas data
   useEffect(() => {
     const data: Aktivitas[] = []
-    const jenisAktivitas = ['berita', 'laporan', 'kategori', 'notifikasi', 'user']
+    const jenisAktivitas = ['berita', 'pengaduan', 'kategori', 'notifikasi', 'user']
     const aksi = ['dibuat', 'diedit', 'dihapus', 'dipublikasi', 'dikomentari']
     const status = ['success', 'pending', 'failed']
 
@@ -651,7 +651,7 @@ export default function AdminPage() {
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'berita', label: 'Berita', icon: FileText },
     { id: 'kategori', label: 'Kategori', icon: Settings },
-    { id: 'laporan', label: 'Laporan', icon: MessageSquare },
+    { id: 'pengaduan', label: 'Pengaduan', icon: MessageSquare },
     { id: 'layanan', label: 'Layanan', icon: FileText },
     { id: 'notifikasi', label: 'Notifikasi', icon: Bell },
   ]
@@ -830,11 +830,11 @@ export default function AdminPage() {
                       </CardFooter>
                     </Card>
 
-                    {/* Total Laporan Card */}
+                    {/* Total Pengaduan Card */}
                     <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
-                        <div className="text-muted-foreground text-sm">Laporan Masuk</div>
-                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{laporan.length}</CardTitle>
+                        <div className="text-muted-foreground text-sm">Pengaduan Masuk</div>
+                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{pengaduan.length}</CardTitle>
                         <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
                           <Badge variant="destructive" className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1">
                             <TrendingDown className="h-3 w-3" />
@@ -846,7 +846,7 @@ export default function AdminPage() {
                         <div className="line-clamp-1 flex gap-2 font-medium">
                           Down 7% this period <TrendingDown size={16} />
                         </div>
-                        <div className="text-muted-foreground">Reports need attention</div>
+                        <div className="text-muted-foreground">Pengaduan need attention</div>
                       </CardFooter>
                     </Card>
 
@@ -900,16 +900,16 @@ export default function AdminPage() {
                     </Card>
                   </div>
 
-                  {/* Charts Section - Laporan dan Layanan */}
+                  {/* Charts Section - Pengaduan dan Layanan */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 lg:px-6">
-                    {/* Laporan Status Chart */}
+                    {/* Pengaduan Status Chart */}
                     <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div>
-                          <CardTitle className="leading-none font-semibold">Statistik Laporan</CardTitle>
+                          <CardTitle className="leading-none font-semibold">Statistik Pengaduan</CardTitle>
                           <div className="text-muted-foreground text-sm">
-                            <span className="hidden @[540px]/card:block">Distribusi status laporan masuk</span>
-                            <span className="@[540px]/card:hidden">Status laporan</span>
+                            <span className="hidden @[540px]/card:block">Distribusi status pengaduan masuk</span>
+                            <span className="@[540px]/card:hidden">Status pengaduan</span>
                           </div>
                         </div>
                       </CardHeader>
@@ -961,7 +961,7 @@ export default function AdminPage() {
                         <div className="flex justify-center mt-4 text-xs text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--muted-foreground))' }}></div>
-                            <span>Total: 32 laporan</span>
+                            <span>Total: 32 pengaduan</span>
                           </div>
                         </div>
                       </CardContent>
@@ -1312,10 +1312,10 @@ export default function AdminPage() {
               </div>
             </TabsContent>
 
-            {/* Tab Laporan */}
-            <TabsContent value="laporan" className="space-y-6 px-6 mt-6">
+            {/* Tab Pengaduan */}
+            <TabsContent value="pengaduan" className="space-y-6 px-6 mt-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Kelola Laporan</h2>
+                <h2 className="text-2xl font-bold">Kelola Pengaduan</h2>
                 <Button variant="outline" onClick={fetchData}>
                   <RefreshCw className="mr-2" size={18} />
                   Refresh
@@ -1323,10 +1323,10 @@ export default function AdminPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {laporan.map((item) => (
+                {pengaduan.map((item) => (
                   <Card key={item.id} className="cursor-pointer">
                     <CardContent className="p-4">
-                      {/* Foto Laporan */}
+                      {/* Foto Pengaduan */}
                       <div className="w-full h-48 bg-muted rounded-lg mb-4 overflow-hidden relative">
                         {item.foto ? (
                           <img
@@ -1391,7 +1391,7 @@ export default function AdminPage() {
 
                       {/* Status Update */}
                       <div className="flex gap-2 mb-3">
-                        <Select onValueChange={(value) => handleUpdateStatusLaporan(item.id, value)}>
+                        <Select onValueChange={(value) => handleUpdateStatusPengaduan(item.id, value)}>
                           <SelectTrigger className="w-32 text-sm">
                             <SelectValue placeholder="Status" />
                           </SelectTrigger>
@@ -1436,15 +1436,15 @@ export default function AdminPage() {
                       <div className="flex gap-2">
                         <Input
                           placeholder="Tulis balasan..."
-                          value={selectedLaporan === item.id ? balasanForm : ''}
+                          value={selectedPengaduan === item.id ? balasanForm : ''}
                           onChange={(e) => {
-                            setSelectedLaporan(item.id)
+                            setSelectedPengaduan(item.id)
                             setBalasanForm(e.target.value)
                           }}
                           className="text-sm"
                         />
                         <button
-                          onClick={() => handleBalasLaporan(item.id)}
+                          onClick={() => handleBalasPengaduan(item.id)}
                           disabled={!balasanForm.trim()}
                           className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -1657,7 +1657,7 @@ export default function AdminPage() {
                     <SelectContent>
                       <SelectItem value="semua">Semua</SelectItem>
                       <SelectItem value="berita">Berita</SelectItem>
-                      <SelectItem value="laporan">Laporan</SelectItem>
+                      <SelectItem value="pengaduan">Pengaduan</SelectItem>
                       <SelectItem value="layanan">Layanan</SelectItem>
                     </SelectContent>
                   </Select>

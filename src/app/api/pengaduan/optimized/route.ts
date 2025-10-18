@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { laporanQueries } from '@/lib/db-optimized'
+import { pengaduanQueries } from '@/lib/db-optimized'
 import { withCache, generateCacheKey, invalidateCachePattern } from '@/lib/cache'
 
 /**
- * Optimized laporan API with pagination and caching
+ * Optimized pengaduan API with pagination and caching
  */
 export async function GET(request: NextRequest) {
   try {
@@ -12,20 +12,20 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const status = searchParams.get('status')
 
-    const cacheKey = generateCacheKey('/api/laporan/optimized', { 
-      page, 
-      limit, 
-      status 
+    const cacheKey = generateCacheKey('/api/pengaduan/optimized', {
+      page,
+      limit,
+      status
     })
     
     return withCache(cacheKey, async () => {
-      const result = await laporanQueries.getWithPagination(page, limit, status || undefined)
+      const result = await pengaduanQueries.getWithPagination(page, limit, status || undefined)
       return NextResponse.json(result)
     }, 1 * 60 * 1000) // 1 minute cache for reports
   } catch (error) {
-    console.error('Error fetching optimized laporan:', error)
+    console.error('Error fetching optimized pengaduan:', error)
     return NextResponse.json(
-      { error: 'Gagal mengambil laporan' },
+      { error: 'Gagal mengambil pengaduan' },
       { status: 500 }
     )
   }

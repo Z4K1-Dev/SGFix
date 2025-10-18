@@ -124,12 +124,12 @@ Gunakan path-based naming untuk konsistensi:
 ```typescript
 // ✅ Good
 '/berita'
-'/laporan'
+'/pengaduan'
 '/layanan'
 
 // ❌ Avoid
 'berita-data'
-'laporan-list'
+'pengaduan-list'
 ```
 
 ### 2. TTL Configuration
@@ -183,7 +183,7 @@ const CACHE_CONFIG = {
   CLEANUP_INTERVAL: 5 * 60 * 1000,    // 5 menit
   PREFETCH_PAGES: [
     { cacheKey: '/berita', apiEndpoint: '/api/berita?published=true' },
-    { cacheKey: '/laporan', apiEndpoint: '/api/laporan' },
+    { cacheKey: '/pengaduan', apiEndpoint: '/api/pengaduan' },
     { cacheKey: '/layanan', apiEndpoint: '/api/layanan' }
   ]
 }

@@ -5,8 +5,8 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Portal SmartGov - Sistem Informasi Pemerintahan',
-  description: 'Portal pemerintahan digital dengan notifikasi realtime, pengelolaan berita, dan sistem laporan masyarakat',
-  keywords: 'pemerintahan, smart city, berita, laporan masyarakat, notifikasi realtime',
+  description: 'Portal pemerintahan digital dengan notifikasi realtime, pengelolaan berita, dan sistem pengaduan masyarakat',
+  keywords: 'pemerintahan, smart city, berita, pengaduan masyarakat, notifikasi realtime',
   authors: [{ name: 'SmartGov Team' }],
   creator: 'SmartGov',
   publisher: 'SmartGov',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Portal SmartGov - Sistem Informasi Pemerintahan',
-    description: 'Portal pemerintahan digital dengan notifikasi realtime, pengelolaan berita, dan sistem laporan masyarakat',
+    description: 'Portal pemerintahan digital dengan notifikasi realtime, pengelolaan berita, dan sistem pengaduan masyarakat',
     url: '/',
     siteName: 'Portal SmartGov',
     locale: 'id_ID',
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Portal SmartGov - Sistem Informasi Pemerintahan',
-    description: 'Portal pemerintahan digital dengan notifikasi realtime, pengelolaan berita, dan sistem laporan masyarakat',
+    description: 'Portal pemerintahan digital dengan notifikasi realtime, pengelolaan berita, dan sistem pengaduan masyarakat',
   },
   robots: {
     index: true,

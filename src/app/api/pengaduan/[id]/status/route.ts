@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
- * Update status laporan
+ * Update status pengaduan
  */
 export async function PUT(
   request: NextRequest,
@@ -20,7 +20,7 @@ export async function PUT(
       )
     }
 
-    const laporan = await db.laporan.update({
+    const pengaduan = await db.pengaduan.update({
       where: { id },
       data: { status }
     })
@@ -28,31 +28,31 @@ export async function PUT(
     // Buat notifikasi untuk user
     await db.notifikasi.create({
       data: {
-        judul: 'Status Laporan Diperbarui',
-        pesan: `Status laporan "${laporan.judul}" telah diperbarui menjadi ${status}`,
-        tipe: 'LAPORAN_UPDATE',
+        judul: 'Status Pengaduan Diperbarui',
+        pesan: `Status pengaduan "${pengaduan.judul}" telah diperbarui menjadi ${status}`,
+        tipe: 'PENGADUAN_UPDATE',
         untukAdmin: false,
-        laporanId: laporan.id
+        pengaduanId: pengaduan.id
       }
     })
 
     // Emit realtime notification to user
     const io = (globalThis as any).__io
     if (io) {
-      io.to('user').emit('laporan-status-changed', {
-        laporan: laporan.judul,
+      io.to('user').emit('pengaduan-status-changed', {
+        pengaduan: pengaduan.judul,
         status: status,
-        laporanId: laporan.id,
+        pengaduanId: pengaduan.id,
         ts: Date.now()
       })
     }
 
 
-    return NextResponse.json(laporan)
+    return NextResponse.json(pengaduan)
   } catch (error) {
-    console.error('Error updating laporan status:', error)
+    console.error('Error updating pengaduan status:', error)
     return NextResponse.json(
-      { error: 'Gagal memperbarui status laporan' },
+      { error: 'Gagal memperbarui status pengaduan' },
       { status: 500 }
     )
   }

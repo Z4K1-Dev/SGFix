@@ -1,6 +1,6 @@
-# Portal Informasi & Pelaporan (Mobile App Design)
+# Portal Informasi & Pengaduan (Mobile App Design)
 
-Aplikasi web sederhana untuk kepentingan DEMO/PROTOTYPE yang menyediakan fitur informasi/berita dan sistem pelaporan masyarakat dengan notifikasi realtime. **Dirancang khusus untuk mobile experience dengan maksimal width 412px dan height 100vh.**
+Aplikasi web sederhana untuk kepentingan DEMO/PROTOTYPE yang menyediakan fitur informasi/berita dan sistem pengaduan masyarakat dengan notifikasi realtime. **Dirancang khusus untuk mobile experience dengan maksimal width 412px dan height 100vh.**
 
 ## 🎨 Design Features
 
@@ -27,22 +27,22 @@ Aplikasi web sederhana untuk kepentingan DEMO/PROTOTYPE yang menyediakan fitur i
 - Admin dapat membuat, mengedit, dan mengelola berita
 - Support untuk gambar berita
 
-### 📝 Sistem Pelaporan
-- Masyarakat dapat membuat laporan dengan:
+### 📝 Sistem Pengaduan
+- Masyarakat dapat membuat pengaduan dengan:
   - Judul dan keterangan
   - Foto (URL)
   - Lokasi (latitude, longitude)
-- Status laporan: Baru, Diproses, Ditampah, Dikerjakan, Selesai
-- Admin dapat memperbarui status laporan
+- Status pengaduan: Baru, Diproses, Ditampah, Dikerjakan, Selesai
+- Admin dapat memperbarui status pengaduan
 - Sistem balasan antara admin dan masyarakat
 
 ### 🔔 Notifikasi Realtime
 - **Admin menerima notifikasi saat:**
-  - User membuat laporan baru
-  - User membalas laporan
+  - User membuat pengaduan baru
+  - User membalas pengaduan
 - **User menerima notifikasi saat:**
-  - Admin update status laporan
-  - Admin membalas laporan
+  - Admin update status pengaduan
+  - Admin membalas pengaduan
 - Support browser notifications
 
 ## Arsitektur
@@ -71,12 +71,12 @@ Berita {
   id, judul, isi, gambar, kategoriId, published, createdAt, updatedAt
 }
 
-Laporan {
+Pengaduan {
   id, judul, keterangan, foto, latitude, longitude, status, createdAt, updatedAt
 }
 
 Balasan {
-  id, laporanId, isi, dariAdmin, createdAt, updatedAt
+  id, pengaduanId, isi, dariAdmin, createdAt, updatedAt
 }
 
 Notifikasi {
@@ -88,7 +88,7 @@ Notifikasi {
 
 ### 📱 Mobile Experience (Recommended)
 Buka `http://localhost:3000` di browser mobile atau dev tools dengan mobile view untuk:
-- **Bottom Navigation**: Gunakan bottom bar untuk navigasi (Beranda, Laporan, Admin)
+- **Bottom Navigation**: Gunakan bottom bar untuk navigasi (Beranda, Pengaduan, Admin)
 - **Top Bar**: Lihat connection status dan akses admin panel
 - **Touch Interface**: Tap dan swipe untuk navigasi yang intuitif
 - **Responsive Design**: Optimized untuk mobile screen sizes
@@ -102,9 +102,9 @@ Buka `http://localhost:3000` untuk:
 ### 🔧 Admin Panel
 Buka `http://localhost:3000/admin` untuk:
 - Mengelola berita dan kategori
-- Memproses laporan dari masyarakat
-- Memperbarui status laporan
-- Membalas laporan
+- Memproses pengaduan dari masyarakat
+- Memperbarui status pengaduan
+- Membalas pengaduan
 
 ### 🚀 Seed Data Awal
 Jalankan endpoint berikut untuk membuat data awal:
@@ -116,12 +116,12 @@ curl -X POST http://localhost:3000/api/seed
 
 ### Admin → User
 1. Admin update berita → Notifikasi ke user
-2. Admin update status laporan → Notifikasi ke user  
-3. Admin balas laporan → Notifikasi ke user
+2. Admin update status pengaduan → Notifikasi ke user
+3. Admin balas pengaduan → Notifikasi ke user
 
 ### User → Admin
-1. User buat laporan → Notifikasi ke admin
-2. User balas laporan → Notifikasi ke admin
+1. User buat pengaduan → Notifikasi ke admin
+2. User balas pengaduan → Notifikasi ke admin
 
 ## Instalasi & Development
 
@@ -165,11 +165,11 @@ npm start
 - `GET /api/kategori` - Get all kategori
 - `POST /api/kategori` - Create new kategori
 
-### Laporan
-- `GET /api/laporan` - Get all laporan
-- `POST /api/laporan` - Create new laporan
-- `PUT /api/laporan/{id}/status` - Update laporan status
-- `POST /api/laporan/{id}/balasan` - Add balasan to laporan
+### Pengaduan
+- `GET /api/pengaduan` - Get all pengaduan
+- `POST /api/pengaduan` - Create new pengaduan
+- `PUT /api/pengaduan/{id}/status` - Update pengaduan status
+- `POST /api/pengaduan/{id}/balasan` - Add balasan to pengaduan
 
 ### Notifikasi
 - `GET /api/notifikasi` - Get all notifikasi
@@ -179,13 +179,13 @@ npm start
 ### Socket.io
 - `GET /api/socket/io` - Socket.io connection endpoint
 
-## Status Laporan
+## Status Pengaduan
 
-1. **BARU** - Laporan baru masuk
-2. **DITAMPUNG** - Laporan ditampung untuk diproses
-3. **DITERUSKAN** - Laporan diteruskan ke unit terkait
+1. **BARU** - Pengaduan baru masuk
+2. **DITAMPUNG** - Pengaduan ditampung untuk diproses
+3. **DITERUSKAN** - Pengaduan diteruskan ke unit terkait
 4. **DIKERJAKAN** - Sedang dikerjakan
-5. **SELESAI** - Laporan selesai
+5. **SELESAI** - Pengaduan selesai
 
 ## Teknologi
 

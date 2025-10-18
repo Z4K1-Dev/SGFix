@@ -1,7 +1,7 @@
 'use client'
 
 import { MobileLayout } from '@/components/layout/mobile-layout'
-import { LaporanDetailSkeleton } from '@/components/loading-skeleton'
+import { PengaduanDetailSkeleton } from '@/components/loading-skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -25,7 +25,7 @@ interface Balasan {
   createdAt: string
 }
 
-interface LaporanDetail {
+interface PengaduanDetail {
   id: string
   judul: string
   keterangan: string
@@ -38,24 +38,24 @@ interface LaporanDetail {
   balasan?: Balasan[]
 }
 
-export default function LaporanDetailPage() {
+export default function PengaduanDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const [laporan, setLaporan] = useState<LaporanDetail | null>(null)
+  const [pengaduan, setPengaduan] = useState<PengaduanDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchLaporanDetail = async () => {
+    const fetchPengaduanDetail = async () => {
       try {
-        const response = await fetch(`/api/laporan/${params?.id}`)
+        const response = await fetch(`/api/pengaduan/${params?.id}`)
         
         if (!response.ok) {
-          throw new Error('Laporan tidak ditemukan')
+          throw new Error('Pengaduan tidak ditemukan')
         }
         
         const data = await response.json()
-        setLaporan(data)
+        setPengaduan(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Terjadi kesalahan')
       } finally {
@@ -64,7 +64,7 @@ export default function LaporanDetailPage() {
     }
 
     if (params?.id) {
-      fetchLaporanDetail()
+      fetchPengaduanDetail()
     }
   }, [params?.id])
 
@@ -89,34 +89,34 @@ export default function LaporanDetailPage() {
   }
 
   const handleShare = async () => {
-    if (navigator.share && laporan) {
+    if (navigator.share && pengaduan) {
       try {
         await navigator.share({
-          title: laporan.judul,
-          text: laporan.keterangan,
+          title: pengaduan.judul,
+          text: pengaduan.keterangan,
           url: window.location.href
         })
       } catch (err) {
         // Fallback ke clipboard
         await navigator.clipboard.writeText(window.location.href)
-        toast.success('Link laporan disalin ke clipboard')
+        toast.success('Link pengaduan disalin ke clipboard')
       }
     } else {
       // Fallback untuk browser yang tidak support Web Share API
       await navigator.clipboard.writeText(window.location.href)
-      toast.success('Link laporan disalin ke clipboard')
+      toast.success('Link pengaduan disalin ke clipboard')
     }
   }
 
   const handleDownload = () => {
-    if (laporan) {
+    if (pengaduan) {
       const data = {
-        judul: laporan.judul,
-        keterangan: laporan.keterangan,
-        status: laporan.status,
-        createdAt: laporan.createdAt,
-        lokasi: laporan.latitude && laporan.longitude 
-          ? `${laporan.latitude}, ${laporan.longitude}` 
+        judul: pengaduan.judul,
+        keterangan: pengaduan.keterangan,
+        status: pengaduan.status,
+        createdAt: pengaduan.createdAt,
+        lokasi: pengaduan.latitude && pengaduan.longitude
+          ? `${pengaduan.latitude}, ${pengaduan.longitude}`
           : 'Tidak ada lokasi'
       }
       
@@ -124,36 +124,36 @@ export default function LaporanDetailPage() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `laporan-${laporan.id}.json`
+      a.download = `pengaduan-${pengaduan.id}.json`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       
-      toast.success('Laporan berhasil diunduh')
+      toast.success('Pengaduan berhasil diunduh')
     }
   }
 
   const openGoogleMaps = () => {
-    if (laporan?.latitude && laporan?.longitude) {
-      const url = `https://www.google.com/maps?q=${laporan.latitude},${laporan.longitude}`
+    if (pengaduan?.latitude && pengaduan?.longitude) {
+      const url = `https://www.google.com/maps?q=${pengaduan.latitude},${pengaduan.longitude}`
       window.open(url, '_blank')
     }
   }
 
   if (loading) {
-    return <LaporanDetailSkeleton />
+    return <PengaduanDetailSkeleton />
   }
 
-  if (error || !laporan) {
+  if (error || !pengaduan) {
     return (
       <div className="min-h-screen bg-background py-8">
         <div className="max-w-md mx-auto px-4">
           <Card>
             <CardContent className="text-center py-12">
               <AlertCircle className="w-16 h-16 mx-auto text-destructive mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Laporan Tidak Ditemukan</h2>
-              <p className="text-muted-foreground mb-4">{error || 'Laporan tidak ditemukan'}</p>
+              <h2 className="text-xl font-semibold mb-2">Pengaduan Tidak Ditemukan</h2>
+              <p className="text-muted-foreground mb-4">{error || 'Pengaduan tidak ditemukan'}</p>
               <Button onClick={() => router.push('/')}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Kembali ke Beranda
@@ -167,15 +167,15 @@ export default function LaporanDetailPage() {
 
   return (
     <MobileLayout
-      title="Detail Laporan"
+      title="Detail Pengaduan"
       showBackButton={true}
-      backRoute="/laporan"
-      activeTab="laporan"
+      backRoute="/pengaduan"
+      activeTab="pengaduan"
       onTabChange={(index) => {
         if (index === null) return
-        const routes = ["/", "/berita", "/laporan", "/layanan", null, "/profile"]
+        const routes = ["/", "/berita", "/pengaduan", "/layanan", null, "/profile"]
         const target = routes[index]
-        if (!target || target === "/laporan") return
+        if (!target || target === "/pengaduan") return
         router.push(target)
       }}
     >
@@ -193,13 +193,13 @@ export default function LaporanDetailPage() {
           
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Badge className={`text-xs border ${getStatusColor(laporan.status)}`}>
+              <Badge className={`text-xs border ${getStatusColor(pengaduan.status)}`}>
                 <div className="flex items-center gap-1">
-                  {getStatusIcon(laporan.status)}
-                  {laporan.status}
+                  {getStatusIcon(pengaduan.status)}
+                  {pengaduan.status}
                 </div>
               </Badge>
-              <h1 className="text-xl font-bold text-foreground">{laporan.judul}</h1>
+              <h1 className="text-xl font-bold text-foreground">{pengaduan.judul}</h1>
             </div>
           </div>
         </div>
@@ -207,12 +207,12 @@ export default function LaporanDetailPage() {
         {/* Single Card Layout */}
         <Card className="space-y-6">
           <CardContent className="px-6 py-6 space-y-6">
-            {/* 1. Informasi Laporan */}
+            {/* 1. Informasi Pengaduan */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  {new Date(laporan.createdAt).toLocaleDateString('id-ID', {
+                  {new Date(pengaduan.createdAt).toLocaleDateString('id-ID', {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric'
@@ -223,7 +223,7 @@ export default function LaporanDetailPage() {
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  {new Date(laporan.createdAt).toLocaleTimeString('id-ID', {
+                  {new Date(pengaduan.createdAt).toLocaleTimeString('id-ID', {
                     hour: '2-digit',
                     minute: '2-digit'
                   })}
@@ -232,13 +232,13 @@ export default function LaporanDetailPage() {
             </div>
 
             {/* 2. Foto */}
-            {laporan.foto && (
+            {pengaduan.foto && (
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">Foto</h3>
                 <div className="rounded-lg overflow-hidden">
                   <img
-                    src={laporan.foto?.startsWith('http') || laporan.foto?.startsWith('/') ? laporan.foto : `/${laporan.foto}`}
-                    alt={laporan.judul}
+                    src={pengaduan.foto?.startsWith('http') || pengaduan.foto?.startsWith('/') ? pengaduan.foto : `/${pengaduan.foto}`}
+                    alt={pengaduan.judul}
                     className="w-full h-auto max-h-96 object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -264,22 +264,22 @@ export default function LaporanDetailPage() {
               </div>
             )}
 
-            {/* 3. Keterangan Laporan */}
+            {/* 3. Keterangan Pengaduan */}
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Keterangan Laporan</h3>
-              <p className="text-foreground whitespace-pre-wrap">{laporan.keterangan}</p>
+              <h3 className="text-lg font-semibold">Keterangan Pengaduan</h3>
+              <p className="text-foreground whitespace-pre-wrap">{pengaduan.keterangan}</p>
             </div>
 
             {/* 4. Lokasi */}
-            {laporan.latitude && laporan.longitude && (
+            {pengaduan.latitude && pengaduan.longitude && (
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <MapPin className="w-5 h-5" />
                   Lokasi
                 </h3>
                 <div className="text-sm text-muted-foreground space-y-2">
-                  <p>Latitude: {laporan.latitude.toFixed(6)}</p>
-                  <p>Longitude: {laporan.longitude.toFixed(6)}</p>
+                  <p>Latitude: {pengaduan.latitude.toFixed(6)}</p>
+                  <p>Longitude: {pengaduan.longitude.toFixed(6)}</p>
                   
                   <Button
                     variant="outline"
@@ -295,13 +295,13 @@ export default function LaporanDetailPage() {
             )}
 
             {/* Balasan */}
-            {laporan.balasan && laporan.balasan.length > 0 && (
+            {pengaduan.balasan && pengaduan.balasan.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <MessageSquare className="w-5 h-5" />
-                  Balasan ({laporan.balasan.length})
+                  Balasan ({pengaduan.balasan.length})
                 </h3>
-                {laporan.balasan.map((balasan) => (
+                {pengaduan.balasan.map((balasan) => (
                   <Card key={balasan.id} className={`${
                     balasan.dariAdmin
                       ? 'bg-primary/10 border border-primary/20'

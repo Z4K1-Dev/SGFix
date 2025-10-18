@@ -1,7 +1,7 @@
 # Rencana Implementasi Prefetch & Cache Management
 
 ## 🎯 **Tujuan Utama**
-Mengimplementasikan sistem prefetch dan cache management untuk meningkatkan performa navigasi antar halaman (berita, laporan, layanan) dengan:
+Mengimplementasikan sistem prefetch dan cache management untuk meningkatkan performa navigasi antar halaman (berita, pengaduan, layanan) dengan:
 - TTL 60 menit untuk data freshness
 - Memory limit untuk mencegah over-cache
 - Error handling untuk prefetch failures
@@ -41,7 +41,7 @@ class CacheManager {
 
 **Implementasi:**
 - Prefetch data setelah home loading selesai
-- Prefetch 3 halaman: berita, laporan, layanan
+- Prefetch 3 halaman: berita, pengaduan, layanan
 - Error handling untuk prefetch failures
 - Logging untuk monitoring
 
@@ -52,7 +52,7 @@ useEffect(() => {
     // Prefetch all pages
     Promise.all([
       prefetchPageData('/berita', '/api/berita?published=true'),
-      prefetchPageData('/laporan', '/api/laporan'),
+      prefetchPageData('/pengaduan', '/api/pengaduan'),
       prefetchPageData('/layanan', '/api/layanan')
     ]).then(() => {
       console.log('✅ All pages prefetched')
@@ -80,9 +80,9 @@ const handleNotif = (data: any) => {
     refetchPageData('/berita', '/api/berita?published=true')
   }
   
-  if (data.tipe === 'LAPORAN_BARU' || data.tipe === 'LAPORAN_UPDATE') {
-    invalidateCache('/laporan')
-    refetchPageData('/laporan', '/api/laporan')
+  if (data.tipe === 'PENGADUAN_BARU' || data.tipe === 'PENGADUAN_UPDATE') {
+    invalidateCache('/pengaduan')
+    refetchPageData('/pengaduan', '/api/pengaduan')
   }
   
   if (data.tipe === 'LAYANAN_BARU' || data.tipe === 'LAYANAN_UPDATE') {
@@ -101,7 +101,7 @@ const handleNotif = (data: any) => {
 ### **4. Cache Sync di Page Components**
 **Files:** 
 - `src/app/berita/page.tsx`
-- `src/app/laporan/page.tsx`
+- `src/app/pengaduan/page.tsx`
 - `src/app/layanan/page.tsx`
 
 **Implementasi:**

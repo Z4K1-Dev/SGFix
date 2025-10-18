@@ -35,8 +35,8 @@ export async function seedData() {
     // Buat berita sample
     await db.berita.create({
       data: {
-        judul: 'Selamat Datang di Portal Informasi & Pelaporan',
-        isi: 'Portal ini merupakan sarana untuk menyampaikan informasi dan menerima laporan dari masyarakat. Melalui portal ini, Anda dapat mengakses berita terkini, pengumuman penting, serta menyampaikan laporan terkait berbagai masalah di lingkungan Anda.',
+        judul: 'Selamat Datang di Portal Informasi & Pengaduan',
+        isi: 'Portal ini merupakan sarana untuk menyampaikan informasi dan menerima pengaduan dari masyarakat. Melalui portal ini, Anda dapat mengakses berita terkini, pengumuman penting, serta menyampaikan pengaduan terkait berbagai masalah di lingkungan Anda.',
         kategoriId: kategoriPengumuman.id,
         published: true
       }
@@ -44,8 +44,8 @@ export async function seedData() {
 
     await db.berita.create({
       data: {
-        judul: 'Cara Menggunakan Sistem Pelaporan',
-        isi: '1. Klik tab "Buat Laporan" \n2. Isi judul dan keterangan laporan dengan jelas \n3. Tambahkan foto jika diperlukan \n4. Masukkan koordinat lokasi (opsional) \n5. Klik "Kirim Laporan" \n\nTim kami akan segera memproses laporan Anda dan memberikan update status secara berkala.',
+        judul: 'Cara Menggunakan Sistem Pengaduan',
+        isi: '1. Klik tab "Buat Pengaduan" \n2. Isi judul dan keterangan pengaduan dengan jelas \n3. Tambahkan foto jika diperlukan \n4. Masukkan koordinat lokasi (opsional) \n5. Klik "Kirim Pengaduan" \n\nTim kami akan segera memproses pengaduan Anda dan memberikan update status secara berkala.',
         kategoriId: kategoriLayanan.id,
         published: true
       }
@@ -207,11 +207,11 @@ export async function seedData() {
       console.log('Layanan data already exists')
     }
 
-    // Cek apakah sudah ada data laporan
-    const existingLaporan = await db.laporan.findFirst()
-    if (!existingLaporan) {
-      // Buat data laporan sample
-      await db.laporan.createMany({
+    // Cek apakah sudah ada data pengaduan
+    const existingPengaduan = await db.pengaduan.findFirst()
+    if (!existingPengaduan) {
+      // Buat data pengaduan sample
+      await db.pengaduan.createMany({
         data: [
           {
             judul: 'Jalan Berlubang di Jl. Merdeka',
@@ -256,25 +256,25 @@ export async function seedData() {
         ]
       })
 
-      // Buat data balasan laporan sample
-      const laporanList = await db.laporan.findMany()
+      // Buat data balasan pengaduan sample
+      const pengaduanList = await db.pengaduan.findMany()
       
-      for (const laporan of laporanList) {
-        if (laporan.id) {
+      for (const pengaduan of pengaduanList) {
+        if (pengaduan.id) {
           // Balasan dari admin
           await db.balasan.create({
             data: {
-              laporanId: laporan.id,
-              isi: 'Terima kasih atas laporannya. Kami akan segera menindaklanjuti.',
+              pengaduanId: pengaduan.id,
+              isi: 'Terima kasih atas pengaduannya. Kami akan segera menindaklanjuti.',
               dariAdmin: true
             }
           })
           
           // Balasan dari user (jika status bukan BARU)
-          if (laporan.status !== Status.BARU) {
+          if (pengaduan.status !== Status.BARU) {
             await db.balasan.create({
               data: {
-                laporanId: laporan.id,
+                pengaduanId: pengaduan.id,
                 isi: 'Baik, saya tunggu informasi selanjutnya. Terima kasih.',
                 dariAdmin: false
               }
@@ -283,9 +283,9 @@ export async function seedData() {
         }
       }
 
-      console.log('Laporan data seeded successfully')
+      console.log('Pengaduan data seeded successfully')
     } else {
-      console.log('Laporan data already exists')
+      console.log('Pengaduan data already exists')
     }
 
     // Cek apakah sudah ada data notifikasi
@@ -295,9 +295,9 @@ export async function seedData() {
       await db.notifikasi.createMany({
         data: [
           {
-            judul: 'Laporan Baru',
-            pesan: 'Ada laporan baru tentang jalan berlubang di Jl. Merdeka yang perlu ditindaklanjuti.',
-            tipe: 'LAPORAN_BARU',
+            judul: 'Pengaduan Baru',
+            pesan: 'Ada pengaduan baru tentang jalan berlubang di Jl. Merdeka yang perlu ditindaklanjuti.',
+            tipe: 'PENGADUAN_BARU',
             untukAdmin: true,
             dibaca: false
           },
@@ -311,14 +311,14 @@ export async function seedData() {
           {
             judul: 'Sistem Maintenance',
             pesan: 'Sistem akan melakukan maintenance pada hari Sabtu pukul 23:00 - 01:00 WIB.',
-            tipe: 'LAPORAN_UPDATE',
+            tipe: 'PENGADUAN_UPDATE',
             untukAdmin: true,
             dibaca: true
           },
           {
-            judul: 'Laporan Selesai',
-            pesan: 'Laporan tentang lampu jalan mati sudah selesai ditangani.',
-            tipe: 'LAPORAN_UPDATE',
+            judul: 'Pengaduan Selesai',
+            pesan: 'Pengaduan tentang lampu jalan mati sudah selesai ditangani.',
+            tipe: 'PENGADUAN_UPDATE',
             untukAdmin: false,
             dibaca: false
           },

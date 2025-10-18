@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
 /**
- * Mendapatkan detail laporan berdasarkan ID
+ * Mendapatkan detail pengaduan berdasarkan ID
  */
 export async function GET(
   request: NextRequest,
@@ -11,7 +11,7 @@ export async function GET(
   try {
     const { id } = await params
     
-    const laporan = await db.laporan.findUnique({
+    const pengaduan = await db.pengaduan.findUnique({
       where: {
         id: id
       },
@@ -24,16 +24,16 @@ export async function GET(
       }
     })
 
-    if (!laporan) {
+    if (!pengaduan) {
       return NextResponse.json(
-        { error: 'Laporan tidak ditemukan' },
+        { error: 'Pengaduan tidak ditemukan' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json(laporan)
+    return NextResponse.json(pengaduan)
   } catch (error) {
-    console.error('Error fetching laporan detail:', error)
+    console.error('Error fetching pengaduan detail:', error)
     return NextResponse.json(
       { error: 'Terjadi kesalahan server' },
       { status: 500 }
@@ -42,7 +42,7 @@ export async function GET(
 }
 
 /**
- * Update laporan (untuk perubahan status dll)
+ * Update pengaduan (untuk perubahan status dll)
  */
 export async function PUT(
   request: NextRequest,
@@ -60,7 +60,7 @@ export async function PUT(
       )
     }
 
-    const laporan = await db.laporan.update({
+    const pengaduan = await db.pengaduan.update({
       where: {
         id: id
       },
@@ -77,11 +77,11 @@ export async function PUT(
       }
     })
 
-    return NextResponse.json(laporan)
+    return NextResponse.json(pengaduan)
   } catch (error) {
-    console.error('Error updating laporan:', error)
+    console.error('Error updating pengaduan:', error)
     return NextResponse.json(
-      { error: 'Gagal mengupdate laporan' },
+      { error: 'Gagal mengupdate pengaduan' },
       { status: 500 }
     )
   }
