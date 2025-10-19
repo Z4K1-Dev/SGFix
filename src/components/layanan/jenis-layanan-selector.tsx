@@ -152,18 +152,6 @@ const kategoriColors: Record<string, string> = {
 }
 
 export function JenisLayananSelector({ onSelect }: JenisLayananSelectorProps) {
-  const [isLoading, setIsLoading] = React.useState(false)
-
-  React.useEffect(() => {
-    // Simulate loading untuk demo
-    setIsLoading(true)
-    const timer = setTimeout(() => setIsLoading(false), 1000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  if (isLoading) {
-    return <JenisLayananSkeleton />
-  }
 
   const kategoriList = Array.from(new Set(jenisLayananList.map(item => item.kategori)))
 

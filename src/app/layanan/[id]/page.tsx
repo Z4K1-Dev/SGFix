@@ -57,11 +57,10 @@ export default function LayananDetailPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [layanan, setLayanan] = useState<LayananDetail | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
 
   const fetchLayananDetail = useCallback(async () => {
     try {
-      setIsLoading(true)
       const response = await fetch(`/api/layanan/${params.id}`)
       if (!response.ok) {
         if (response.status === 404) {
@@ -85,8 +84,6 @@ export default function LayananDetailPage() {
         description: 'Gagal memuat detail layanan',
         variant: 'destructive'
       })
-    } finally {
-      setIsLoading(false)
     }
   }, [params.id, router, toast])
 
@@ -458,24 +455,6 @@ export default function LayananDetailPage() {
     router.push(target)
   };
 
-  if (isLoading) {
-    return (
-      <MobileLayout 
-        title="Detail Layanan"
-        showBackButton={true}
-        backRoute="/layanan"
-        activeTab="layanan"
-        onTabChange={handleTabChange}
-      >
-        <div className="container mx-auto py-8 px-4">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </MobileLayout>
-    )
-  }
 
   if (!layanan) {
     return (

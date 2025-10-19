@@ -571,7 +571,6 @@ interface MultiStepFormProps {
 
 export function MultiStepForm({ jenisLayanan, onSubmit, onCancel, isLoading = false }: MultiStepFormProps) {
   const [currentStep, setCurrentStep] = useState(0)
-  const [isFormLoading, setIsFormLoading] = React.useState(false)
   
   const [formData, setFormData] = useState<FormData>({
     // Data Pribadi
@@ -604,17 +603,6 @@ export function MultiStepForm({ jenisLayanan, onSubmit, onCancel, isLoading = fa
   })
   
   const [errors, setErrors] = useState<Record<string, string>>({})
-
-  React.useEffect(() => {
-    // Simulate loading untuk demo
-    setIsFormLoading(true)
-    const timer = setTimeout(() => setIsFormLoading(false), 800)
-    return () => clearTimeout(timer)
-  }, [currentStep])
-
-  if (isFormLoading) {
-    return <FormSkeleton />
-  }
 
   const steps: StepConfig[] = [
     {

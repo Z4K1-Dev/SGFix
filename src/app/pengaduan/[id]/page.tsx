@@ -1,7 +1,6 @@
 'use client'
 
 import { MobileLayout } from '@/components/layout/mobile-layout'
-import { PengaduanDetailSkeleton } from '@/components/loading-skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -42,7 +41,7 @@ export default function PengaduanDetailPage() {
   const params = useParams()
   const router = useRouter()
   const [pengaduan, setPengaduan] = useState<PengaduanDetail | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -58,8 +57,6 @@ export default function PengaduanDetailPage() {
         setPengaduan(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Terjadi kesalahan')
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -141,9 +138,6 @@ export default function PengaduanDetailPage() {
     }
   }
 
-  if (loading) {
-    return <PengaduanDetailSkeleton />
-  }
 
   if (error || !pengaduan) {
     return (

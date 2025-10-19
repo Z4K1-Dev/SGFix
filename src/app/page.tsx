@@ -1,7 +1,6 @@
 'use client'
 
 import { MobileLayout } from '@/components/layout/mobile-layout'
-import { BeritaSkeleton, SliderSkeleton, StatsCardSkeleton } from '@/components/loading-skeleton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
@@ -56,7 +55,7 @@ interface Pengaduan {
 export default function HomePage() {
   const [berita, setBerita] = useState<Berita[]>([])
   const [pengaduan, setPengaduan] = useState<Pengaduan[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState('beranda')
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -89,18 +88,6 @@ export default function HomePage() {
       fetchData()
     }
   }, [mounted])
-
-  // Set loading to false after initial fetch
-  useEffect(() => {
-    if (mounted) {
-      const timer = setTimeout(() => {
-        setLoading(false)
-      }, 2000) // Force loading to false after 2 seconds
-
-      return () => clearTimeout(timer)
-    }
-  }
-  , [mounted])
 
   // Prefetch data setelah home loading selesai
   useEffect(() => {
@@ -234,7 +221,6 @@ export default function HomePage() {
     }
 
     try {
-      setLoading(true)
       console.log('Fetching data...')
 
       const [beritaRes, pengaduanRes] = await Promise.all([
@@ -263,9 +249,6 @@ export default function HomePage() {
     } catch (error) {
       console.error('Error fetching data:', error)
       appToast({ title: 'Gagal memuat data', variant: 'destructive' })
-    } finally {
-      setLoading(false)
-      console.log('Fetch completed, loading set to false')
     }
   }
 
@@ -405,25 +388,22 @@ export default function HomePage() {
         <TabsContent value="beranda" className="px-4 pb-6 mt-4">
           {/* Image Slider */}
           <div className="mb-6">
-            {loading ? (
-              <SliderSkeleton />
-            ) : (
-              <div className={`relative overflow-hidden rounded-xl shadow-sm ${isDragging ? 'shadow-lg' : ''} transition-shadow duration-200`}>
-                <div
-                  className={`relative h-48 bg-muted ${isDragging ? 'select-none' : ''}`}
-                  onTouchStart={onTouchStart}
-                  onTouchMove={onTouchMove}
-                  onTouchEnd={onTouchEnd}
-                  onMouseDown={onMouseDown}
-                  onMouseMove={onMouseMove}
-                  onMouseUp={onMouseUp}
-                  onMouseLeave={onMouseUp}
-                  style={{
-                    touchAction: 'none',
-                    WebkitUserSelect: 'none',
-                    userSelect: 'none'
-                  }}
-                >
+            <div className={`relative overflow-hidden rounded-xl shadow-sm ${isDragging ? 'shadow-lg' : ''} transition-shadow duration-200`}>
+              <div
+                className={`relative h-48 bg-muted ${isDragging ? 'select-none' : ''}`}
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+                onMouseDown={onMouseDown}
+                onMouseMove={onMouseMove}
+                onMouseUp={onMouseUp}
+                onMouseLeave={onMouseUp}
+                style={{
+                  touchAction: 'none',
+                  WebkitUserSelect: 'none',
+                  userSelect: 'none'
+                }}
+              >
               {/* Slides */}
               <div
                 className={`flex h-full ${isDragging ? '' : 'transition-transform duration-500 ease-in-out'}`}
@@ -498,8 +478,6 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-            )}
-          </div>
 
           {/* Layanan Icons */}
           <div className="mb-6">
@@ -543,36 +521,27 @@ export default function HomePage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
-            {loading ? (
-              <>
-                <StatsCardSkeleton />
-                <StatsCardSkeleton />
-              </>
-            ) : (
-              <>
-                <Card className="p-4 shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                      <FileText size={20} />
-                    </div>
-                    <span className="text-sm text-muted-foreground font-medium">Berita</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{!mounted || loading ? '...' : berita.length}</p>
-                  <p className="text-xs text-muted-foreground">Tersedia</p>
-                </Card>
+            <Card className="p-4 shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <FileText size={20} />
+                </div>
+                <span className="text-sm text-muted-foreground font-medium">Berita</span>
+              </div>
+              <p className="text-2xl font-bold text-foreground">{!mounted ? '...' : berita.length}</p>
+              <p className="text-xs text-muted-foreground">Tersedia</p>
+            </Card>
 
-                <Card className="p-4 shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                      <MessageSquare size={20} />
-                    </div>
-                    <span className="text-sm text-muted-foreground font-medium">Pengaduan</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{pengaduan.length}</p>
-                  <p className="text-xs text-muted-foreground">Diterima</p>
-                </Card>
-              </>
-            )}
+            <Card className="p-4 shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                  <MessageSquare size={20} />
+                </div>
+                <span className="text-sm text-muted-foreground font-medium">Pengaduan</span>
+              </div>
+              <p className="text-2xl font-bold text-foreground">{pengaduan.length}</p>
+              <p className="text-xs text-muted-foreground">Diterima</p>
+            </Card>
           </div>
 
           {/* Quick Actions */}
@@ -614,30 +583,22 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {loading ? (
-                  <>
-                    <BeritaSkeleton />
-                    <BeritaSkeleton />
-                    <BeritaSkeleton />
-                  </>
-                ) : (
-                  berita.slice(0, 3).map((item) => (
-                    <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                      <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground line-clamp-1">{item.judul}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
+                {berita.slice(0, 3).map((item) => (
+                  <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground line-clamp-1">{item.judul}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(item.createdAt).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
                       </p>
                     </div>
                   </div>
-                  ))
-                )}
-                {berita.length === 0 && !loading && (
+                ))}
+                {berita.length === 0 && (
                   <div className="text-center py-8">
                     <FileText size={48} />
                     <p className="text-sm text-muted-foreground">Belum ada berita</p>
