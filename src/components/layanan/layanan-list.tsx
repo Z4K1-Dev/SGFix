@@ -1,6 +1,5 @@
 'use client'
 
-import { LayananSkeleton } from '@/components/loading-skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -151,14 +150,8 @@ export function LayananList({
         )}
       </div>
 
-      {/* Loading State */}
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((index) => (
-            <LayananSkeleton key={index} />
-          ))}
-        </div>
-      ) : sortedLayanan.length === 0 ? (
+      {/* Daftar Layanan */}
+      {sortedLayanan.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <div className="text-center space-y-3">

@@ -51,7 +51,6 @@ export default function BeritaDetailPage() {
   const router = useRouter()
   const [berita, setBerita] = useState<BeritaDetail | null>(null)
   const [relatedBerita, setRelatedBerita] = useState<RelatedBerita[]>([])
-  const [loading, setLoading] = useState(true)
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
   const [activeTab, setActiveTab] = useState('berita')
@@ -65,7 +64,6 @@ export default function BeritaDetailPage() {
 
   const fetchBeritaDetail = async () => {
     try {
-      setLoading(true)
       const slug = params?.slug
       const response = await fetch(`/api/berita/${slug}`)
       
@@ -86,8 +84,6 @@ export default function BeritaDetailPage() {
     } catch (error) {
       console.error('Error fetching berita detail:', error)
       toast.error('Gagal memuat berita')
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -148,19 +144,6 @@ export default function BeritaDetailPage() {
     if (!target || target === "/berita") return
     router.push(target)
   };
-
-  if (loading) {
-    return (
-      <MobileLayout title="Baca Berita" showBackButton={true} backRoute="/berita" activeTab="berita" onTabChange={handleTabChange}>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Memuat berita...</p>
-          </div>
-        </div>
-      </MobileLayout>
-    )
-  }
 
   if (!berita) {
     return (

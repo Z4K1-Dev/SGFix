@@ -41,7 +41,6 @@ export default function PengaduanDetailPage() {
   const params = useParams()
   const router = useRouter()
   const [pengaduan, setPengaduan] = useState<PengaduanDetail | null>(null)
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {

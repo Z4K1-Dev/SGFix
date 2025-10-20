@@ -38,7 +38,6 @@ export default function LayananBalasanPage() {
   const [layanan, setLayanan] = useState<LayananInfo | null>(null)
   const [balasanList, setBalasanList] = useState<Balasan[]>([])
   const [newMessage, setNewMessage] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
 
   const scrollToBottom = () => {
@@ -47,7 +46,6 @@ export default function LayananBalasanPage() {
 
   const fetchBalasan = async () => {
     try {
-      setIsLoading(true)
       const response = await fetch(`/api/layanan/${params.id}/balasan`)
       if (!response.ok) {
         if (response.status === 404) {
@@ -83,8 +81,6 @@ export default function LayananBalasanPage() {
         description: 'Gagal memuat data balasan',
         variant: 'destructive'
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -213,17 +209,6 @@ export default function LayananBalasanPage() {
     hours = hours ? hours : 12 // the hour '0' should be '12'
     
     return `${datePart}${hours}:${minutes} ${ampm}`
-  }
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto py-8 px-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
-        </div>
-      </div>
-    )
   }
 
   if (!layanan) {

@@ -57,7 +57,6 @@ export default function LayananDetailPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [layanan, setLayanan] = useState<LayananDetail | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
 
   const fetchLayananDetail = useCallback(async () => {
     try {

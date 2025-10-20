@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { FormSkeleton } from '@/components/loading-skeleton'
+
 import { Upload, FileText, User, MapPin, Calendar, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 

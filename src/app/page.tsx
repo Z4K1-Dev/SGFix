@@ -55,7 +55,6 @@ interface Pengaduan {
 export default function HomePage() {
   const [berita, setBerita] = useState<Berita[]>([])
   const [pengaduan, setPengaduan] = useState<Pengaduan[]>([])
-  const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState('beranda')
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -91,7 +90,7 @@ export default function HomePage() {
 
   // Prefetch data setelah home loading selesai
   useEffect(() => {
-    if (!loading && mounted) {
+    if (mounted) {
       // Prefetch semua halaman utama
       Promise.all([
         prefetchPageData('/berita', '/api/berita?published=true'),
@@ -103,7 +102,7 @@ export default function HomePage() {
         console.error('❌ Prefetch failed:', error)
       })
     }
-  }, [loading, mounted])
+  }, [mounted])
 
   // Socket.IO: connect as user and listen for notifications
   useEffect(() => {
@@ -460,6 +459,7 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
+              </div>
               </div>
             </div>
 
