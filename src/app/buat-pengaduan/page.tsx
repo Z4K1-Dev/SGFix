@@ -80,6 +80,7 @@ export default function BuatPengaduanPage() {
       const reader = new FileReader()
       reader.onload = (e) => {
         updateFormData('foto', e.target?.result as string)
+        toast.success('Foto berhasil diupload')
       }
       reader.readAsDataURL(file)
     }
@@ -134,12 +135,17 @@ export default function BuatPengaduanPage() {
     setIsSubmitting(true)
 
     try {
+      const submitData = {
+        ...formData,
+        foto: formData.foto || null // Ensure null instead of empty string
+      }
+      
       const response = await fetch('/api/pengaduan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submitData)
       })
 
       if (response.ok) {
@@ -156,7 +162,7 @@ export default function BuatPengaduanPage() {
         
         // Redirect ke halaman pengaduan
         setTimeout(() => {
-          window.location.href = '/'
+          window.location.href = '/pengaduan'
         }, 2000)
       } else {
         const error = await response.json()
@@ -224,38 +230,30 @@ export default function BuatPengaduanPage() {
                 Upload Foto (Opsional)
               </label>
               <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                {formData.foto ? (
-                  <div className="space-y-4">
-                    <img
-                      src={formData.foto?.startsWith('http') || formData.foto?.startsWith('/') ? formData.foto : `/${formData.foto}`}
-                      alt="Preview"
-                      className="max-w-full h-48 mx-auto object-cover rounded-lg"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Ganti Foto
-                    </Button>
+                <div className="space-y-4">
+                  <img
+                    src={formData.foto || '/placeholder-image.png'}
+                    alt="Preview"
+                    className="max-w-full h-48 mx-auto object-cover rounded-lg"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder-image.png'
+                    }}
+                  />
+                  <div>
+                    <p className="text-muted-foreground">
+                      {formData.foto ? 'Klik untuk ganti foto' : 'Klik untuk upload foto'}
+                    </p>
+                    <p className="text-sm text-muted-foreground/70">Maksimal 5MB</p>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <Camera className="w-12 h-12 mx-auto text-muted-foreground" />
-                    <div>
-                      <p className="text-muted-foreground">Klik untuk upload foto</p>
-                      <p className="text-sm text-muted-foreground/70">Maksimal 5MB</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Pilih Foto
-                    </Button>
-                  </div>
-                )}
+                  <Button
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {formData.foto ? 'Ganti Foto' : 'Pilih Foto'}
+                  </Button>
+                </div>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -334,16 +332,17 @@ export default function BuatPengaduanPage() {
                   <p className="text-foreground">{formData.keterangan || 'Tidak ada keterangan'}</p>
                 </div>
                
-                {formData.foto && (
-                  <div>
-                    <h4 className="font-medium mb-2">Foto:</h4>
-                    <img
-                      src={formData.foto?.startsWith('http') || formData.foto?.startsWith('/') ? formData.foto : `/${formData.foto}`}
-                      alt="Foto pengaduan"
-                      className="max-w-full h-48 object-cover rounded-lg"
-                    />
-                  </div>
-                )}
+                <div>
+                  <h4 className="font-medium mb-2">Foto:</h4>
+                  <img
+                    src={formData.foto || '/placeholder-image.png'}
+                    alt="Foto pengaduan"
+                    className="max-w-full h-48 object-cover rounded-lg"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder-image.png'
+                    }}
+                  />
+                </div>
                
                 {formData.latitude && formData.longitude && (
                   <div>

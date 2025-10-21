@@ -91,13 +91,14 @@ export default function HomePage() {
   // Prefetch data setelah home loading selesai
   useEffect(() => {
     if (mounted) {
-      // Prefetch semua halaman utama
+      // Prefetch semua halaman utama dengan limit 5 untuk performa optimal
       Promise.all([
-        prefetchPageData('/berita', '/api/berita?published=true'),
-        prefetchPageData('/pengaduan', '/api/pengaduan'),
-        prefetchPageData('/layanan', '/api/layanan')
+        prefetchPageData('/berita', '/api/berita?published=true&limit=5'),
+        prefetchPageData('/pengaduan', '/api/pengaduan?limit=5'),
+        prefetchPageData('/layanan', '/api/layanan?limit=5'),
+        prefetchPageData('/notifikasi', '/api/notifikasi?limit=5&untukAdmin=false')
       ]).then(() => {
-        console.log('✅ All pages prefetched successfully')
+        console.log('✅ All pages prefetched successfully with limit 5')
       }).catch(error => {
         console.error('❌ Prefetch failed:', error)
       })
@@ -112,18 +113,22 @@ export default function HomePage() {
       // Update cache berdasarkan tipe notifikasi
       if (data.tipe === 'BERITA_BARU') {
         invalidatePageCache('/berita')
-        refetchPageData('/berita', '/api/berita?published=true')
+        refetchPageData('/berita', '/api/berita?published=true&limit=5')
       }
       
       if (data.tipe === 'PENGADUAN_BARU' || data.tipe === 'PENGADUAN_UPDATE') {
         invalidatePageCache('/pengaduan')
-        refetchPageData('/pengaduan', '/api/pengaduan')
+        refetchPageData('/pengaduan', '/api/pengaduan?limit=5')
       }
       
       if (data.tipe === 'LAYANAN_BARU' || data.tipe === 'LAYANAN_UPDATE') {
         invalidatePageCache('/layanan')
-        refetchPageData('/layanan', '/api/layanan')
+        refetchPageData('/layanan', '/api/layanan?limit=5')
       }
+      
+      // Always refetch notifikasi when there's new notification
+      invalidatePageCache('/notifikasi')
+      refetchPageData('/notifikasi', '/api/notifikasi?limit=5&untukAdmin=false')
       
       // Show notification
       appToast({
@@ -145,7 +150,7 @@ export default function HomePage() {
       const status = data?.status || data?.newStatus || 'DIPERBARUI'
       // Invalidate cache pengaduan saat status berubah
       invalidatePageCache('/pengaduan')
-      refetchPageData('/pengaduan', '/api/pengaduan')
+      refetchPageData('/pengaduan', '/api/pengaduan?limit=5')
       
       appToast({
         title: 'Status Pengaduan Berubah',
@@ -158,7 +163,7 @@ export default function HomePage() {
       const status = data?.status || data?.newStatus || 'DIPERBARUI'
       // Invalidate cache layanan saat status berubah
       invalidatePageCache('/layanan')
-      refetchPageData('/layanan', '/api/layanan')
+      refetchPageData('/layanan', '/api/layanan?limit=5')
       
       appToast({
         title: 'Status Layanan Berubah',

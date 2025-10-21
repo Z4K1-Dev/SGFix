@@ -4,7 +4,7 @@ import { MobileLayout } from "@/components/layout/mobile-layout"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertCircle, Camera, CheckCircle, Clock, MessageSquare } from "lucide-react"
+import { AlertCircle, Camera, CheckCircle, Clock, MessageSquare, RefreshCw } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -42,36 +42,46 @@ const getStatusIcon = (status: string) => {
 export default function PengaduanPage() {
   const [pengaduan, setPengaduan] = useState<Pengaduan[]>([])
   const [isDataLoaded, setIsDataLoaded] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     /**
      * Memuat data pengaduan dari cache atau fetch baru jika tidak ada/expired
      */
-    const loadPengaduan = async () => {
+    const loadPengaduan = async (forceRefresh = false) => {
       try {
-        // Coba ambil dari cache terlebih dahulu
-        const cached = pageCache.get('/pengaduan')
-        if (cached) {
-          setPengaduan(cached as Pengaduan[])
-          setIsDataLoaded(true)
-          return
+        if (forceRefresh) {
+          setIsRefreshing(true)
         }
         
-        // Fetch baru jika tidak ada cache
+        // Selalu fetch data terbaru saat halaman dimuat untuk menghindari cache stale
         const res = await fetch('/api/pengaduan')
         if (res.ok) {
           const data = await res.json()
           setPengaduan(data as Pengaduan[])
-          // Simpan ke cache dengan TTL 60 menit
+          // Update cache dengan data terbaru
           pageCache.set('/pengaduan', data, 60 * 60 * 1000)
         } else {
-          toast.error('Gagal memuat pengaduan')
+          // Fallback ke cache jika API gagal
+          const cached = pageCache.get('/pengaduan')
+          if (cached) {
+            setPengaduan(cached as Pengaduan[])
+          } else {
+            toast.error('Gagal memuat pengaduan')
+          }
         }
       } catch (e) {
-        toast.error('Terjadi kesalahan koneksi')
+        // Fallback ke cache jika koneksi gagal
+        const cached = pageCache.get('/pengaduan')
+        if (cached) {
+          setPengaduan(cached as Pengaduan[])
+        } else {
+          toast.error('Terjadi kesalahan koneksi')
+        }
       } finally {
         setIsDataLoaded(true)
+        setIsRefreshing(false)
       }
     }
 
@@ -103,9 +113,40 @@ export default function PengaduanPage() {
     }
   }, [])
 
+  const handleRefresh = () => {
+    loadPengaduan(true)
+  }
+
   return (
-    <MobileLayout title="Pengaduan" activeTab="pengaduan">
+    <MobileLayout 
+      title="Pengaduan" 
+      activeTab="pengaduan"
+      headerAction={
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="p-2"
+        >
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </Button>
+      }
+    >
       <div className={`px-4 pb-6 mt-4 space-y-4 transition-opacity duration-300 ${isDataLoaded ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Tombol Buat Pengaduan Selalu Visible */}
+        <Card className="shadow-sm bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+          <CardContent className="p-4">
+            <Button 
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 active:shadow-none active:scale-[0.98] transition-all duration-200"
+              onClick={() => router.push('/buat-pengaduan')}
+            >
+              <Camera className="mr-2" size={16} />
+              Buat Pengaduan Baru
+            </Button>
+          </CardContent>
+        </Card>
+
         {pengaduan.map((item) => (
           <Card key={item.id} className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
             <CardHeader className="pb-3">
@@ -132,7 +173,7 @@ export default function PengaduanPage() {
               {item.foto && (
                 <div className="relative w-full h-32 bg-muted rounded-xl mb-3 overflow-hidden">
                   <img
-                    src={item.foto?.startsWith('http') || item.foto?.startsWith('/') ? item.foto : `/${item.foto}`}
+                    src={item.foto}
                     alt={item.judul}
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -155,15 +196,11 @@ export default function PengaduanPage() {
         ))}
 
         {pengaduan.length === 0 && (
-          <Card className="shadow-sm bg-card active:shadow-none transition-all duration-200 cursor-pointer">
+          <Card className="shadow-sm bg-card">
             <CardContent className="text-center py-12">
-              <MessageSquare size={64} />
+              <MessageSquare size={64} className="mx-auto text-muted-foreground mb-4" />
               <p className="text-base text-muted-foreground font-medium">Belum ada pengaduan</p>
-              <p className="text-sm text-muted-foreground mt-1">Buat pengaduan pertama Anda</p>
-              <Button className="mt-4 bg-primary text-primary-foreground" onClick={() => router.push('/buat-pengaduan')}>
-                <Camera className="mr-2" size={16} />
-                Buat Pengaduan Baru
-              </Button>
+              <p className="text-sm text-muted-foreground mt-1">Buat pengaduan pertama Anda menggunakan tombol di atas</p>
             </CardContent>
           </Card>
         )}

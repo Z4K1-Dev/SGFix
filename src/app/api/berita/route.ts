@@ -16,6 +16,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const published = searchParams.get('published')
     const kategoriId = searchParams.get('kategoriId')
+    const limitParam = searchParams.get('limit')
+    
+    // Set default limit to 5 for prefetch, max 50
+    const limit = Math.min(Math.max(parseInt(limitParam || '5', 10) || 5, 1), 50)
 
     const where: any = {}
     
@@ -34,7 +38,8 @@ export async function GET(request: NextRequest) {
       },
       orderBy: {
         createdAt: 'desc'
-      }
+      },
+      take: limit
     })
 
     return NextResponse.json(berita)

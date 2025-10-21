@@ -230,7 +230,7 @@ export default function PengaduanDetailPage() {
                 <h3 className="text-lg font-semibold">Foto</h3>
                 <div className="rounded-lg overflow-hidden">
                   <img
-                    src={pengaduan.foto?.startsWith('http') || pengaduan.foto?.startsWith('/') ? pengaduan.foto : `/${pengaduan.foto}`}
+                    src={pengaduan.foto}
                     alt={pengaduan.judul}
                     className="w-full h-auto max-h-96 object-cover"
                     onError={(e) => {

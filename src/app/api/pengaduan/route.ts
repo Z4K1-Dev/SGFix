@@ -7,9 +7,17 @@ import { cache, generateCacheKey, invalidateCachePattern } from '@/lib/cache'
 
 /**
  * Mendapatkan daftar pengaduan
+ * Query parameters:
+ * - limit: number (default 5, max 50)
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const limitParam = searchParams.get('limit')
+    
+    // Set default limit to 5 for prefetch, max 50
+    const limit = Math.min(Math.max(parseInt(limitParam || '5', 10) || 5, 1), 50)
+
     const pengaduan = await db.pengaduan.findMany({
       include: {
         balasan: {
@@ -20,7 +28,8 @@ export async function GET() {
       },
       orderBy: {
         createdAt: 'desc'
-      }
+      },
+      take: limit
     })
 
     return NextResponse.json(pengaduan)

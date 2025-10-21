@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const jenis = searchParams.get('jenis')
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = parseInt(searchParams.get('limit') || '5')
     const search = searchParams.get('search')
 
     // Build where clause - untuk demo, tampilkan semua data
