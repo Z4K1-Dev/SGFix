@@ -15,12 +15,33 @@ export async function POST(request: NextRequest) {
       { nama: "Pendidikan", deskripsi: "Berita seputar pendidikan dan beasiswa" }
     ]
 
-    // Dapatkan kategori yang ada
-    const kategori = await db.kategori.findMany()
+    // Buat mapping dari nama kategori ke ID
     const kategoriMap = new Map()
-    kategori.forEach(k => {
+    
+    // Periksa kategori yang sudah ada
+    const existingKategori = await db.kategori.findMany({
+      where: {
+        nama: { in: kategoriData.map(k => k.nama) }
+      }
+    })
+    
+    // Isi mapping dengan kategori yang sudah ada
+    existingKategori.forEach(k => {
       kategoriMap.set(k.nama, k.id)
     })
+    
+    // Buat kategori yang belum ada
+    for (const kategori of kategoriData) {
+      if (!kategoriMap.has(kategori.nama)) {
+        const createdKategori = await db.kategori.create({
+          data: {
+            nama: kategori.nama,
+            deskripsi: kategori.deskripsi
+          }
+        })
+        kategoriMap.set(kategori.nama, createdKategori.id)
+      }
+    }
 
     // Dummy berita data
     const dummyBerita = [
@@ -37,7 +58,7 @@ export async function POST(request: NextRequest) {
       },
       {
         judul: "Workshop Kewirausahaan untuk UMKM Lokal",
-        isi: "Dinas Koperasi dan UMKM mengadakan workshop kewirausahaan untuk membantu pengusaha lokal mengembangkan bisnis mereka. Workshop ini mencakup topik seperti strategi pemasaran digital, manajemen keuangan, dan akses permodalan. Lebih dari 100 peserta hadir dalam workshop yang berlangsung selama dua hari ini.",
+        isi: "Dinas Koperasi dan UMKM mengadakan workshop kewirausahaan untuk membantu pengusaha lokal mengembangkan bisnis mereka. Workshop ini mencakup topik seperti strategi pemasaran digital, manajemen keuangan, dan akses permodalan. Lebih dari 10 peserta hadir dalam workshop yang berlangsung selama dua hari ini.",
         gambar: null, // Tanpa foto
         kategoriId: kategoriMap.get("Ekonomi"),
         published: true,
@@ -104,7 +125,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET endpoint untuk melihat status dummy berita
+* GET endpoint untuk melihat status dummy berita
  */
 export async function GET() {
   try {

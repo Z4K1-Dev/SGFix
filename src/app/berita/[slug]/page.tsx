@@ -10,6 +10,7 @@ import {
     Calendar,
     Clock,
     Eye,
+    RefreshCw,
     Share2,
     Tag,
     User
@@ -59,7 +60,7 @@ export default function BeritaDetailPage() {
   const [isInitialized, setIsInitialized] = useState(false)
 
   /**
-   * Mengambil detail berita dari API dengan cache
+   * Mengambil detail berita dari cache atau API
    * @returns Promise<void>
    */
   const fetchBeritaDetail = async () => {
@@ -67,7 +68,7 @@ export default function BeritaDetailPage() {
       const slug = params?.slug
       const cacheKey = `/berita/${slug}`
       
-      // Check cache first
+      // Check cache first (from list page or previous visits)
       const cached = pageCache.get(cacheKey) as BeritaDetail | null
       if (cached) {
         setBerita(cached)
@@ -75,6 +76,7 @@ export default function BeritaDetailPage() {
         return
       }
       
+      // Only fetch if not in cache
       const response = await fetch(`/api/berita/${slug}`)
       
       if (response.ok) {
@@ -187,6 +189,34 @@ export default function BeritaDetailPage() {
     router.push(target)
   };
 
+  /**
+   * Handle manual refresh - invalidate cache and fetch fresh data
+   */
+  const handleManualRefresh = () => {
+    const slug = params?.slug
+    if (slug) {
+      // Invalidate cache for this specific article
+      pageCache.delete(`/berita/${slug}`)
+      // Show loading state
+      setIsLoading(true)
+      // Fetch fresh data
+      fetchBeritaDetail()
+    }
+  };
+
+  // Check for manual refresh on component mount
+  useEffect(() => {
+    // Check if this is a manual refresh (navigation type 1)
+    const isManualRefresh = performance.getEntriesByType && 
+      performance.getEntriesByType('navigation').length > 0 &&
+      (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming).type === 'reload';
+    
+    if (isManualRefresh && params?.slug) {
+      // Clear cache for this article on manual refresh
+      pageCache.delete(`/berita/${params.slug}`)
+    }
+  }, [params?.slug])
+
   if (isLoading) {
     return (
       <MobileLayout title="Memuat Berita" showBackButton={true} backRoute="/berita" activeTab="berita" onTabChange={handleTabChange}>
@@ -217,7 +247,7 @@ export default function BeritaDetailPage() {
       {berita.gambar && (
         <div className="w-full h-48 bg-muted relative">
           <img
-            src={berita.gambar}
+            src={berita.gambar.startsWith('http') ? berita.gambar : `/${berita.gambar}`}
             alt={berita.judul}
             className="w-full h-full object-cover"
           />
@@ -280,7 +310,7 @@ export default function BeritaDetailPage() {
                       {item.gambar && (
                         <div className="w-16 h-16 bg-muted rounded-lg flex-shrink-0">
                           <img
-                            src={item.gambar}
+                            src={item.gambar.startsWith('http') ? item.gambar : `/${item.gambar}`}
                             alt={item.judul}
                             className="w-full h-full object-cover rounded-lg"
                           />
@@ -313,6 +343,9 @@ export default function BeritaDetailPage() {
           <Button className="flex-1" onClick={handleShare}>
             <Share2 className="mr-2" size={16} />
             Bagikan
+          </Button>
+          <Button variant="outline" onClick={handleManualRefresh}>
+            <RefreshCw size={16} />
           </Button>
           <Button variant="outline" onClick={handleBookmark}>
             <Bookmark className={`${isBookmarked ? 'fill-current' : ''}`} size={16} />

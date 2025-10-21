@@ -18,7 +18,6 @@ import {
     MessageSquare,
     Search
 } from 'lucide-react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -465,13 +464,10 @@ export default function HomePage() {
                 }}
               >
                 <div className="min-w-full h-full relative">
-                  <Image
+                  <img
                     src="/pic1.jpg"
                     alt="Government Services Advertisement 1"
-                    fill
-                    className={`object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
-                    sizes="(max-width: 768px) 100vw, 768px"
-                    priority={currentSlide === 0}
+                    className={`w-full h-full object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
                     <div className="text-white">
@@ -481,13 +477,10 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div className="min-w-full h-full relative">
-                  <Image
+                  <img
                     src="/pic2.jpg"
                     alt="Government Services Advertisement 2"
-                    fill
-                    className={`object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
-                    sizes="(max-width: 768px) 100vw, 768px"
-                    priority={currentSlide === 1}
+                    className={`w-full h-full object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
                     <div className="text-white">
@@ -497,13 +490,10 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div className="min-w-full h-full relative">
-                  <Image
+                  <img
                     src="/pic3.jpg"
                     alt="Government Services Advertisement 3"
-                    fill
-                    className={`object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
-                    sizes="(max-width: 768px) 100vw, 768px"
-                    priority={currentSlide === 2}
+                    className={`w-full h-full object-cover ${isDragging ? 'opacity-90' : ''} transition-opacity duration-200`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
                     <div className="text-white">

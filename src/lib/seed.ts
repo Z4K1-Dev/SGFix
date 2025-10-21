@@ -50,7 +50,6 @@ export async function seedData() {
         published: true
       }
     })
-
     console.log('Kategori data seeded successfully')
     } else {
       console.log('Kategori data already exists')

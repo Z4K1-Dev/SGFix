@@ -165,6 +165,7 @@ export default function AdminPage() {
   const [selectAll, setSelectAll] = useState(false)
   const [selectedLayananDetail, setSelectedLayananDetail] = useState<string | null>(null)
   const [editingBeritaId, setEditingBeritaId] = useState<string | null>(null)
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
 
   // Socket integration (admin)
   const [isConnected, setIsConnected] = useState(false)
@@ -655,8 +656,15 @@ export default function AdminPage() {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'berita', label: 'Berita', icon: FileText },
-    { id: 'kategori', label: 'Kategori', icon: Settings },
+    {
+      id: 'berita',
+      label: 'Berita',
+      icon: FileText,
+      children: [
+        { id: 'list-berita', label: 'List Berita', parentId: 'berita' },
+        { id: 'kategori', label: 'Kategori', parentId: 'berita' }
+      ]
+    },
     { id: 'pengaduan', label: 'Pengaduan', icon: MessageSquare },
     { id: 'layanan', label: 'Layanan', icon: FileText },
     { id: 'notifikasi', label: 'Notifikasi', icon: Bell },
@@ -664,6 +672,18 @@ export default function AdminPage() {
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId)
+    
+    // Jika tab yang dipilih adalah submenu, pastikan parent menu terbuka
+    const parentMenuItem = menuItems.find(item =>
+      item.children && item.children.some(child => child.id === tabId)
+    )
+    
+    if (parentMenuItem) {
+      setOpenMenus(prev => ({
+        ...prev,
+        [parentMenuItem.id]: true
+      }))
+    }
   }
 
   return (
@@ -697,15 +717,37 @@ export default function AdminPage() {
           <div className="space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon
+              const hasChildren = item.children && item.children.length > 0
+              
               return (
                 <div key={item.id} className="relative">
                   <Button
                     variant={activeTab === item.id ? "default" : "ghost"}
                     size="default"
                     className={`w-full justify-start h-10 ${!sidebarOpen && 'px-2'} active:shadow-none active:scale-[0.98] transition-all duration-200`}
-                    onClick={() => handleTabChange(item.id)}
+                    onClick={() => {
+                      if (hasChildren) {
+                        // Toggle submenu
+                        setOpenMenus(prev => ({
+                          ...prev,
+                          [item.id]: !prev[item.id]
+                        }))
+                      } else {
+                        handleTabChange(item.id)
+                      }
+                    }}
                   >
-                    {sidebarOpen && <span className="ml-8 text-sidebar-foreground">{item.label}</span>}
+                    {sidebarOpen && (
+                      <>
+                        <span className="ml-8 text-sidebar-foreground flex-1 text-left">{item.label}</span>
+                        {hasChildren && (
+                          <ChevronRight
+                            className={`transform transition-transform ${openMenus[item.id] ? 'rotate-90' : ''}`}
+                            size={16}
+                          />
+                        )}
+                      </>
+                    )}
                   </Button>
                   <Icon
                     className={`absolute top-1/2 transform -translate-y-1/2 text-sidebar-foreground pointer-events-none ${sidebarOpen ? 'left-3' : 'left-1/2 -translate-x-1/2'}`}
@@ -713,6 +755,23 @@ export default function AdminPage() {
                     height="28"
                     strokeWidth="1.5"
                   />
+                  
+                  {/* Submenu */}
+                  {hasChildren && openMenus[item.id] && sidebarOpen && (
+                    <div className="ml-8 mt-1 space-y-1 relative">
+                      {item.children.map((child) => (
+                        <Button
+                          key={child.id}
+                          variant={activeTab === child.id ? "default" : "ghost"}
+                          size="sm"
+                          className="w-full justify-start h-8 text-sm"
+                          onClick={() => handleTabChange(child.id)}
+                        >
+                          <span className="ml-4 text-sidebar-foreground">{child.label}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -1165,8 +1224,8 @@ export default function AdminPage() {
             <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
               {/* Tab contents for non-dashboard tabs */}
 
-            {/* Tab Berita */}
-            <TabsContent value="berita" className="space-y-6 px-6 mt-6">
+            {/* Tab List Berita (submenu dari Berita) */}
+            <TabsContent value="list-berita" className="space-y-6 px-6 mt-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Berita</h2>
                 <Button onClick={() => {
@@ -1247,7 +1306,7 @@ export default function AdminPage() {
               )}
             </TabsContent>
 
-            {/* Tab Kategori */}
+            {/* Tab Kategori (submenu dari Berita) */}
             <TabsContent value="kategori" className="space-y-6 px-6 mt-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Kategori</h2>
