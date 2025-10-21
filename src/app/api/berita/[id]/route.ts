@@ -99,3 +99,40 @@ export async function PUT(
     )
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    // Periksa apakah berita ada
+    const existingBerita = await db.berita.findUnique({
+      where: { id }
+    })
+
+    if (!existingBerita) {
+      return NextResponse.json(
+        { error: 'Berita tidak ditemukan' },
+        { status: 404 }
+      )
+    }
+
+    // Hapus berita
+    await db.berita.delete({
+      where: { id }
+    })
+
+    return NextResponse.json(
+      { message: 'Berita berhasil dihapus' },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Error deleting berita:', error)
+    return NextResponse.json(
+      { error: 'Terjadi kesalahan server' },
+      { status: 500 }
+    )
+  }
+}

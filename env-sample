@@ -1,0 +1,12 @@
+# Database
+DATABASE_URL="file:./db/custom.db"
+
+# Next.js
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-key-here"
+
+# Mapbox
+MAPBOX_ACCESS_TOKEN="pk.eyJ1IjoiZ2hhemFsaTIwMjUiLCJhIjoiY21mOTgwa3A2MGZ6djJscTJrMDN0ZTc4YiJ9.FVpOkIx-k8zfY0XFKACCAQ"
+
+# Node Environment
+NODE_ENV="development"

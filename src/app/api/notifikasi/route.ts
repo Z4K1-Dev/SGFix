@@ -46,6 +46,50 @@ export async function GET(request: NextRequest) {
 }
 
 /**
+ * Membuat notifikasi baru
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { judul, pesan, tipe, untukAdmin = true } = body
+
+    if (!judul || !pesan || !tipe) {
+      return NextResponse.json(
+        { error: 'Judul, pesan, dan tipe wajib diisi' },
+        { status: 400 }
+      )
+    }
+
+    // Validasi tipe notifikasi
+    const validTypes = ['BERITA_BARU', 'BERITA_UPDATE', 'PENGADUAN_BARU', 'PENGADUAN_UPDATE', 'PENGADUAN_BALASAN', 'LAYANAN_BARU', 'LAYANAN_UPDATE', 'LAYANAN_BALASAN', 'INFO', 'BARU', 'UPDATE']
+    if (!validTypes.includes(tipe)) {
+      return NextResponse.json(
+        { error: 'Tipe notifikasi tidak valid' },
+        { status: 400 }
+      )
+    }
+
+    const notifikasi = await db.notifikasi.create({
+      data: {
+        judul,
+        pesan,
+        tipe: typeof tipe === 'string' ? tipe as any : 'INFO',
+        untukAdmin,
+        dibaca: false
+      }
+    })
+
+    return NextResponse.json(notifikasi, { status: 201 })
+  } catch (error) {
+    console.error('Error creating notifikasi:', error)
+    return NextResponse.json(
+      { error: 'Gagal membuat notifikasi' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
  * Menandai notifikasi sebagai dibaca
  */
 export async function PUT(request: NextRequest) {

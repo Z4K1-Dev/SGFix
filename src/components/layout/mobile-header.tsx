@@ -291,7 +291,7 @@ export function MobileHeader({
                             })
                           } catch {}
                           // navigate to detail
-                          window.location.href = linkForNotif(n)
+                          router.push(linkForNotif(n))
                         }}
                         className="text-left bg-card rounded-lg border p-3 w-full"
                       >

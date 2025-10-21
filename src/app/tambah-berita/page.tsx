@@ -36,6 +36,7 @@ import {
 import '@mdxeditor/editor/style.css'
 import { ArrowLeft, Calendar, Eye, FileText, Save } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { pageCache } from '@/lib/cache-manager'
 
@@ -46,6 +47,7 @@ interface Kategori {
 }
 
 export default function TambahBeritaPage() {
+  const router = useRouter()
   const [kategori, setKategori] = useState<Kategori[]>([])
   const [formData, setFormData] = useState({
     judul: '',
@@ -112,7 +114,7 @@ export default function TambahBeritaPage() {
           published: false
         })
         // Redirect to admin page after successful creation
-        window.location.href = '/admin'
+        router.push('/admin')
       } else {
         const error = await response.json()
         toast.error(error.message || 'Gagal membuat berita')
@@ -167,7 +169,7 @@ export default function TambahBeritaPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => window.location.href = '/admin'}
+                onClick={() => router.push('/admin')}
                 className="inline-flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground h-8 px-3"
               >
                 <ArrowLeft size={18} />
@@ -370,7 +372,7 @@ export default function TambahBeritaPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => window.location.href = '/admin'}
+              onClick={() => router.push('/admin')}
             >
               Batal
             </Button>

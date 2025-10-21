@@ -21,10 +21,40 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast as appToast } from '@/hooks/use-toast'
 import { playNotifSound } from '@/lib/notif-sound'
 import { connectSocket } from '@/lib/socket-client'
+import '@/styles/mdxeditor-theme.css'
+import {
+  BlockTypeSelect,
+  BoldItalicUnderlineToggles,
+  codeBlockPlugin,
+  codeMirrorPlugin,
+  CodeToggle,
+  CreateLink,
+  diffSourcePlugin,
+  DiffSourceToggleWrapper,
+  headingsPlugin,
+  imagePlugin,
+  InsertCodeBlock,
+  InsertImage,
+  InsertTable,
+  InsertThematicBreak,
+  linkDialogPlugin,
+  listsPlugin,
+  ListsToggle,
+  markdownShortcutPlugin,
+  MDXEditor,
+  quotePlugin,
+  Separator,
+  tablePlugin,
+  thematicBreakPlugin,
+  toolbarPlugin,
+  UndoRedo
+} from '@mdxeditor/editor'
+import '@mdxeditor/editor/style.css'
 import {
     AlertCircle,
     BarChart3,
     Bell,
+    Calendar,
     CheckCircle,
     ChevronDown,
     ChevronRight,
@@ -35,11 +65,13 @@ import {
     Home,
     Image,
     LayoutGrid,
-    Menu,
     MessageSquare,
     Moon,
+    PanelLeftClose,
+    PanelLeftOpen,
     Plus,
     RefreshCw,
+    Save,
     Send,
     Settings,
     Sun,
@@ -51,8 +83,10 @@ import {
     X
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Bar, BarChart, XAxis, YAxis } from 'recharts'
 import { toast } from 'sonner'
+import { marked } from 'marked'
 
 
 
@@ -148,7 +182,331 @@ interface Aktivitas {
   updatedAt: string
 }
 
+// TambahBeritaForm Component
+interface TambahBeritaFormProps {
+  onClose: () => void
+  onSave: () => void
+}
+
+function TambahBeritaForm({ onClose, onSave }: TambahBeritaFormProps) {
+  const [kategori, setKategori] = useState<Kategori[]>([])
+  const [formData, setFormData] = useState({
+    judul: '',
+    isi: '',
+    gambar: '',
+    kategoriId: '',
+    published: false
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPreview, setIsPreview] = useState(false)
+
+  useEffect(() => {
+    fetchKategori()
+  }, [])
+
+  const fetchKategori = async () => {
+    try {
+      const response = await fetch('/api/kategori')
+      if (response.ok) {
+        const data = await response.json()
+        setKategori(data)
+      }
+    } catch (error) {
+      console.error('Error fetching kategori:', error)
+      toast.error('Gagal memuat kategori')
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.judul.trim() || !formData.isi.trim() || !formData.kategoriId) {
+      toast.error('Mohon lengkapi semua field yang wajib diisi')
+      return
+    }
+
+    setIsSubmitting(true)
+    
+    try {
+      const response = await fetch('/api/berita', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      })
+
+      if (response.ok) {
+        toast.success('Berita berhasil dibuat!')
+        onSave()
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Gagal membuat berita')
+      }
+    } catch (error) {
+      console.error('Error creating berita:', error)
+      toast.error('Terjadi kesalahan saat membuat berita')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleSaveDraft = async () => {
+    if (!formData.judul.trim() || !formData.isi.trim()) {
+      toast.error('Mohon lengkapi judul dan isi berita')
+      return
+    }
+
+    setIsSubmitting(true)
+    
+    try {
+      const response = await fetch('/api/berita', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          published: false
+        })
+      })
+
+      if (response.ok) {
+        toast.success('Draft berhasil disimpan!')
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Gagal menyimpan draft')
+      }
+    } catch (error) {
+      console.error('Error saving draft:', error)
+      toast.error('Terjadi kesalahan saat menyimpan draft')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X size={18} className="mr-2" />
+            Kembali
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold text-foreground">Tambah Berita Baru</h1>
+            <p className="text-sm text-muted-foreground">Buat dan publikasikan berita baru</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSaveDraft}
+            disabled={isSubmitting}
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save size={18} />
+            Simpan Draft
+          </button>
+          <button
+            onClick={() => setIsPreview(!isPreview)}
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3"
+          >
+            <Eye size={18} />
+            {isPreview ? 'Edit' : 'Preview'}
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText size={20} />
+              Informasi Dasar
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="judul">Judul Berita *</Label>
+                <Input
+                  id="judul"
+                  value={formData.judul}
+                  onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
+                  placeholder="Masukkan judul berita yang menarik"
+                  className="w-full"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="kategori">Kategori *</Label>
+                <Select value={formData.kategoriId} onValueChange={(value) => setFormData({ ...formData, kategoriId: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {kategori.map((kat) => (
+                      <SelectItem key={kat.id} value={kat.id}>
+                        {kat.nama}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="gambar">URL Gambar (Opsional)</Label>
+              <Input
+                id="gambar"
+                value={formData.gambar}
+                onChange={(e) => setFormData({ ...formData, gambar: e.target.value })}
+                placeholder="https://example.com/gambar.jpg"
+                className="w-full"
+              />
+              {formData.gambar && (
+                <div className="mt-2">
+                  <img 
+                    src={formData.gambar} 
+                    alt="Preview" 
+                    className="w-full h-48 object-cover rounded-lg border border-border"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Content Editor */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText size={20} />
+              Konten Berita *
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Gunakan Markdown untuk menulis konten berita. Mendukung heading, lists, quotes, dan lainnya.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {!isPreview ? (
+              <div className="min-h-[400px] border border-border rounded-lg overflow-hidden">
+                <MDXEditor className="mdx-editor"
+                  markdown={formData.isi}
+                  onChange={(value) => setFormData({ ...formData, isi: value })}
+                  plugins={[
+                    toolbarPlugin({
+                      toolbarContents: () => (
+                        <DiffSourceToggleWrapper>
+                          <UndoRedo />
+                          <Separator />
+                          <BoldItalicUnderlineToggles />
+                          <CodeToggle />
+                          <Separator />
+                          <CreateLink />
+                          <InsertImage />
+                          <Separator />
+                          <InsertTable />
+                          <InsertThematicBreak />
+                          <InsertCodeBlock />
+                          <Separator />
+                          <BlockTypeSelect />
+                          <ListsToggle />
+                          <Separator />
+                        </DiffSourceToggleWrapper>
+                      )
+                    }),
+                    headingsPlugin(),
+                    listsPlugin(),
+                    quotePlugin(),
+                    thematicBreakPlugin(),
+                    markdownShortcutPlugin(),
+                    codeBlockPlugin(),
+                    codeMirrorPlugin(),
+                    tablePlugin(),
+                    imagePlugin(),
+                    linkDialogPlugin(),
+                    diffSourcePlugin()
+                  ]}
+                  contentEditableClassName="prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[400px] p-4"
+                />
+              </div>
+            ) : (
+              <div className="min-h-[400px] border border-border rounded-lg p-4 bg-muted/50">
+                <div className="prose prose-sm max-w-none">
+                  {formData.isi ? (
+                    <div dangerouslySetInnerHTML={{ __html: marked(formData.isi) }} />
+                  ) : (
+                    <p className="text-muted-foreground">Konten akan muncul di sini...</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Publishing Options */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar size={20} />
+              Opsi Publikasi
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="published"
+                checked={formData.published}
+                onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="published" className="text-sm font-medium">
+                Publikasikan sekarang
+              </Label>
+            </div>
+            {formData.published && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-800">
+                  <strong>Perhatian:</strong> Berita akan langsung dipublikasikan dan dapat dilihat oleh pengguna.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Submit Actions */}
+        <div className="flex justify-end gap-4 pt-6 border-t border-border">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+          >
+            Kembali
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="min-w-[120px]"
+          >
+            {isSubmitting ? 'Menyimpan...' : formData.published ? 'Publikasikan' : 'Simpan'}
+          </Button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
 export default function AdminPage() {
+  const router = useRouter()
   const [berita, setBerita] = useState<Berita[]>([])
   const [kategori, setKategori] = useState<Kategori[]>([])
   const [pengaduan, setPengaduan] = useState<Pengaduan[]>([])
@@ -165,6 +523,7 @@ export default function AdminPage() {
   const [selectAll, setSelectAll] = useState(false)
   const [selectedLayananDetail, setSelectedLayananDetail] = useState<string | null>(null)
   const [editingBeritaId, setEditingBeritaId] = useState<string | null>(null)
+  const [showAddBeritaForm, setShowAddBeritaForm] = useState(false)
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
 
   // Socket integration (admin)
@@ -253,6 +612,12 @@ export default function AdminPage() {
     nama: '',
     deskripsi: ''
   })
+  const [editKategoriForm, setEditKategoriForm] = useState({
+    id: '',
+    nama: '',
+    deskripsi: ''
+  })
+  const [isEditKategoriOpen, setIsEditKategoriOpen] = useState(false)
   const [balasanForm, setBalasanForm] = useState('')
   const [selectedPengaduan, setSelectedPengaduan] = useState<string | null>(null)
   const [selectedLayanan, setSelectedLayanan] = useState<string | null>(null)
@@ -264,6 +629,13 @@ export default function AdminPage() {
     estimasiSelesai: ''
   })
   const [notifFilter, setNotifFilter] = useState('semua')
+  const [isCreateNotifOpen, setIsCreateNotifOpen] = useState(false)
+  const [createNotifForm, setCreateNotifForm] = useState({
+    judul: '',
+    pesan: '',
+    tipe: 'INFO',
+    untukAdmin: true
+  })
 
   // Memoized data for charts
   const pengaduanStatusData = useMemo(() => {
@@ -396,6 +768,147 @@ export default function AdminPage() {
     }
   }
 
+  const handleEditKategori = (kategori: Kategori) => {
+    setEditKategoriForm({
+      id: kategori.id,
+      nama: kategori.nama,
+      deskripsi: kategori.deskripsi || ''
+    })
+    setIsEditKategoriOpen(true)
+  }
+
+  const handleUpdateKategori = async () => {
+    try {
+      const response = await fetch(`/api/kategori/${editKategoriForm.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nama: editKategoriForm.nama,
+          deskripsi: editKategoriForm.deskripsi
+        })
+      })
+
+      if (response.ok) {
+        toast.success('Kategori berhasil diperbarui!')
+        setIsEditKategoriOpen(false)
+        setEditKategoriForm({ id: '', nama: '', deskripsi: '' })
+        fetchData()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Gagal memperbarui kategori')
+      }
+    } catch (error) {
+      toast.error('Terjadi kesalahan')
+    }
+  }
+
+  const handleDeleteKategori = async (id: string, nama: string) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus kategori "${nama}"?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/kategori/${id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        toast.success('Kategori berhasil dihapus!')
+        fetchData()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Gagal menghapus kategori')
+      }
+    } catch (error) {
+      toast.error('Terjadi kesalahan')
+    }
+  }
+
+  const handleCreateNotifikasi = async () => {
+    if (!createNotifForm.judul.trim() || !createNotifForm.pesan.trim()) {
+      toast.error('Mohon lengkapi judul dan pesan notifikasi')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/notifikasi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createNotifForm)
+      })
+
+      if (response.ok) {
+        toast.success('Notifikasi berhasil dibuat!')
+        setIsCreateNotifOpen(false)
+        setCreateNotifForm({
+          judul: '',
+          pesan: '',
+          tipe: 'INFO',
+          untukAdmin: true
+        })
+        fetchData()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Gagal membuat notifikasi')
+      }
+    } catch (error) {
+      toast.error('Terjadi kesalahan')
+    }
+  }
+
+  const handleDeleteNotifikasi = async (id: string, judul: string) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus notifikasi "${judul}"?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/notifikasi/${id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        toast.success('Notifikasi berhasil dihapus!')
+        fetchData()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Gagal menghapus notifikasi')
+      }
+    } catch (error) {
+      toast.error('Terjadi kesalahan')
+    }
+  }
+
+  const handleViewNotifikasi = async (notif: Notifikasi) => {
+    // Tandai sebagai dibaca jika belum dibaca
+    if (!notif.dibaca) {
+      try {
+        await fetch('/api/notifikasi', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: [notif.id] })
+        })
+      } catch (error) {
+        console.error('Error marking notification as read:', error)
+      }
+    }
+
+    // Arahkan ke halaman yang relevan berdasarkan tipe notifikasi
+    let targetUrl = '/'
+    
+    if (notif.tipe.includes('BERITA') || notif.tipe.includes('berita')) {
+      targetUrl = '/admin?tab=berita'
+    } else if (notif.tipe.includes('PENGADUAN') || notif.tipe.includes('pengaduan')) {
+      targetUrl = '/admin?tab=pengaduan'
+    } else if (notif.tipe.includes('LAYANAN') || notif.tipe.includes('layanan')) {
+      targetUrl = '/admin?tab=layanan'
+    } else if (notif.tipe.includes('KATEGORI') || notif.tipe.includes('kategori')) {
+      targetUrl = '/admin?tab=kategori'
+    }
+
+    // Buka di tab baru
+    window.open(targetUrl, '_blank')
+  }
+
   const handleUpdateStatusPengaduan = async (pengaduanId: string, status: string) => {
     try {
       const response = await fetch(`/api/pengaduan/${pengaduanId}/status`, {
@@ -434,6 +947,28 @@ export default function AdminPage() {
       }
     } catch (error) {
       toast.error('Terjadi kesalahan')
+    }
+  }
+
+  const handleDeleteBerita = async (beritaId: string) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus berita ini?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/berita/${beritaId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        toast.success('Berita berhasil dihapus!')
+        fetchData()
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Gagal menghapus berita')
+      }
+    } catch (error) {
+      toast.error('Terjadi kesalahan saat menghapus berita')
     }
   }
 
@@ -689,7 +1224,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-sidebar border-r border-sidebar-border transition-all duration-300 flex flex-col`}>
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} bg-sidebar border-r border-sidebar-border transition-all duration-300 flex flex-col overflow-hidden`}>
         {/* Top Section */}
         <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center justify-between">
@@ -701,14 +1236,6 @@ export default function AdminPage() {
                 <span className="font-bold text-lg text-sidebar-foreground">SmartGov</span>
               </div>
             )}
-            <Button
-              variant="ghost"
-              size="default"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="h-10 w-10 p-0"
-            >
-              {sidebarOpen ? <X className="text-sidebar-foreground" size={28} /> : <Menu className="text-sidebar-foreground" size={28} />}
-            </Button>
           </div>
         </div>
 
@@ -737,9 +1264,15 @@ export default function AdminPage() {
                       }
                     }}
                   >
+                    <Icon
+                      className={`text-sidebar-foreground pointer-events-none ${sidebarOpen ? 'mr-3' : ''}`}
+                      width="28"
+                      height="28"
+                      strokeWidth="1.5"
+                    />
                     {sidebarOpen && (
                       <>
-                        <span className="ml-8 text-sidebar-foreground flex-1 text-left">{item.label}</span>
+                        <span className="text-sidebar-foreground flex-1 text-left">{item.label}</span>
                         {hasChildren && (
                           <ChevronRight
                             className={`transform transition-transform ${openMenus[item.id] ? 'rotate-90' : ''}`}
@@ -749,16 +1282,10 @@ export default function AdminPage() {
                       </>
                     )}
                   </Button>
-                  <Icon
-                    className={`absolute top-1/2 transform -translate-y-1/2 text-sidebar-foreground pointer-events-none ${sidebarOpen ? 'left-3' : 'left-1/2 -translate-x-1/2'}`}
-                    width="28"
-                    height="28"
-                    strokeWidth="1.5"
-                  />
                   
                   {/* Submenu */}
                   {hasChildren && openMenus[item.id] && sidebarOpen && (
-                    <div className="ml-8 mt-1 space-y-1 relative">
+                    <div className="ml-11 mt-1 space-y-1 relative">
                       {item.children.map((child) => (
                         <Button
                           key={child.id}
@@ -767,7 +1294,7 @@ export default function AdminPage() {
                           className="w-full justify-start h-8 text-sm"
                           onClick={() => handleTabChange(child.id)}
                         >
-                          <span className="ml-4 text-sidebar-foreground">{child.label}</span>
+                          <span className="text-sidebar-foreground">{child.label}</span>
                         </Button>
                       ))}
                     </div>
@@ -833,9 +1360,8 @@ export default function AdminPage() {
           <div className="px-6 py-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="sm" onClick={() => window.location.href = '/'}>
-                  <Home className="mr-2" size={18} />
-                  Kembali
+                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                  {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
                 </Button>
                 <h1 className="text-xl font-bold text-foreground">Admin Panel</h1>
               </div>
@@ -878,7 +1404,10 @@ export default function AdminPage() {
                   {/* Stats Cards */}
                   <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
                     {/* Total Berita Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
+                    <Card 
+                      className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200 hover:bg-accent/50"
+                      onClick={() => handleTabChange('list-berita')}
+                    >
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Total Berita</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{berita.length}</CardTitle>
@@ -898,7 +1427,10 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Total Pengaduan Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
+                    <Card 
+                      className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200 hover:bg-accent/50"
+                      onClick={() => handleTabChange('pengaduan')}
+                    >
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Pengaduan Masuk</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{pengaduan.length}</CardTitle>
@@ -918,7 +1450,10 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Active Kategori Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
+                    <Card 
+                      className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200 hover:bg-accent/50"
+                      onClick={() => handleTabChange('kategori')}
+                    >
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Kategori Aktif</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{kategori.length}</CardTitle>
@@ -938,7 +1473,10 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Notifikasi Card */}
-                    <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200">
+                    <Card 
+                      className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm @container/card cursor-pointer active:shadow-none transition-all duration-200 hover:bg-accent/50"
+                      onClick={() => handleTabChange('notifikasi')}
+                    >
                       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6">
                         <div className="text-muted-foreground text-sm">Notifikasi Aktif</div>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{unreadCount}</CardTitle>
@@ -1228,15 +1766,21 @@ export default function AdminPage() {
             <TabsContent value="list-berita" className="space-y-6 px-6 mt-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Kelola Berita</h2>
-                <Button onClick={() => {
-                  window.location.href = '/tambah-berita'
-                }}>
+                <Button onClick={() => setShowAddBeritaForm(true)}>
                   <Plus className="mr-2" size={18} />
                   Tambah Berita
                 </Button>
               </div>
 
-              {editingBeritaId ? (
+              {showAddBeritaForm ? (
+                <TambahBeritaForm
+                  onClose={() => setShowAddBeritaForm(false)}
+                  onSave={() => {
+                    setShowAddBeritaForm(false)
+                    fetchData()
+                  }}
+                />
+              ) : editingBeritaId ? (
                 <EditBeritaForm
                   beritaId={editingBeritaId}
                   onClose={() => setEditingBeritaId(null)}
@@ -1277,7 +1821,7 @@ export default function AdminPage() {
                                 onClick={(e) => {
                                   e.preventDefault()
                                   e.stopPropagation()
-                                  // Delete functionality here
+                                  handleDeleteBerita(item.id)
                                 }}
                                 className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
                                 title="Hapus"
@@ -1309,7 +1853,7 @@ export default function AdminPage() {
             {/* Tab Kategori (submenu dari Berita) */}
             <TabsContent value="kategori" className="space-y-6 px-6 mt-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Kelola Kategori</h2>
+                <h2 className="text-2xl font-bold">Kelola Kategori Berita</h2>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button>
@@ -1349,30 +1893,78 @@ export default function AdminPage() {
                 </Dialog>
               </div>
 
+              {/* Edit Kategori Dialog */}
+              <Dialog open={isEditKategoriOpen} onOpenChange={setIsEditKategoriOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Kategori</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="edit-nama">Nama Kategori</Label>
+                      <Input
+                        id="edit-nama"
+                        value={editKategoriForm.nama}
+                        onChange={(e) => setEditKategoriForm({ ...editKategoriForm, nama: e.target.value })}
+                        placeholder="Masukkan nama kategori"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-deskripsi">Deskripsi</Label>
+                      <Textarea
+                        id="edit-deskripsi"
+                        value={editKategoriForm.deskripsi}
+                        onChange={(e) => setEditKategoriForm({ ...editKategoriForm, deskripsi: e.target.value })}
+                        placeholder="Masukkan deskripsi kategori"
+                        rows={3}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsEditKategoriOpen(false)}
+                        className="flex-1"
+                      >
+                        Batal
+                      </Button>
+                      <Button onClick={handleUpdateKategori} className="flex-1">
+                        Perbarui Kategori
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {kategori.map((item) => (
-                  <Card key={item.id} className="cursor-pointer">
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-semibold">{item.nama}</h3>
-                      <p className="text-muted-foreground mt-2">{item.deskripsi || 'Tidak ada deskripsi'}</p>
-                      <div className="flex gap-2 mt-4">
+                  <Card key={item.id} className="relative">
+                    <CardHeader className="pb-2">
+                      <div className="absolute top-2 right-2 flex gap-1">
                         <button
-                          onClick={() => {
-                            // Edit functionality here
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditKategori(item)
                           }}
                           className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                          title="Edit kategori"
                         >
-                          <Edit size={20} />
+                          <Edit size={16} />
                         </button>
                         <button
-                          onClick={() => {
-                            // Delete functionality here
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteKategori(item.id, item.nama)
                           }}
                           className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                          title="Hapus kategori"
                         >
-                          <Trash2 size={20} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
+                      <CardTitle className="text-lg pr-16">{item.nama}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-muted-foreground text-sm">{item.deskripsi || 'Tidak ada deskripsi'}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -1734,28 +2326,110 @@ export default function AdminPage() {
                     <RefreshCw className="mr-2" size={18} />
                     Refresh
                   </Button>
-                  <Button variant="outline">
-                    <Plus className="mr-2" size={18} />
-                    Buat Notifikasi
-                  </Button>
+                  <Dialog open={isCreateNotifOpen} onOpenChange={setIsCreateNotifOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline">
+                        <Plus className="mr-2" size={18} />
+                        Buat Notifikasi
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Buat Notifikasi Baru</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="notif-judul">Judul Notifikasi</Label>
+                          <Input
+                            id="notif-judul"
+                            value={createNotifForm.judul}
+                            onChange={(e) => setCreateNotifForm({ ...createNotifForm, judul: e.target.value })}
+                            placeholder="Masukkan judul notifikasi"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="notif-pesan">Pesan</Label>
+                          <Textarea
+                            id="notif-pesan"
+                            value={createNotifForm.pesan}
+                            onChange={(e) => setCreateNotifForm({ ...createNotifForm, pesan: e.target.value })}
+                            placeholder="Masukkan pesan notifikasi"
+                            rows={3}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="notif-tipe">Tipe Notifikasi</Label>
+                          <Select value={createNotifForm.tipe} onValueChange={(value) => setCreateNotifForm({ ...createNotifForm, tipe: value })}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Pilih tipe" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="INFO">Info</SelectItem>
+                              <SelectItem value="BERITA_BARU">Berita Baru</SelectItem>
+                              <SelectItem value="BERITA_UPDATE">Berita Update</SelectItem>
+                              <SelectItem value="PENGADUAN_BARU">Pengaduan Baru</SelectItem>
+                              <SelectItem value="PENGADUAN_UPDATE">Pengaduan Update</SelectItem>
+                              <SelectItem value="PENGADUAN_BALASAN">Balasan Pengaduan</SelectItem>
+                              <SelectItem value="LAYANAN_BARU">Layanan Baru</SelectItem>
+                              <SelectItem value="LAYANAN_UPDATE">Layanan Update</SelectItem>
+                              <SelectItem value="LAYANAN_BALASAN">Balasan Layanan</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="notif-untuk-admin"
+                            checked={createNotifForm.untukAdmin}
+                            onChange={(e) => setCreateNotifForm({ ...createNotifForm, untukAdmin: e.target.checked })}
+                            className="rounded border-gray-300"
+                          />
+                          <Label htmlFor="notif-untuk-admin" className="text-sm font-medium">
+                            Tampilkan untuk admin
+                          </Label>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setIsCreateNotifOpen(false)}
+                            className="flex-1"
+                          >
+                            Batal
+                          </Button>
+                          <Button onClick={handleCreateNotifikasi} className="flex-1">
+                            Buat Notifikasi
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredNotifikasi.map((item) => (
-                  <Card key={item.id} className={`${item.dibaca ? "opacity-60" : ""} cursor-pointer`}>
+                  <Card key={item.id} className={`${item.dibaca ? "opacity-60" : ""} relative`}>
+                    {!item.dibaca && (
+                      <div className="absolute top-2 right-2 z-10">
+                        <span
+                          className="h-3 w-3 rounded-full bg-green-500 block"
+                          title="Belum dibaca"
+                        />
+                      </div>
+                    )}
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-3">
                         <h3 className="text-lg font-semibold line-clamp-2 pr-2 flex-1">{item.judul}</h3>
-                        <div className="flex items-start gap-2">
-                          <span
-                            className={`h-2.5 w-2.5 rounded-full mt-1 ${item.dibaca ? 'bg-muted-foreground' : 'bg-green-500'}`}
-                            title={item.dibaca ? 'Sudah dibaca' : 'Belum dibaca'}
-                          />
+                        <div className="flex items-start gap-1">
                           <button
-                            onClick={() => {
-                              // Delete functionality here
-                            }}
+                            onClick={() => handleViewNotifikasi(item)}
+                            className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                            title="Lihat detail"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteNotifikasi(item.id, item.judul)}
                             className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
                             title="Hapus"
                           >

@@ -8,51 +8,164 @@ export async function seedData() {
   try {
     // Cek apakah sudah ada data kategori
     const existingKategori = await db.kategori.findFirst()
+    let kategoriBerita, kategoriPengumuman, kategoriLayanan, kategoriKemajuanDesa, kategoriPedesaan
+    
     if (!existingKategori) {
 
     // Buat kategori default
-    const kategoriBerita = await db.kategori.create({
+    kategoriBerita = await db.kategori.create({
       data: {
         nama: 'Berita Umum',
         deskripsi: 'Berita-berita umum dan informasi penting'
       }
     })
 
-    const kategoriPengumuman = await db.kategori.create({
+    kategoriPengumuman = await db.kategori.create({
       data: {
         nama: 'Pengumuman',
         deskripsi: 'Pengumuman resmi dari pemerintah'
       }
     })
 
-    const kategoriLayanan = await db.kategori.create({
+    kategoriLayanan = await db.kategori.create({
       data: {
         nama: 'Layanan Publik',
         deskripsi: 'Informasi seputar layanan publik'
       }
     })
 
-    // Buat berita sample
-    await db.berita.create({
+    kategoriKemajuanDesa = await db.kategori.create({
       data: {
-        judul: 'Selamat Datang di Portal Informasi & Pengaduan',
-        isi: 'Portal ini merupakan sarana untuk menyampaikan informasi dan menerima pengaduan dari masyarakat. Melalui portal ini, Anda dapat mengakses berita terkini, pengumuman penting, serta menyampaikan pengaduan terkait berbagai masalah di lingkungan Anda.',
-        kategoriId: kategoriPengumuman.id,
-        published: true
+        nama: 'Kemajuan Desa Lombok',
+        deskripsi: 'Berita seputar kemajuan dan pembangunan desa di pulau Lombok'
       }
     })
 
-    await db.berita.create({
+    kategoriPedesaan = await db.kategori.create({
       data: {
-        judul: 'Cara Menggunakan Sistem Pengaduan',
-        isi: '1. Klik tab "Buat Pengaduan" \n2. Isi judul dan keterangan pengaduan dengan jelas \n3. Tambahkan foto jika diperlukan \n4. Masukkan koordinat lokasi (opsional) \n5. Klik "Kirim Pengaduan" \n\nTim kami akan segera memproses pengaduan Anda dan memberikan update status secara berkala.',
-        kategoriId: kategoriLayanan.id,
-        published: true
+        nama: 'Pedesaan NTB',
+        deskripsi: 'Berita seputar pembangunan dan kehidupan pedesaan di Nusa Tenggara Barat'
       }
     })
+
     console.log('Kategori data seeded successfully')
     } else {
+      // Ambil kategori yang sudah ada
+      kategoriBerita = await db.kategori.findUnique({ where: { nama: 'Berita Umum' } })
+      kategoriPengumuman = await db.kategori.findUnique({ where: { nama: 'Pengumuman' } })
+      kategoriLayanan = await db.kategori.findUnique({ where: { nama: 'Layanan Publik' } })
+      kategoriKemajuanDesa = await db.kategori.findUnique({ where: { nama: 'Kemajuan Desa Lombok' } })
+      kategoriPedesaan = await db.kategori.findUnique({ where: { nama: 'Pedesaan NTB' } })
+      
+      // Buat kategori jika belum ada
+      if (!kategoriKemajuanDesa) {
+        kategoriKemajuanDesa = await db.kategori.create({
+          data: {
+            nama: 'Kemajuan Desa Lombok',
+            deskripsi: 'Berita seputar kemajuan dan pembangunan desa di pulau Lombok'
+          }
+        })
+      }
+      
+      if (!kategoriPedesaan) {
+        kategoriPedesaan = await db.kategori.create({
+          data: {
+            nama: 'Pedesaan NTB',
+            deskripsi: 'Berita seputar pembangunan dan kehidupan pedesaan di Nusa Tenggara Barat'
+          }
+        })
+      }
+      
       console.log('Kategori data already exists')
+    }
+
+    // Cek apakah sudah ada data berita
+    const existingBerita = await db.berita.findFirst()
+    if (!existingBerita) {
+      // Buat berita sample
+      await db.berita.create({
+        data: {
+          judul: 'Selamat Datang di Portal Informasi & Pengaduan',
+          isi: 'Portal ini merupakan sarana untuk menyampaikan informasi dan menerima pengaduan dari masyarakat. Melalui portal ini, Anda dapat mengakses berita terkini, pengumuman penting, serta menyampaikan pengaduan terkait berbagai masalah di lingkungan Anda.',
+          kategoriId: kategoriPengumuman.id,
+          published: true
+        }
+      })
+
+      await db.berita.create({
+        data: {
+          judul: 'Cara Menggunakan Sistem Pengaduan',
+          isi: '1. Klik tab "Buat Pengaduan" \n2. Isi judul dan keterangan pengaduan dengan jelas \n3. Tambahkan foto jika diperlukan \n4. Masukkan koordinat lokasi (opsional) \n5. Klik "Kirim Pengaduan" \n\nTim kami akan segera memproses pengaduan Anda dan memberikan update status secara berkala.',
+          kategoriId: kategoriLayanan.id,
+          published: true
+        }
+      })
+
+      console.log('Berita data seeded successfully')
+    } else {
+      console.log('Berita data already exists')
+    }
+
+    // Tambahkan berita kemajuan desa Lombok (selalu cek dan tambah jika belum ada)
+    const existingBeritaLombok = await db.berita.findFirst({
+      where: { judul: 'Desa Wisata Digital Lombok Barat Jadi Teladan Kemajuan Teknologi' }
+    })
+    
+    if (!existingBeritaLombok && kategoriKemajuanDesa) {
+      // Berita tentang Kemajuan Desa Lombok
+      await db.berita.create({
+        data: {
+          judul: 'Desa Wisata Digital Lombok Barat Jadi Teladan Kemajuan Teknologi',
+          isi: 'Desa Senggigi di Lombok Barat berhasil bertransformasi menjadi desa wisata digital pertama di NTB. Dengan dukungan pemerintah pusat, desa ini kini dilengkapi dengan WiFi publik gratis, pusat belajar digital untuk anak-anak, dan aplikasi manajemen desa berbasis mobile. Para pelaku UMKM lokal juga dilatih untuk berjualan secara online, meningkatkan omzet hingga 200%. Wisatawan yang datang pun dapat menikmati kemudahan akses informasi dan pemesanan secara digital.',
+          gambar: 'images/berita/desa-digital-lombok.jpg',
+          kategoriId: kategoriKemajuanDesa.id,
+          published: true,
+          author: 'Tim Teknologi Pedesaan',
+          views: 456,
+          likes: 32
+        }
+      })
+
+      await db.berita.create({
+        data: {
+          judul: 'Energi Terbarukan Desa Lombok Tengah Listriki 500 Rumah',
+          isi: 'Program pembangkit listrik tenaga surya di Desa Sukaraja, Lombok Tengah, berhasil memberikan listrik kepada 500 kepala keluarga. Program ini tidak hanya mengatasi masalah penerangan, tetapi juga membuka peluang ekonomi baru. Masyarakat kini dapat mengoperasikan mesin pertanian, kulkas untuk penyimpanan hasil panen, dan usaha kecil di malam hari. Kelebihan energi bahkan dapat dijual ke PLN, memberikan tambahan penghasilan bagi desa.',
+          gambar: 'images/berita/energi-terbarukan-lombok.jpg',
+          kategoriId: kategoriKemajuanDesa.id,
+          published: true,
+          author: 'Tim Energi Pedesaan',
+          views: 389,
+          likes: 28
+        }
+      })
+
+      await db.berita.create({
+        data: {
+          judul: 'Koperasi Wanita Lombok Timur Ekspor Tenun Ikat ke 5 Negara',
+          isi: 'Koperasi "Sasak Weaving" di Desa Sembalun, Lombok Timur, berhasil menembus pasar internasional. Berawal dari 10 anggota, kini koperasi ini memiliki 150 anggota wanita yang memproduksi tenun ikat berkualitas ekspor. Produk mereka telah diekspor ke Jepang, Australia, Amerika Serikat, Prancis, dan Malaysia. Omzet koperasi mencapai Rp 2.5 miliar per tahun, memberikan kesejahteraan ekonomi bagi ratusan keluarga di desa.',
+          gambar: 'images/berita/koperasi-wanita-lombok.jpg',
+          kategoriId: kategoriKemajuanDesa.id,
+          published: true,
+          author: 'Tim Ekonomi Kreatif',
+          views: 523,
+          likes: 41
+        }
+      })
+
+      await db.berita.create({
+        data: {
+          judul: 'Sistem Irigasi Modern Tingkatkan Produksi Pertanian Organik Lombok Utara',
+          isi: 'Desa Bayan di Lombok Utara berhasil menerapkan sistem irigasi modern dengan teknologi drip irrigation. Program ini menghemat penggunaan air hingga 60% dan meningkatkan produksi pertanian organik hingga 80%. Petani kini dapat menanam berbagai jenis sayuran organik yang memiliki nilai jual tinggi. Hasil panen langsung diserap oleh hotel-hotel bintang lima di Lombok dan Bali, menciptakan rantai pasok yang berkelanjutan.',
+          gambar: 'images/berita/irigasi-modern-lombok.jpg',
+          kategoriId: kategoriKemajuanDesa.id,
+          published: true,
+          author: 'Tim Pertanian Pedesaan',
+          views: 367,
+          likes: 25
+        }
+      })
+
+      console.log('Berita Kemajuan Desa Lombok seeded successfully')
     }
 
     // Cek apakah sudah ada data layanan

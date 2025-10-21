@@ -162,7 +162,7 @@ export default function BuatPengaduanPage() {
         
         // Redirect ke halaman pengaduan
         setTimeout(() => {
-          window.location.href = '/pengaduan'
+          router.push('/pengaduan')
         }, 2000)
       } else {
         const error = await response.json()
