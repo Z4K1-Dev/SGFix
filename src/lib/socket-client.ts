@@ -60,4 +60,3 @@ export function connectSocket(role?: SocketRole): Socket {
 export function getSocket(): Socket | null {
   return socket
 }
-

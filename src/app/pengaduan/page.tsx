@@ -45,46 +45,53 @@ export default function PengaduanPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    /**
-     * Memuat data pengaduan dari cache atau fetch baru jika tidak ada/expired
-     */
-    const loadPengaduan = async (forceRefresh = false) => {
-      try {
-        if (forceRefresh) {
-          setIsRefreshing(true)
+  const loadPengaduan = async (forceRefresh = false) => {
+    try {
+      if (forceRefresh) {
+        setIsRefreshing(true)
+      }
+      
+      // Coba ambil dari cache terlebih dahulu (kecuali force refresh)
+      if (!forceRefresh) {
+        const cached = pageCache.get('/pengaduan')
+        if (cached) {
+          setPengaduan(cached as Pengaduan[])
+          setIsDataLoaded(true)
+          return
         }
-        
-        // Selalu fetch data terbaru saat halaman dimuat untuk menghindari cache stale
-        const res = await fetch('/api/pengaduan')
-        if (res.ok) {
-          const data = await res.json()
-          setPengaduan(data as Pengaduan[])
-          // Update cache dengan data terbaru
-          pageCache.set('/pengaduan', data, 60 * 60 * 1000)
-        } else {
-          // Fallback ke cache jika API gagal
-          const cached = pageCache.get('/pengaduan')
-          if (cached) {
-            setPengaduan(cached as Pengaduan[])
-          } else {
-            toast.error('Gagal memuat pengaduan')
-          }
-        }
-      } catch (e) {
-        // Fallback ke cache jika koneksi gagal
+      }
+      
+      // Fetch baru jika tidak ada cache atau force refresh
+      const res = await fetch('/api/pengaduan')
+      if (res.ok) {
+        const data = await res.json()
+        setPengaduan(data as Pengaduan[])
+        // Update cache dengan data terbaru
+        pageCache.set('/pengaduan', data, 60 * 60 * 1000)
+      } else {
+        // Fallback ke cache jika API gagal
         const cached = pageCache.get('/pengaduan')
         if (cached) {
           setPengaduan(cached as Pengaduan[])
         } else {
-          toast.error('Terjadi kesalahan koneksi')
+          toast.error('Gagal memuat pengaduan')
         }
-      } finally {
-        setIsDataLoaded(true)
-        setIsRefreshing(false)
       }
+    } catch (e) {
+      // Fallback ke cache jika koneksi gagal
+      const cached = pageCache.get('/pengaduan')
+      if (cached) {
+        setPengaduan(cached as Pengaduan[])
+      } else {
+        toast.error('Terjadi kesalahan koneksi')
+      }
+    } finally {
+      setIsDataLoaded(true)
+      setIsRefreshing(false)
     }
+  }
 
+  useEffect(() => {
     // Load data awal
     loadPengaduan()
 
@@ -121,17 +128,6 @@ export default function PengaduanPage() {
     <MobileLayout 
       title="Pengaduan" 
       activeTab="pengaduan"
-      headerAction={
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="p-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-        </Button>
-      }
     >
       <div className={`px-4 pb-6 mt-4 space-y-4 transition-opacity duration-300 ${isDataLoaded ? 'opacity-100' : 'opacity-0'}`}>
         {/* Tombol Buat Pengaduan Selalu Visible */}

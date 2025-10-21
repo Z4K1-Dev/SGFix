@@ -24,7 +24,7 @@ import { useEffect, useState } from 'react'
 
 import { playNotifSound } from '@/lib/notif-sound'
 import { connectSocket } from '@/lib/socket-client'
-import { prefetchPageData, invalidatePageCache, refetchPageData } from '@/lib/cache-manager'
+import { pageCache, prefetchPageData, invalidatePageCache, refetchPageData } from '@/lib/cache-manager'
 
 
 // Force dynamic rendering
@@ -65,10 +65,139 @@ export default function HomePage() {
 
   // Handle client-side mounting
   useEffect(() => {
-    setMounted(true)
+    // Use setTimeout to avoid synchronous setState in effect
+    setTimeout(() => setMounted(true), 0)
   }, [])
 
   const router = useRouter()
+
+  /**
+   * Mengambil data dari API atau cache
+   */
+  const fetchData = async () => {
+    // Skip data fetching during build time
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    try {
+      console.log('Fetching data...')
+
+      // Check cache first for berita
+      let beritaData = pageCache.get('/berita') as Berita[] | null
+      let pengaduanData = pageCache.get('/pengaduan') as Pengaduan[] | null
+
+      if (beritaData && pengaduanData) {
+        // Both data available in cache
+        console.log('Using cached data')
+        setBerita(beritaData)
+        setPengaduan(pengaduanData)
+        return
+      }
+
+      // Fetch missing data
+      const fetchPromises: Promise<any>[] = []
+      
+      if (!beritaData) {
+        const promise = fetch('/api/berita?published=true').then(res => {
+          if (res.ok) return res.json()
+          throw new Error(`Berita API error: ${res.status}`)
+        }).then(data => {
+          beritaData = data
+          pageCache.set('/berita', data, 60 * 60 * 1000)
+          return data
+        }).catch(err => {
+          console.error('Failed to fetch berita:', err)
+          return null
+        })
+        fetchPromises.push(promise)
+      }
+
+      if (!pengaduanData) {
+        const promise = fetch('/api/pengaduan').then(res => {
+          if (res.ok) return res.json()
+          throw new Error(`Pengaduan API error: ${res.status}`)
+        }).then(data => {
+          pengaduanData = data
+          pageCache.set('/pengaduan', data, 60 * 60 * 1000)
+          return data
+        }).catch(err => {
+          console.error('Failed to fetch pengaduan:', err)
+          return null
+        })
+        fetchPromises.push(promise)
+      }
+
+      if (fetchPromises.length > 0) {
+        await Promise.all(fetchPromises)
+      }
+
+      // Update state with available data
+      if (beritaData) {
+        console.log('Berita data received:', beritaData.length, 'items')
+        setBerita(beritaData)
+      }
+      
+      if (pengaduanData) {
+        console.log('Pengaduan data received:', pengaduanData.length, 'items')
+        setPengaduan(pengaduanData)
+      }
+
+    } catch (error) {
+      console.error('Error fetching data:', error)
+      appToast({ title: 'Gagal memuat data', variant: 'destructive' })
+    }
+  }
+
+  /**
+   * Menangani pergerakan saat drag/swipe
+   */
+  const handleMove = (clientX: number) => {
+    if (!isDragging) return
+
+    setTouchEnd(clientX)
+
+    const offset = clientX - touchStart
+    setDragOffset(offset)
+    console.log('Move:', clientX, 'Offset:', offset)
+  }
+
+  /**
+   * Menangani akhir dari drag/swipe
+   */
+  const handleEnd = () => {
+    if (!isDragging) return
+
+    setIsDragging(false)
+
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    console.log('End:', {
+      touchStart,
+      touchEnd,
+      distance,
+      isLeftSwipe,
+      isRightSwipe,
+      currentSlide
+    })
+
+    if (isLeftSwipe && currentSlide < 2) {
+      // Swipe left - go to next slide
+      console.log('Going to next slide')
+      setCurrentSlide(currentSlide + 1)
+    } else if (isRightSwipe && currentSlide > 0) {
+      // Swipe right - go to previous slide
+      console.log('Going to previous slide')
+      setCurrentSlide(currentSlide - 1)
+    } else {
+      console.log('No slide change - boundary or insufficient distance')
+    }
+
+    // Reset drag offset after a short delay to allow smooth transition
+    setTimeout(() => setDragOffset(0), 50)
+  }
 
   const handleTabChange = (index: number | null) => {
     if (index === null) return
@@ -84,7 +213,8 @@ export default function HomePage() {
 
   useEffect(() => {
     if (mounted) {
-      fetchData()
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => fetchData(), 0)
     }
   }, [mounted])
 
@@ -135,7 +265,7 @@ export default function HomePage() {
         title: data?.judul || data?.title || 'Notifikasi',
         description: data?.pesan || data?.message || 'Pesan masuk',
       })
-      void playNotifSound()
+      playNotifSound()
     }
 
     const handleChatReply = (data: any) => {
@@ -143,7 +273,7 @@ export default function HomePage() {
         title: 'Balasan Pesan',
         description: data?.pesan || data?.message || 'Ada balasan baru di pesan Anda',
       })
-      void playNotifSound()
+      playNotifSound()
     }
 
     const handlePengaduanStatus = (data: any) => {
@@ -156,7 +286,7 @@ export default function HomePage() {
         title: 'Status Pengaduan Berubah',
         description: `${data?.judul || data?.pengaduan || 'Pengaduan'} kini ${status}`,
       })
-      void playNotifSound()
+      playNotifSound()
     }
 
     const handleLayananStatus = (data: any) => {
@@ -169,7 +299,7 @@ export default function HomePage() {
         title: 'Status Layanan Berubah',
         description: `${data?.judul || data?.layanan || 'Layanan'} kini ${status}`,
       })
-      void playNotifSound()
+      playNotifSound()
     }
 
     s.on('notification', handleNotif)
@@ -218,44 +348,6 @@ export default function HomePage() {
     }
   }, [isDragging, touchStart])
 
-  const fetchData = async () => {
-    // Skip data fetching during build time
-    if (typeof window === 'undefined') {
-      return
-    }
-
-    try {
-      console.log('Fetching data...')
-
-      const [beritaRes, pengaduanRes] = await Promise.all([
-        fetch('/api/berita?published=true'),
-        fetch('/api/pengaduan')
-      ])
-
-      console.log('Berita response status:', beritaRes.status)
-      console.log('Pengaduan response status:', pengaduanRes.status)
-
-      if (beritaRes.ok) {
-        const beritaData = await beritaRes.json()
-        console.log('Berita data received:', beritaData.length, 'items')
-        setBerita(beritaData)
-      } else {
-        console.error('Berita API error:', beritaRes.status)
-      }
-
-      if (pengaduanRes.ok) {
-        const pengaduanData = await pengaduanRes.json()
-        console.log('Pengaduan data received:', pengaduanData.length, 'items')
-        setPengaduan(pengaduanData)
-      } else {
-        console.error('Pengaduan API error:', pengaduanRes.status)
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error)
-      appToast({ title: 'Gagal memuat data', variant: 'destructive' })
-    }
-  }
-
   // Touch handling functions
   const minSwipeDistance = 50
 
@@ -265,50 +357,6 @@ export default function HomePage() {
     setIsDragging(true)
     setDragOffset(0)
     console.log('Start:', clientX)
-  }
-
-  const handleMove = (clientX: number) => {
-    if (!isDragging) return
-
-    setTouchEnd(clientX)
-
-    const offset = clientX - touchStart
-    setDragOffset(offset)
-    console.log('Move:', clientX, 'Offset:', offset)
-  }
-
-  const handleEnd = () => {
-    if (!isDragging) return
-
-    setIsDragging(false)
-
-    const distance = touchStart - touchEnd
-    const isLeftSwipe = distance > minSwipeDistance
-    const isRightSwipe = distance < -minSwipeDistance
-
-    console.log('End:', {
-      touchStart,
-      touchEnd,
-      distance,
-      isLeftSwipe,
-      isRightSwipe,
-      currentSlide
-    })
-
-    if (isLeftSwipe && currentSlide < 2) {
-      // Swipe left - go to next slide
-      console.log('Going to next slide')
-      setCurrentSlide(currentSlide + 1)
-    } else if (isRightSwipe && currentSlide > 0) {
-      // Swipe right - go to previous slide
-      console.log('Going to previous slide')
-      setCurrentSlide(currentSlide - 1)
-    } else {
-      console.log('No slide change - boundary or insufficient distance')
-    }
-
-    // Reset drag offset after a short delay to allow smooth transition
-    setTimeout(() => setDragOffset(0), 50)
   }
 
   // Touch events
@@ -488,31 +536,31 @@ export default function HomePage() {
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-4">Layanan Kami</h2>
             <div className="grid grid-cols-5 gap-4">
-              <div className="flex flex-col items-center space-y-2 cursor-pointer" onClick={() => window.location.href = '/layanan'}>
+              <div className="flex flex-col items-center space-y-2 cursor-pointer" onClick={() => router.push('/layanan')}>
                 <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center">
                   <FileText size={24} className="text-primary" />
                 </div>
                 <span className="text-xs text-center text-foreground">KTP</span>
               </div>
-              <div className="flex flex-col items-center space-y-2 cursor-pointer" onClick={() => window.location.href = '/layanan'}>
+              <div className="flex flex-col items-center space-y-2 cursor-pointer" onClick={() => router.push('/layanan')}>
                 <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center">
                   <CheckCircle size={24} className="text-green-600" />
                 </div>
                 <span className="text-xs text-center text-foreground">Akta</span>
               </div>
-              <div className="flex flex-col items-center space-y-2 cursor-pointer" onClick={() => window.location.href = '/layanan'}>
+              <div className="flex flex-col items-center space-y-2 cursor-pointer" onClick={() => router.push('/layanan')}>
                 <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center">
                   <Home size={24} className="text-blue-600" />
                 </div>
                 <span className="text-xs text-center text-foreground">KK</span>
               </div>
-              <div className="flex flex-col items-center space-y-2 cursor-pointer" onClick={() => window.location.href = '/layanan'}>
+              <div className="flex flex-col items-center space-y-2 cursor-pointer" onClick={() => router.push('/layanan')}>
                 <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center">
                   <MessageSquare size={24} className="text-purple-600" />
                 </div>
                 <span className="text-xs text-center text-foreground">Surat</span>
               </div>
-              <div className="flex flex-col items-center space-y-2 cursor-pointer relative" onClick={() => window.location.href = '/layanan'}>
+              <div className="flex flex-col items-center space-y-2 cursor-pointer relative" onClick={() => router.push('/layanan')}>
                 <div className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center">
                   <FileText size={24} className="text-gray-600" />
                 </div>
@@ -557,13 +605,13 @@ export default function HomePage() {
             <CardContent className="space-y-3">
               <Button
                 className="w-full justify-start h-12 bg-primary/10 text-primary border border-primary/20 active:shadow-none transition-all duration-200"
-                onClick={() => window.location.href = '/buat-pengaduan'}
+                onClick={() => router.push('/buat-pengaduan')}
               >
                 <Camera className="mr-3" size={20} />
                 Buat Pengaduan
                 <ChevronRight className="ml-auto" size={16} />
               </Button>
-              <Button className="w-full justify-start h-12 bg-secondary text-secondary-foreground border border-border active:shadow-none transition-all duration-200" onClick={() => window.location.href = '/layanan'}>
+              <Button className="w-full justify-start h-12 bg-secondary text-secondary-foreground border border-border active:shadow-none transition-all duration-200" onClick={() => router.push('/layanan')}>
                 <FileText className="mr-3" size={20} />
                 Ajukan Layanan
                 <ChevronRight className="ml-auto" size={16} />

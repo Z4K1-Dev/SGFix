@@ -240,7 +240,7 @@ export default function AdminPage() {
       const latest: any = realtimeNotif[0]
       if (latest) {
         // Use app toast position (top center already configured globally)
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+         
         appToast({ title: latest.judul || 'Notifikasi baru', description: latest.pesan })
       }
       prevRealtimeCountRef.current = realtimeNotif.length
@@ -287,38 +287,10 @@ export default function AdminPage() {
     return data
   }, [layanan])
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  useEffect(() => {
-    // Apply dark mode
-    if (darkMode) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }, [darkMode])
-
-  // Add error boundary for debugging
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      console.error('Admin: JavaScript error:', event.error)
-    }
-
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error('Admin: Unhandled promise rejection:', event.reason)
-    }
-
-    window.addEventListener('error', handleError)
-    window.addEventListener('unhandledrejection', handleUnhandledRejection)
-
-    return () => {
-      window.removeEventListener('error', handleError)
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection)
-    }
-  }, [])
-
+  /**
+   * Mengambil data dari API untuk berita, kategori, pengaduan, layanan, dan notifikasi
+   * @returns Promise<void>
+   */
   const fetchData = async () => {
     // Skip data fetching during build time
     if (typeof window === 'undefined') {
@@ -369,6 +341,39 @@ export default function AdminPage() {
       console.error('Admin: Error fetching data:', error)
     }
   }
+
+  useEffect(() => {
+    // Use setTimeout to avoid synchronous setState in effect
+    setTimeout(() => fetchData(), 0)
+  }, [])
+
+  useEffect(() => {
+    // Apply dark mode
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [darkMode])
+
+  // Add error boundary for debugging
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('Admin: JavaScript error:', event.error)
+    }
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Admin: Unhandled promise rejection:', event.reason)
+    }
+
+    window.addEventListener('error', handleError)
+    window.addEventListener('unhandledrejection', handleUnhandledRejection)
+
+    return () => {
+      window.removeEventListener('error', handleError)
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection)
+    }
+  }, [])
 
   const handleCreateKategori = async () => {
     try {
@@ -644,7 +649,8 @@ export default function AdminPage() {
       })
     }
 
-    setAktivitasData(data)
+    // Use setTimeout to avoid synchronous setState in effect
+    setTimeout(() => setAktivitasData(data), 0)
   }, [])
 
   const menuItems = [
@@ -741,7 +747,9 @@ export default function AdminPage() {
             {settingsOpen && sidebarOpen && (
               <div className="ml-6 space-y-2">
                 <Button variant="ghost" size="default" className="w-full justify-start h-10 active:shadow-none active:scale-[0.98] transition-all duration-200">
-                  <Image className="text-sidebar-foreground mr-2" size={28} />
+                  <div className="text-sidebar-foreground mr-2">
+                    <Image size={28} />
+                  </div>
                   <span className="text-sidebar-foreground">Image</span>
                 </Button>
                 <Button
@@ -1331,7 +1339,7 @@ export default function AdminPage() {
                         {item.foto ? (
                           <img
                             src={item.foto}
-                            alt={item.judul}
+                            alt={item.judul || 'Gambar pengaduan'}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.currentTarget.src = '/placeholder-image.png'
@@ -1340,7 +1348,9 @@ export default function AdminPage() {
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <div className="text-center">
-                              <Image size={48} className="mx-auto text-muted-foreground mb-2" />
+                              <div className="flex justify-center">
+                                <Image size={48} className="mx-auto text-muted-foreground mb-2" />
+                              </div>
                               <p className="text-muted-foreground text-sm">No Image</p>
                             </div>
                           </div>

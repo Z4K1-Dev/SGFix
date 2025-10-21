@@ -37,6 +37,7 @@ import '@mdxeditor/editor/style.css'
 import { ArrowLeft, Calendar, Eye, FileText, Save } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { pageCache } from '@/lib/cache-manager'
 
 interface Kategori {
   id: string
@@ -62,10 +63,19 @@ export default function TambahBeritaPage() {
 
   const fetchKategori = async () => {
     try {
+      // Check cache first
+      const cached = pageCache.get('/kategori') as Kategori[] | null
+      if (cached) {
+        setKategori(cached)
+        return
+      }
+      
       const response = await fetch('/api/kategori')
       if (response.ok) {
         const data = await response.json()
         setKategori(data)
+        // Cache with TTL 60 minutes for kategori
+        pageCache.set('/kategori', data, 60 * 60 * 1000)
       }
     } catch (error) {
       console.error('Error fetching kategori:', error)

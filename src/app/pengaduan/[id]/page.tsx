@@ -4,6 +4,8 @@ import { MobileLayout } from '@/components/layout/mobile-layout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
+import { Send } from 'lucide-react'
 import {
     AlertCircle,
     ArrowLeft,
@@ -16,6 +18,7 @@ import {
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { pageCache } from '@/lib/cache-manager'
 
 interface Balasan {
   id: string
@@ -42,11 +45,26 @@ export default function PengaduanDetailPage() {
   const router = useRouter()
   const [pengaduan, setPengaduan] = useState<PengaduanDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [newBalasan, setNewBalasan] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
     const fetchPengaduanDetail = async () => {
       try {
-        const response = await fetch(`/api/pengaduan/${params?.id}`)
+        const id = params?.id
+        const cacheKey = `/pengaduan/${id}`
+        
+        // Check cache first
+        const cached = pageCache.get(cacheKey) as PengaduanDetail | null
+        if (cached) {
+          setPengaduan(cached)
+          setIsLoading(false)
+          return
+        }
+        
+        const response = await fetch(`/api/pengaduan/${id}`)
         
         if (!response.ok) {
           throw new Error('Pengaduan tidak ditemukan')
@@ -54,15 +72,20 @@ export default function PengaduanDetailPage() {
         
         const data = await response.json()
         setPengaduan(data)
+        setIsLoading(false)
+        // Cache with TTL 30 minutes for detail pages
+        pageCache.set(cacheKey, data, 30 * 60 * 1000)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Terjadi kesalahan')
+        setIsLoading(false)
       }
     }
 
-    if (params?.id) {
+    if (params?.id && !isInitialized) {
+      setIsInitialized(true)
       fetchPengaduanDetail()
     }
-  }, [params?.id])
+  }, [params?.id, isInitialized])
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -137,6 +160,87 @@ export default function PengaduanDetailPage() {
     }
   }
 
+  const handleSubmitBalasan = async () => {
+    if (!newBalasan.trim()) {
+      toast.error('Balasan tidak boleh kosong')
+      return
+    }
+
+    if (!pengaduan?.id) {
+      toast.error('Data pengaduan tidak valid')
+      return
+    }
+
+    setIsSubmitting(true)
+    
+    // Show loading toast
+    const loadingToast = toast.loading('Mengirim balasan...')
+
+    try {
+      const response = await fetch(`/api/pengaduan/${pengaduan.id}/balasan`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isi: newBalasan.trim(),
+          dariAdmin: false
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Gagal mengirim balasan')
+      }
+
+      const balasanBaru = await response.json()
+      
+      // Update local state dengan balasan baru
+      setPengaduan(prev => ({
+        ...prev!,
+        balasan: [...(prev?.balasan || []), balasanBaru]
+      }))
+
+      // Clear form
+      setNewBalasan('')
+      
+      // Show success toast
+      toast.success('Balasan berhasil dikirim!', {
+        id: loadingToast
+      })
+
+    } catch (error) {
+      console.error('Error submitting balasan:', error)
+      toast.error('Gagal mengirim balasan. Silakan coba lagi.', {
+        id: loadingToast
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+
+  if (isLoading) {
+    return (
+      <MobileLayout
+        title="Memuat Pengaduan"
+        showBackButton={true}
+        backRoute="/pengaduan"
+        activeTab="pengaduan"
+        onTabChange={(index) => {
+          if (index === null) return
+          const routes = ["/", "/berita", "/pengaduan", "/layanan", null, "/profile"]
+          const target = routes[index]
+          if (!target || target === "/pengaduan") return
+          router.push(target)
+        }}
+      >
+        <div className="p-4 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Memuat detail pengaduan...</p>
+        </div>
+      </MobileLayout>
+    )
+  }
 
   if (error || !pengaduan) {
     return (
@@ -288,41 +392,79 @@ export default function PengaduanDetailPage() {
             )}
 
             {/* Balasan */}
-            {pengaduan.balasan && pengaduan.balasan.length > 0 && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5" />
-                  Balasan ({pengaduan.balasan.length})
-                </h3>
-                {pengaduan.balasan.map((balasan) => (
-                  <Card key={balasan.id} className={`${
-                    balasan.dariAdmin
-                      ? 'bg-primary/10 border border-primary/20'
-                      : 'bg-muted border-border'
-                  }`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`text-sm font-medium ${
-                          balasan.dariAdmin ? 'text-primary' : 'text-foreground'
-                        }`}>
-                          {balasan.dariAdmin ? 'Admin' : 'Anda'}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(balasan.createdAt).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-foreground">{balasan.isi}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Balasan {pengaduan.balasan && `(${pengaduan.balasan.length})`}
+              </h3>
+              
+              {/* Daftar Balasan */}
+              {pengaduan.balasan && pengaduan.balasan.length > 0 && (
+                <div className="space-y-3">
+                  {pengaduan.balasan.map((balasan) => (
+                    <Card key={balasan.id} className={`${
+                      balasan.dariAdmin
+                        ? 'bg-primary/10 border border-primary/20'
+                        : 'bg-muted border-border'
+                    }`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`text-sm font-medium ${
+                            balasan.dariAdmin ? 'text-primary' : 'text-foreground'
+                          }`}>
+                            {balasan.dariAdmin ? 'Admin' : 'Anda'}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(balasan.createdAt).toLocaleDateString('id-ID', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-foreground">{balasan.isi}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Form Input Balasan */}
+              <Card className="border-2 border-dashed border-border">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <Textarea
+                      placeholder="Tulis balasan Anda..."
+                      value={newBalasan}
+                      onChange={(e) => setNewBalasan(e.target.value)}
+                      className="min-h-[100px] resize-none border-0 focus-visible:ring-0 bg-transparent"
+                      disabled={isSubmitting}
+                    />
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={handleSubmitBalasan}
+                        disabled={!newBalasan.trim() || isSubmitting}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            Mengirim...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Kirim Balasan
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Calendar, Download, Mail, MapPin, MessageSquare, Phone, User } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { pageCache } from '@/lib/cache-manager'
 
 interface LayananDetail {
   id: string
@@ -57,12 +58,26 @@ export default function LayananDetailPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [layanan, setLayanan] = useState<LayananDetail | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   const fetchLayananDetail = useCallback(async () => {
     try {
-      const response = await fetch(`/api/layanan/${params.id}`)
+      const id = params.id
+      const cacheKey = `/layanan/${id}`
+      
+      // Check cache first
+      const cached = pageCache.get(cacheKey) as { data: LayananDetail } | null
+      if (cached) {
+        setLayanan(cached.data)
+        setIsLoading(false)
+        return
+      }
+      
+      const response = await fetch(`/api/layanan/${id}`)
       if (!response.ok) {
         if (response.status === 404) {
+          setIsLoading(false)
           toast({
             title: 'Error',
             description: 'Layanan tidak ditemukan',
@@ -76,8 +91,12 @@ export default function LayananDetailPage() {
       
       const data = await response.json()
       setLayanan(data.data)
+      setIsLoading(false)
+      // Cache with TTL 30 minutes for detail pages
+      pageCache.set(cacheKey, data, 30 * 60 * 1000)
     } catch (error) {
       console.error('Error fetching layanan detail:', error)
+      setIsLoading(false)
       toast({
         title: 'Error',
         description: 'Gagal memuat detail layanan',
@@ -87,10 +106,11 @@ export default function LayananDetailPage() {
   }, [params.id, router, toast])
 
   useEffect(() => {
-    if (params.id) {
+    if (params.id && !isInitialized) {
+      setIsInitialized(true)
       fetchLayananDetail()
     }
-  }, [params.id, fetchLayananDetail])
+  }, [params.id, isInitialized, fetchLayananDetail])
 
   // Memoize formatting functions to prevent re-calculations
   const formatDate = useCallback((dateString: string) => {
@@ -454,6 +474,25 @@ export default function LayananDetailPage() {
     router.push(target)
   };
 
+
+  if (isLoading) {
+    return (
+      <MobileLayout 
+        title="Memuat Layanan"
+        showBackButton={true}
+        backRoute="/layanan"
+        activeTab="layanan"
+        onTabChange={handleTabChange}
+      >
+        <div className="container mx-auto py-8 px-4">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Memuat detail layanan...</p>
+          </div>
+        </div>
+      </MobileLayout>
+    )
+  }
 
   if (!layanan) {
     return (

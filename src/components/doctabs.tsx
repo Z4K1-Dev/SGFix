@@ -151,7 +151,8 @@ function ExpandedTabs({ tabs, className, onChange, activeTab }: ExpandedTabsProp
       const tabMap = ['beranda', 'berita', 'pengaduan', 'layanan', null, 'profile'];
       const index = tabMap.indexOf(activeTab);
       if (index !== -1) {
-        setSelected(index);
+        // Use setTimeout to avoid synchronous setState in effect
+        setTimeout(() => setSelected(index), 0);
       }
     }
   }, [activeTab]);

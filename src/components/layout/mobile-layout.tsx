@@ -32,7 +32,8 @@ export function MobileLayout({
 
   // Handle client-side mounting
   useEffect(() => {
-    setMounted(true)
+    // Use setTimeout to avoid synchronous setState in effect
+    setTimeout(() => setMounted(true), 0)
   }, [])
 
   // Default tab change handler

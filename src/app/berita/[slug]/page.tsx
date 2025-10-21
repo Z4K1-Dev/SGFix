@@ -17,6 +17,7 @@ import {
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { pageCache } from '@/lib/cache-manager'
 
 interface BeritaDetail {
   id: string
@@ -54,22 +55,34 @@ export default function BeritaDetailPage() {
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
   const [activeTab, setActiveTab] = useState('berita')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isInitialized, setIsInitialized] = useState(false)
 
-  useEffect(() => {
-    if (params?.slug) {
-      fetchBeritaDetail()
-      fetchRelatedBerita()
-    }
-  }, [params?.slug])
-
+  /**
+   * Mengambil detail berita dari API dengan cache
+   * @returns Promise<void>
+   */
   const fetchBeritaDetail = async () => {
     try {
       const slug = params?.slug
+      const cacheKey = `/berita/${slug}`
+      
+      // Check cache first
+      const cached = pageCache.get(cacheKey) as BeritaDetail | null
+      if (cached) {
+        setBerita(cached)
+        setIsLoading(false)
+        return
+      }
+      
       const response = await fetch(`/api/berita/${slug}`)
       
       if (response.ok) {
         const data = await response.json()
         setBerita(data)
+        setIsLoading(false)
+        // Cache with TTL 30 minutes for detail pages
+        pageCache.set(cacheKey, data, 30 * 60 * 1000)
         
         // Increment views
         try {
@@ -78,27 +91,56 @@ export default function BeritaDetailPage() {
           console.log('View increment failed:', viewError)
         }
       } else {
+        setIsLoading(false)
         toast.error('Berita tidak ditemukan')
         router.push('/berita')
       }
     } catch (error) {
       console.error('Error fetching berita detail:', error)
+      setIsLoading(false)
       toast.error('Gagal memuat berita')
     }
   }
 
+  /**
+   * Mengambil berita terkait dari API dengan cache
+   * @returns Promise<void>
+   */
   const fetchRelatedBerita = async () => {
     try {
       const slug = params?.slug
+      const cacheKey = `/berita/related/${slug}`
+      
+      // Check cache first
+      const cached = pageCache.get(cacheKey) as RelatedBerita[] | null
+      if (cached) {
+        setRelatedBerita(cached.slice(0, 3))
+        return
+      }
+      
       const response = await fetch(`/api/berita/related/${slug}`)
       if (response.ok) {
         const data = await response.json()
         setRelatedBerita(data.slice(0, 3)) // Show max 3 related articles
+        // Cache with TTL 30 minutes
+        pageCache.set(cacheKey, data, 30 * 60 * 1000)
       }
     } catch (error) {
       console.error('Error fetching related berita:', error)
     }
   }
+
+  useEffect(() => {
+    if (params?.slug && !isInitialized) {
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => setIsInitialized(true), 0)
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        fetchBeritaDetail()
+        fetchRelatedBerita()
+      }, 0)
+    }
+  }, [params?.slug, isInitialized])
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -144,6 +186,17 @@ export default function BeritaDetailPage() {
     if (!target || target === "/berita") return
     router.push(target)
   };
+
+  if (isLoading) {
+    return (
+      <MobileLayout title="Memuat Berita" showBackButton={true} backRoute="/berita" activeTab="berita" onTabChange={handleTabChange}>
+        <div className="p-4 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Memuat berita...</p>
+        </div>
+      </MobileLayout>
+    )
+  }
 
   if (!berita) {
     return (
