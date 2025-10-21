@@ -9,12 +9,13 @@ export const dynamic = 'force-dynamic'
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // Cek apakah notifikasi ada
     const existingNotifikasi = await db.notifikasi.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     if (!existingNotifikasi) {
@@ -26,7 +27,7 @@ export async function DELETE(
 
     await db.notifikasi.delete({
       where: {
-        id: params.id
+        id: id
       }
     })
 

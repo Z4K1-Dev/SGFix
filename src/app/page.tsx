@@ -606,7 +606,7 @@ export default function HomePage() {
                 Ajukan Layanan
                 <ChevronRight className="ml-auto" size={16} />
               </Button>
-              <Button className="w-full justify-start h-12 bg-secondary text-secondary-foreground border border-border active:shadow-none transition-all duration-200">
+              <Button className="w-full justify-start h-12 bg-secondary text-secondary-foreground border border-border active:shadow-none transition-all duration-200" onClick={() => router.push('/test-map')}>
                 <MapPin className="mr-3" size={20} />
                 Lihat Peta Lokasi
                 <ChevronRight className="ml-auto" size={16} />

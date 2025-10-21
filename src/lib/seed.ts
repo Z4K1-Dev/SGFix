@@ -117,7 +117,7 @@ export async function seedData() {
         data: {
           judul: 'Desa Wisata Digital Lombok Barat Jadi Teladan Kemajuan Teknologi',
           isi: 'Desa Senggigi di Lombok Barat berhasil bertransformasi menjadi desa wisata digital pertama di NTB. Dengan dukungan pemerintah pusat, desa ini kini dilengkapi dengan WiFi publik gratis, pusat belajar digital untuk anak-anak, dan aplikasi manajemen desa berbasis mobile. Para pelaku UMKM lokal juga dilatih untuk berjualan secara online, meningkatkan omzet hingga 200%. Wisatawan yang datang pun dapat menikmati kemudahan akses informasi dan pemesanan secara digital.',
-          gambar: 'images/berita/desa-digital-lombok.jpg',
+          gambar: 'images/berita/pedesaan-lombok-sawah.webp',
           kategoriId: kategoriKemajuanDesa.id,
           published: true,
           author: 'Tim Teknologi Pedesaan',
@@ -130,7 +130,7 @@ export async function seedData() {
         data: {
           judul: 'Energi Terbarukan Desa Lombok Tengah Listriki 500 Rumah',
           isi: 'Program pembangkit listrik tenaga surya di Desa Sukaraja, Lombok Tengah, berhasil memberikan listrik kepada 500 kepala keluarga. Program ini tidak hanya mengatasi masalah penerangan, tetapi juga membuka peluang ekonomi baru. Masyarakat kini dapat mengoperasikan mesin pertanian, kulkas untuk penyimpanan hasil panen, dan usaha kecil di malam hari. Kelebihan energi bahkan dapat dijual ke PLN, memberikan tambahan penghasilan bagi desa.',
-          gambar: 'images/berita/energi-terbarukan-lombok.jpg',
+          gambar: 'images/berita/energi-terbarukan-lombok.webp',
           kategoriId: kategoriKemajuanDesa.id,
           published: true,
           author: 'Tim Energi Pedesaan',
@@ -143,7 +143,7 @@ export async function seedData() {
         data: {
           judul: 'Koperasi Wanita Lombok Timur Ekspor Tenun Ikat ke 5 Negara',
           isi: 'Koperasi "Sasak Weaving" di Desa Sembalun, Lombok Timur, berhasil menembus pasar internasional. Berawal dari 10 anggota, kini koperasi ini memiliki 150 anggota wanita yang memproduksi tenun ikat berkualitas ekspor. Produk mereka telah diekspor ke Jepang, Australia, Amerika Serikat, Prancis, dan Malaysia. Omzet koperasi mencapai Rp 2.5 miliar per tahun, memberikan kesejahteraan ekonomi bagi ratusan keluarga di desa.',
-          gambar: 'images/berita/koperasi-wanita-lombok.jpg',
+          gambar: 'images/berita/koperasi-wanita-lombok.webp',
           kategoriId: kategoriKemajuanDesa.id,
           published: true,
           author: 'Tim Ekonomi Kreatif',
@@ -156,7 +156,7 @@ export async function seedData() {
         data: {
           judul: 'Sistem Irigasi Modern Tingkatkan Produksi Pertanian Organik Lombok Utara',
           isi: 'Desa Bayan di Lombok Utara berhasil menerapkan sistem irigasi modern dengan teknologi drip irrigation. Program ini menghemat penggunaan air hingga 60% dan meningkatkan produksi pertanian organik hingga 80%. Petani kini dapat menanam berbagai jenis sayuran organik yang memiliki nilai jual tinggi. Hasil panen langsung diserap oleh hotel-hotel bintang lima di Lombok dan Bali, menciptakan rantai pasok yang berkelanjutan.',
-          gambar: 'images/berita/irigasi-modern-lombok.jpg',
+          gambar: 'images/berita/irigasi-modern-lombok.webp',
           kategoriId: kategoriKemajuanDesa.id,
           published: true,
           author: 'Tim Pertanian Pedesaan',
@@ -328,7 +328,7 @@ export async function seedData() {
           {
             judul: 'Jalan Berlubang di Jl. Merdeka',
             keterangan: 'Ada beberapa jalan berlubang yang cukup berbahaya bagi pengendara, terutama pada malam hari. Lokasi tepatnya di depan kantor kelurahan Menteng.',
-            foto: 'jalan-berlubang.jpg',
+            foto: 'jalan-berlubang.webp',
             latitude: -6.1944,
             longitude: 106.8229,
             status: Status.BARU
@@ -336,7 +336,7 @@ export async function seedData() {
           {
             judul: 'Sampah Menumpuk di Taman Kota',
             keterangan: 'Sampah sudah menumpuk selama 3 hari dan belum ada yang mengangkut. Ini menyebabkan bau tidak sedap dan potensi penyakit.',
-            foto: 'sampah-menumpuk.jpg',
+            foto: 'sampah-menumpuk.webp',
             latitude: -6.2088,
             longitude: 106.8456,
             status: Status.DITAMPUNG
@@ -344,7 +344,7 @@ export async function seedData() {
           {
             judul: 'Lampu Jalan Mati',
             keterangan: 'Lampu jalan di sepanjang Jl. Sudirman mati sudah seminggu. Ini membahayakan pengendara pada malam hari.',
-            foto: 'lampu-jalan-mati.jpg',
+            foto: 'lampu-jalan-mati.webp',
             latitude: -6.2297,
             longitude: 106.8295,
             status: Status.DITERUSKAN
@@ -352,7 +352,7 @@ export async function seedData() {
           {
             judul: 'Pohon Tumbang',
             keterangan: 'Sebuah pohon besar tumbang menutupi jalan akibat hujan deras kemarin. Butuh penanganan segera.',
-            foto: 'pohon-tumbang.jpg',
+            foto: 'pohon-tumbang.webp',
             latitude: -6.1751,
             longitude: 106.8650,
             status: Status.DIKERJAKAN
@@ -360,7 +360,7 @@ export async function seedData() {
           {
             judul: 'Saluran Air Mampet',
             keterangan: 'Saluran air di kompleks perumahan mampet menyebabkan banjir kecil saat hujan. Sudah dilaporkan sebulan lalu tapi belum ada tindakan.',
-            foto: 'saluran-mampet.jpg',
+            foto: 'saluran-mampet.webp',
             latitude: -6.2382,
             longitude: 106.8036,
             status: Status.SELESAI

@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+
 import { ChartPieLayanan } from '@/components/ui/pie-chart-layanan'
 
 
@@ -2008,12 +2009,13 @@ export default function AdminPage() {
                         )}
                       </div>
 
+
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1 text-left">
                           <h3 className="text-lg font-semibold line-clamp-2">{item.judul}</h3>
                           <p className="text-muted-foreground mt-1 text-sm line-clamp-3">{item.keterangan}</p>
                         </div>
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 ml-2">
                           <button
                             onClick={() => {
                               // View functionality here
@@ -2070,8 +2072,8 @@ export default function AdminPage() {
                       {item.balasan && item.balasan.length > 0 && (
                         <div className="mb-3 p-3 bg-muted rounded-lg">
                           <h4 className="font-medium text-sm mb-2">Balasan ({item.balasan.length}):</h4>
-                          <div className="max-h-20 overflow-y-auto space-y-1">
-                            {item.balasan.slice(0, 2).map((balasan) => (
+                          <div className="max-h-32 overflow-y-auto space-y-1">
+                            {item.balasan.slice(0, 5).map((balasan) => (
                               <div key={balasan.id} className="text-xs">
                                 <div className="flex items-center gap-1">
                                   <Badge variant={balasan.dariAdmin ? "default" : "secondary"} className="text-xs px-1 py-0">
@@ -2084,9 +2086,9 @@ export default function AdminPage() {
                                 <p className="mt-1 line-clamp-2">{balasan.isi}</p>
                               </div>
                             ))}
-                            {item.balasan.length > 2 && (
+                            {item.balasan.length > 5 && (
                               <p className="text-xs text-muted-foreground italic">
-                                +{item.balasan.length - 2} balasan lainnya
+                                +{item.balasan.length - 5} balasan lainnya
                               </p>
                             )}
                           </div>
@@ -2237,7 +2239,7 @@ export default function AdminPage() {
                         {/* Balasan */}
                         <div className="space-y-3">
                           <h4 className="font-medium">Balasan</h4>
-                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                          <div className="space-y-2 max-h-60 overflow-y-auto">
                             {item.balasan && item.balasan.length > 0 ? (
                               item.balasan.map((balasan) => (
                                 <div key={balasan.id} className={`p-2 rounded-lg text-sm ${balasan.dariAdmin ? 'bg-blue-50 ml-4' : 'bg-gray-50'}`}>

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Map } from '@/components/ui/map'
 import { Progress } from '@/components/ui/progress'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -84,6 +85,13 @@ export default function BuatPengaduanPage() {
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  const handleMapClick = (event: any) => {
+    const { lng, lat } = event.lngLat
+    updateFormData('latitude', lat)
+    updateFormData('longitude', lng)
+    toast.success('Lokasi berhasil dipilih!')
   }
 
   const getCurrentLocation = useCallback(() => {
@@ -270,32 +278,33 @@ export default function BuatPengaduanPage() {
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Lokasi (Opsional)
+              <label className="block text-sm font-medium text-foreground mb-4">
+                Lokasi Pengaduan (Opsional)
               </label>
+              
+              {/* Map Container */}
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-muted-foreground mb-1">Latitude</label>
-                    <Input
-                      type="number"
-                      step="any"
-                      value={formData.latitude || ''}
-                      onChange={(e) => updateFormData('latitude', parseFloat(e.target.value) || null)}
-                      placeholder="Contoh: -6.200000"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-muted-foreground mb-1">Longitude</label>
-                    <Input
-                      type="number"
-                      step="any"
-                      value={formData.longitude || ''}
-                      onChange={(e) => updateFormData('longitude', parseFloat(e.target.value) || null)}
-                      placeholder="Contoh: 106.816666"
-                    />
-                  </div>
+                <div className="h-64 rounded-lg overflow-hidden border">
+                  <Map
+                    initialCoordinates={formData.latitude && formData.longitude ? [formData.longitude, formData.latitude] : [116.1186, -8.5656]}
+                    initialZoom={formData.latitude && formData.longitude ? 15 : 12}
+                    onMapClick={handleMapClick}
+                    markers={formData.latitude && formData.longitude ? [{
+                      coordinates: [formData.longitude, formData.latitude],
+                      popup: `<div class="p-2"><h3 class="font-semibold">Lokasi Pengaduan</h3><p class="text-sm">Klik untuk ubah lokasi</p></div>`,
+                      color: "#ef4444"
+                    }] : []}
+                    className="w-full h-full"
+                    onMapLoad={(map) => {
+                      // Get user location on map load if no location set
+                      if (!formData.latitude || !formData.longitude) {
+                        getCurrentLocation()
+                      }
+                    }}
+                  />
                 </div>
+                
+                {/* Current Location Button */}
                 <Button
                   variant="outline"
                   onClick={getCurrentLocation}
@@ -305,6 +314,8 @@ export default function BuatPengaduanPage() {
                   <MapPin className="w-4 h-4 mr-2" />
                   {locationLoading ? 'Mendapatkan Lokasi...' : 'Gunakan Lokasi Saat Ini'}
                 </Button>
+                
+                {/* Location Status */}
                 {formData.latitude && formData.longitude && (
                   <div className="p-3 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                     <p className="text-sm text-green-800 dark:text-green-200">
@@ -313,6 +324,35 @@ export default function BuatPengaduanPage() {
                     </p>
                   </div>
                 )}
+                
+                {/* Manual Input Option */}
+                <details className="mt-4">
+                  <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
+                    Input manual koordinat
+                  </summary>
+                  <div className="mt-3 grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-muted-foreground mb-1">Latitude</label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={formData.latitude || ''}
+                        onChange={(e) => updateFormData('latitude', parseFloat(e.target.value) || null)}
+                        placeholder="Contoh: -6.200000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-muted-foreground mb-1">Longitude</label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={formData.longitude || ''}
+                        onChange={(e) => updateFormData('longitude', parseFloat(e.target.value) || null)}
+                        placeholder="Contoh: 106.816666"
+                      />
+                    </div>
+                  </div>
+                </details>
               </div>
             </div>
           </div>
@@ -347,10 +387,18 @@ export default function BuatPengaduanPage() {
                 {formData.latitude && formData.longitude && (
                   <div>
                     <h4 className="font-medium mb-2">Lokasi:</h4>
-                    <p className="text-foreground">
-                      <MapPin className="w-4 h-4 inline mr-1" />
-                      {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
-                    </p>
+                    <div className="h-48 rounded-lg overflow-hidden border">
+                      <Map
+                        initialCoordinates={[formData.longitude, formData.latitude]}
+                        initialZoom={15}
+                        markers={[{
+                          coordinates: [formData.longitude, formData.latitude],
+                          popup: `<div class="p-2"><h3 class="font-semibold">Lokasi Pengaduan</h3></div>`,
+                          color: "#ef4444"
+                        }]}
+                        className="w-full h-full"
+                      />
+                    </div>
                   </div>
                 )}
               </CardContent>
