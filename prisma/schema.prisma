@@ -91,10 +91,12 @@ model Notifikasi {
   pengaduanId  String?
   layananId    String?
   balasanId    String?
+  produkId     String?
   balasan      Balasan?  @relation(fields: [balasanId], references: [id], onDelete: Cascade)
   pengaduan    Pengaduan?  @relation(fields: [pengaduanId], references: [id], onDelete: Cascade)
   berita       Berita?   @relation(fields: [beritaId], references: [id], onDelete: Cascade)
   layanan      Layanan?  @relation(fields: [layananId], references: [id], onDelete: Cascade)
+  produk       Produk?   @relation(fields: [produkId], references: [id], onDelete: Cascade)
 
   @@index([untukAdmin])
   @@index([dibaca])
@@ -105,6 +107,7 @@ model Notifikasi {
   @@index([pengaduanId])
   @@index([layananId])
   @@index([balasanId])
+  @@index([produkId])
 }
 
 model Layanan {
@@ -155,6 +158,63 @@ model BalasanLayanan {
   @@index([createdAt])
   @@index([dariAdmin])
   @@index([layananId, createdAt])
+}
+
+model KategoriProduk {
+  id          String   @id @default(cuid())
+  nama        String   @unique
+  deskripsi   String?
+  icon        String?  // Optional icon URL
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  produk      Produk[]
+  
+  @@index([nama])
+  @@index([createdAt])
+}
+
+model Produk {
+  id           String        @id @default(cuid())
+  judul        String
+  deskripsi    String
+  harga        Float
+  stok         Int           @default(0)
+  kategoriId   String
+  gambar       String?       // JSON string array image URLs (max 5)
+  status       StatusProduk  @default(PENDING)
+  dariAdmin    Boolean       @default(false)
+  views        Int           @default(0) // Page view counter
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  kategori     KategoriProduk @relation(fields: [kategoriId], references: [id])
+  pesanan      Pesanan[]
+  notifikasi   Notifikasi[]
+  
+  @@index([kategoriId])
+  @@index([status])
+  @@index([dariAdmin])
+  @@index([createdAt])
+  @@index([views])
+  @@index([status, createdAt])
+}
+
+model Pesanan {
+  id         String       @id @default(cuid())
+  produkId   String
+  nama       String
+  nomorWA    String       // Format: 62xxx
+  jumlah     Int          @default(1)
+  total      Float
+  status     StatusPesanan @default(BARU)
+  pesan      String?      // Optional message from buyer
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  produk     Produk       @relation(fields: [produkId], references: [id])
+  
+  @@index([produkId])
+  @@index([nama])
+  @@index([status])
+  @@index([createdAt])
 }
 
 enum Status {
@@ -216,4 +276,25 @@ enum TipeNotif {
   INFO
   BARU
   UPDATE
+  PRODUK_PENGGUNAJUAN_BARU
+  PRODUK_PENGGUNAJUAN_DITERIMA
+  PRODUK_PENGGUNAJUAN_DITOLAK
+  PRODUK_BARU_ADMIN
+  PESANAN_BARU
+}
+
+enum StatusProduk {
+  DRAFT        // Draft admin (belum tersedia)
+  PENDING      // Pending review dari user submission
+  APPROVED     // Approved dan aktif di marketplace
+  REJECTED     // Rejected oleh admin
+  ACTIVE       // Aktif di marketplace
+  INACTIVE     // Non-aktif (dihapus admin)
+}
+
+enum StatusPesanan {
+  BARU         // Order baru
+  DIPROSES     // Sedang diproses penjual
+  SELESAI      // Transaksi selesai
+  BATAL        // Order dibatalkan
 }

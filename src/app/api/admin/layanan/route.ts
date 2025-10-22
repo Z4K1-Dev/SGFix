@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { JenisLayanan, StatusLayanan } from '@prisma/client'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
+// Build-time check to prevent static generation
+export const fetchCache = 'force-no-store'
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)

@@ -2,6 +2,12 @@ import { db } from '@/lib/db'
 import { StatusLayanan } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
+// Build-time check to prevent static generation
+export const fetchCache = 'force-no-store'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

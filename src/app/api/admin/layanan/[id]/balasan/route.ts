@@ -1,6 +1,12 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
+// Build-time check to prevent static generation
+export const fetchCache = 'force-no-store'
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

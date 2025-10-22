@@ -109,6 +109,26 @@ const LayananIcon = ({ className = "w-5 h-5" }) => (
     <polyline points="10,9 9,9 8,9"/>
   </svg>
 );
+const EpasarIcon = ({ className = "w-5 h-5" }) => (
+<svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="32" 
+    height="32" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    stroke-width="1.75" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+    className={className}
+  >
+    <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/>
+    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+    <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/>
+    <path d="M2 7h20"/>
+    <path d="M22 7v3a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V9a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V7"/>
+  </svg>
+);
 interface Tab {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -148,7 +168,7 @@ function ExpandedTabs({ tabs, className, onChange, activeTab }: ExpandedTabsProp
   useEffect(() => {
     // Set active tab based on activeTab prop
     if (activeTab) {
-      const tabMap = ['beranda', 'berita', 'pengaduan', 'layanan', null, 'profile'];
+      const tabMap = ['beranda', 'berita', 'pengaduan', 'layanan', 'epasar', null, 'profile'];
       const index = tabMap.indexOf(activeTab);
       if (index !== -1) {
         // Use setTimeout to avoid synchronous setState in effect
@@ -245,6 +265,7 @@ export default function Tabs2({ onChange, activeTab }: { onChange?: (index: numb
     { title: "Berita", icon: FileText },
     { title: "Pengaduan", icon: Pengaduan },
     { title: "Layanan", icon: LayananIcon },
+    { title: "e-Pasar", icon: EpasarIcon },
     { type: "separator" },
     { title: "Profile", icon: UserIcon },
 //    { title: "Settings", icon: SettingsIcon },

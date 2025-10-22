@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pengaduanQueries } from '@/lib/db-optimized'
 import { withCache, generateCacheKey, invalidateCachePattern } from '@/lib/cache'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 /**
  * Optimized pengaduan API with pagination and caching
  */

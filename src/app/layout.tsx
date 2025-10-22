@@ -1,5 +1,6 @@
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
+import ServiceWorkerProvider from '@/components/ServiceWorkerProvider'
 import { Metadata } from 'next'
 import './globals.css'
 
@@ -73,6 +74,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <ServiceWorkerProvider />
           {children}
         </ThemeProvider>
         <Toaster />

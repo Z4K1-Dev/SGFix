@@ -7,7 +7,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 
 import { ChartAreaInteractive } from '@/components/ui/chart-area-interactive'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -15,13 +15,16 @@ import { ChartPieLayanan } from '@/components/ui/pie-chart-layanan'
 
 
 import EditBeritaForm from '@/components/edit-berita-form'
+import { LucideIcon } from '@/components/ui/lucide-icon'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { toast as appToast } from '@/hooks/use-toast'
 import { playNotifSound } from '@/lib/notif-sound'
 import { connectSocket } from '@/lib/socket-client'
+import { Produk, KategoriProduk, Pesanan } from '@/types/epasar'
+
 import '@/styles/mdxeditor-theme.css'
 import {
   BlockTypeSelect,
@@ -63,25 +66,34 @@ import {
     Edit,
     Eye,
     FileText,
+    Filter,
     Home,
     Image,
     LayoutGrid,
     MessageSquare,
     Moon,
+    Package,
     PanelLeftClose,
     PanelLeftOpen,
     Plus,
     RefreshCw,
     Save,
+    Search,
     Send,
     Settings,
+    ShoppingCart,
+    Store,
     Sun,
     Trash2,
+    TreePine,
     TrendingDown,
     TrendingUp,
+    Users,
     Wifi,
     WifiOff,
-    X
+    X,
+    cowHead,
+    farm
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -513,6 +525,40 @@ export default function AdminPage() {
   const [pengaduan, setPengaduan] = useState<Pengaduan[]>([])
   const [layanan, setLayanan] = useState<Layanan[]>([])
   const [notifikasi, setNotifikasi] = useState<Notifikasi[]>([])
+  
+  // e-Pasar state
+  const [products, setProducts] = useState<Produk[]>([])
+  const [categories, setCategories] = useState<KategoriProduk[]>([])
+  const [orders, setOrders] = useState<Pesanan[]>([])
+  const [epasarLoading, setEpasarLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Produk | null>(null)
+  const [epasarStats, setEpasarStats] = useState({
+    totalProducts: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    lowStock: 0
+  })
+  const [epasarFormData, setEpasarFormData] = useState({
+    nama: '',
+    deskripsi: '',
+    harga: '',
+    stok: '',
+    kategoriId: '',
+    gambar: '',
+    status: 'ACTIVE'
+  })
+
+  // Kategori Form State
+  const [kategoriFormData, setKategoriFormData] = useState({
+    nama: '',
+    deskripsi: '',
+    icon: ''
+  })
+  const [isKategoriDialogOpen, setIsKategoriDialogOpen] = useState(false)
+  const [editingKategori, setEditingKategori] = useState<KategoriProduk | null>(null)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -609,16 +655,16 @@ export default function AdminPage() {
   }, [realtimeNotif])
 
   // Form states
-  const [kategoriForm, setKategoriForm] = useState({
+  const [kategoriBeritaForm, setKategoriBeritaForm] = useState({
     nama: '',
     deskripsi: ''
   })
-  const [editKategoriForm, setEditKategoriForm] = useState({
+  const [editKategoriBeritaForm, setEditKategoriBeritaForm] = useState({
     id: '',
     nama: '',
     deskripsi: ''
   })
-  const [isEditKategoriOpen, setIsEditKategoriOpen] = useState(false)
+  const [isEditKategoriBeritaOpen, setIsEditKategoriBeritaOpen] = useState(false)
   const [balasanForm, setBalasanForm] = useState('')
   const [selectedPengaduan, setSelectedPengaduan] = useState<string | null>(null)
   const [selectedLayanan, setSelectedLayanan] = useState<string | null>(null)
@@ -716,10 +762,226 @@ export default function AdminPage() {
     }
   }
 
+  // e-Pasar functions
+  const fetchEpasarData = async () => {
+    try {
+      const [productsRes, categoriesRes, ordersRes] = await Promise.all([
+        fetch('/api/epasar/produk'),
+        fetch('/api/epasar/kategori'),
+        fetch('/api/epasar/pesanan')
+      ]);
+
+      const productsResponse = await productsRes.json();
+      const categoriesResponse = await categoriesRes.json();
+      const ordersResponse = await ordersRes.json();
+
+      // Handle different response structures
+      const productsData = productsResponse.data || productsResponse;
+      const categoriesData = categoriesResponse.data || categoriesResponse;
+      const ordersData = ordersResponse.data || ordersResponse;
+
+      setProducts(Array.isArray(productsData) ? productsData : []);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      setOrders(Array.isArray(ordersData) ? ordersData : []);
+
+      // Calculate stats
+      const totalRevenue = ordersData.reduce((sum: number, order: Pesanan) => 
+        order.status === 'SELESAI' ? sum + (order.total || order.totalHarga || 0) : sum, 0
+      );
+
+      setEpasarStats({
+        totalProducts: Array.isArray(productsData) ? productsData.length : 0,
+        totalOrders: Array.isArray(ordersData) ? ordersData.length : 0,
+        totalRevenue,
+        lowStock: Array.isArray(productsData) ? productsData.filter((p: Produk) => p.stok < 10).length : 0
+      });
+
+    } catch (error) {
+      console.error('Error fetching e-Pasar data:', error);
+      toast.error('Gagal memuat data e-Pasar');
+    } finally {
+      setEpasarLoading(false);
+    }
+  };
+
+  const handleEpasarSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const url = editingProduct 
+        ? `/api/epasar/produk/${editingProduct.id}`
+        : '/api/epasar/produk';
+      
+      const method = editingProduct ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          judul: epasarFormData.nama,
+          deskripsi: epasarFormData.deskripsi,
+          harga: parseInt(epasarFormData.harga),
+          stok: parseInt(epasarFormData.stok),
+          kategoriId: epasarFormData.kategoriId,
+          gambar: epasarFormData.gambar.split(',').map(g => g.trim()).filter(Boolean),
+          status: epasarFormData.status
+        })
+      });
+
+      if (response.ok) {
+        toast.success(editingProduct ? 'Produk berhasil diperbarui' : 'Produk berhasil ditambahkan');
+        setIsEditDialogOpen(false);
+        resetEpasarForm();
+        fetchEpasarData();
+      } else {
+        toast.error('Gagal menyimpan produk');
+      }
+    } catch (error) {
+      console.error('Error saving product:', error);
+      toast.error('Terjadi kesalahan');
+    }
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus produk ini?')) return;
+
+    try {
+      const response = await fetch(`/api/epasar/produk/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        toast.success('Produk berhasil dihapus');
+        fetchEpasarData();
+      } else {
+        toast.error('Gagal menghapus produk');
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Terjadi kesalahan');
+    }
+  };
+
+  const handleEditProduct = (product: Produk) => {
+    setEditingProduct(product);
+    setEpasarFormData({
+      nama: product.judul,
+      deskripsi: product.deskripsi,
+      harga: product.harga.toString(),
+      stok: product.stok.toString(),
+      kategoriId: product.kategoriId,
+      gambar: product.gambar.join(', '),
+      status: product.status
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const resetEpasarForm = () => {
+    setEpasarFormData({
+      nama: '',
+      deskripsi: '',
+      harga: '',
+      stok: '',
+      kategoriId: '',
+      gambar: '',
+      status: 'ACTIVE'
+    });
+    setEditingProduct(null);
+  };
+
+  // Kategori functions
+  const handleKategoriSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const url = editingKategori 
+        ? `/api/epasar/kategori/${editingKategori.id}`
+        : '/api/epasar/kategori';
+      
+      const method = editingKategori ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nama: kategoriFormData.nama,
+          deskripsi: kategoriFormData.deskripsi,
+          icon: kategoriFormData.icon || null
+        })
+      });
+
+      if (response.ok) {
+        toast.success(editingKategori ? 'Kategori berhasil diperbarui' : 'Kategori berhasil ditambahkan');
+        setIsKategoriDialogOpen(false);
+        resetKategoriForm();
+        fetchEpasarData();
+      } else {
+        toast.error('Gagal menyimpan kategori');
+      }
+    } catch (error) {
+      console.error('Error saving kategori:', error);
+      toast.error('Terjadi kesalahan');
+    }
+  };
+
+  const handleDeleteKategoriProduk = async (id: string) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus kategori ini?')) return;
+
+    try {
+      const response = await fetch(`/api/epasar/kategori/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        toast.success('Kategori berhasil dihapus');
+        fetchEpasarData();
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Gagal menghapus kategori');
+      }
+    } catch (error) {
+      console.error('Error deleting kategori:', error);
+      toast.error('Terjadi kesalahan');
+    }
+  };
+
+  const handleEditKategoriProduk = (kategori: KategoriProduk) => {
+    setEditingKategori(kategori);
+    setKategoriFormData({
+      nama: kategori.nama,
+      deskripsi: kategori.deskripsi,
+      icon: kategori.icon || ''
+    });
+    setIsKategoriDialogOpen(true);
+  };
+
+  const resetKategoriForm = () => {
+    setKategoriFormData({
+      nama: '',
+      deskripsi: '',
+      icon: ''
+    });
+    setEditingKategori(null);
+  };
+
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.judul.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.deskripsi.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || product.kategoriId === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
   useEffect(() => {
     // Use setTimeout to avoid synchronous setState in effect
     setTimeout(() => fetchData(), 0)
   }, [])
+
+  useEffect(() => {
+    // Fetch e-Pasar data when e-Pasar tabs become active
+    if (activeTab === 'epasar-produk' || activeTab === 'epasar-kategori') {
+      fetchEpasarData()
+    }
+  }, [activeTab])
 
   useEffect(() => {
     // Apply dark mode
@@ -749,62 +1011,62 @@ export default function AdminPage() {
     }
   }, [])
 
-  const handleCreateKategori = async () => {
+  const handleCreateKategoriBerita = async () => {
     try {
       const response = await fetch('/api/kategori', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(kategoriForm)
+        body: JSON.stringify(kategoriBeritaForm)
       })
 
       if (response.ok) {
-        toast.success('Kategori berhasil dibuat!')
-        setKategoriForm({ nama: '', deskripsi: '' })
+        toast.success('Kategori berita berhasil dibuat!')
+        setKategoriBeritaForm({ nama: '', deskripsi: '' })
         fetchData()
       } else {
-        toast.error('Gagal membuat kategori')
+        toast.error('Gagal membuat kategori berita')
       }
     } catch (error) {
       toast.error('Terjadi kesalahan')
     }
   }
 
-  const handleEditKategori = (kategori: Kategori) => {
-    setEditKategoriForm({
+  const handleEditKategoriBerita = (kategori: Kategori) => {
+    setEditKategoriBeritaForm({
       id: kategori.id,
       nama: kategori.nama,
       deskripsi: kategori.deskripsi || ''
     })
-    setIsEditKategoriOpen(true)
+    setIsEditKategoriBeritaOpen(true)
   }
 
-  const handleUpdateKategori = async () => {
+  const handleUpdateKategoriBerita = async () => {
     try {
-      const response = await fetch(`/api/kategori/${editKategoriForm.id}`, {
+      const response = await fetch(`/api/kategori/${editKategoriBeritaForm.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nama: editKategoriForm.nama,
-          deskripsi: editKategoriForm.deskripsi
+          nama: editKategoriBeritaForm.nama,
+          deskripsi: editKategoriBeritaForm.deskripsi
         })
       })
 
       if (response.ok) {
-        toast.success('Kategori berhasil diperbarui!')
-        setIsEditKategoriOpen(false)
-        setEditKategoriForm({ id: '', nama: '', deskripsi: '' })
+        toast.success('Kategori berita berhasil diperbarui!')
+        setIsEditKategoriBeritaOpen(false)
+        setEditKategoriBeritaForm({ id: '', nama: '', deskripsi: '' })
         fetchData()
       } else {
         const error = await response.json()
-        toast.error(error.error || 'Gagal memperbarui kategori')
+        toast.error(error.error || 'Gagal memperbarui kategori berita')
       }
     } catch (error) {
       toast.error('Terjadi kesalahan')
     }
   }
 
-  const handleDeleteKategori = async (id: string, nama: string) => {
-    if (!window.confirm(`Apakah Anda yakin ingin menghapus kategori "${nama}"?`)) {
+  const handleDeleteKategoriBerita = async (id: string, nama: string) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus kategori berita "${nama}"?`)) {
       return
     }
 
@@ -814,11 +1076,11 @@ export default function AdminPage() {
       })
 
       if (response.ok) {
-        toast.success('Kategori berhasil dihapus!')
+        toast.success('Kategori berita berhasil dihapus!')
         fetchData()
       } else {
         const error = await response.json()
-        toast.error(error.error || 'Gagal menghapus kategori')
+        toast.error(error.error || 'Gagal menghapus kategori berita')
       }
     } catch (error) {
       toast.error('Terjadi kesalahan')
@@ -1203,6 +1465,15 @@ export default function AdminPage() {
     },
     { id: 'pengaduan', label: 'Pengaduan', icon: MessageSquare },
     { id: 'layanan', label: 'Layanan', icon: FileText },
+    {
+      id: 'epasar',
+      label: 'e-Pasar',
+      icon: Store,
+      children: [
+        { id: 'epasar-produk', label: 'Produk', parentId: 'epasar' },
+        { id: 'epasar-kategori', label: 'Kategori', parentId: 'epasar' }
+      ]
+    },
     { id: 'notifikasi', label: 'Notifikasi', icon: Bell },
   ]
 
@@ -1232,7 +1503,7 @@ export default function AdminPage() {
             {sidebarOpen && (
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center">
-                  <FileText className="text-sidebar-primary-foreground" size={28} />
+                  <FileText size={20} />
                 </div>
                 <span className="font-bold text-lg text-sidebar-foreground">SmartGov</span>
               </div>
@@ -1859,20 +2130,20 @@ export default function AdminPage() {
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="mr-2" size={18} />
-                      Tambah Kategori
+                      Tambah Kategori Berita
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Tambah Kategori Baru</DialogTitle>
+                      <DialogTitle>Tambah Kategori Berita Baru</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="nama">Nama Kategori</Label>
                         <Input
                           id="nama"
-                          value={kategoriForm.nama}
-                          onChange={(e) => setKategoriForm({ ...kategoriForm, nama: e.target.value })}
+                          value={kategoriBeritaForm.nama}
+                          onChange={(e) => setKategoriBeritaForm({ ...kategoriBeritaForm, nama: e.target.value })}
                           placeholder="Masukkan nama kategori"
                         />
                       </div>
@@ -1880,33 +2151,33 @@ export default function AdminPage() {
                         <Label htmlFor="deskripsi">Deskripsi</Label>
                         <Textarea
                           id="deskripsi"
-                          value={kategoriForm.deskripsi}
-                          onChange={(e) => setKategoriForm({ ...kategoriForm, deskripsi: e.target.value })}
+                          value={kategoriBeritaForm.deskripsi}
+                          onChange={(e) => setKategoriBeritaForm({ ...kategoriBeritaForm, deskripsi: e.target.value })}
                           placeholder="Masukkan deskripsi kategori"
                           rows={3}
                         />
                       </div>
-                      <Button onClick={handleCreateKategori} className="w-full">
-                        Simpan Kategori
+                      <Button onClick={handleCreateKategoriBerita} className="w-full">
+                        Simpan Kategori Berita
                       </Button>
                     </div>
                   </DialogContent>
                 </Dialog>
               </div>
 
-              {/* Edit Kategori Dialog */}
-              <Dialog open={isEditKategoriOpen} onOpenChange={setIsEditKategoriOpen}>
+              {/* Edit Kategori Berita Dialog */}
+              <Dialog open={isEditKategoriBeritaOpen} onOpenChange={setIsEditKategoriBeritaOpen}>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Edit Kategori</DialogTitle>
+                    <DialogTitle>Edit Kategori Berita</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="edit-nama">Nama Kategori</Label>
                       <Input
                         id="edit-nama"
-                        value={editKategoriForm.nama}
-                        onChange={(e) => setEditKategoriForm({ ...editKategoriForm, nama: e.target.value })}
+                        value={editKategoriBeritaForm.nama}
+                        onChange={(e) => setEditKategoriBeritaForm({ ...editKategoriBeritaForm, nama: e.target.value })}
                         placeholder="Masukkan nama kategori"
                       />
                     </div>
@@ -1914,8 +2185,8 @@ export default function AdminPage() {
                       <Label htmlFor="edit-deskripsi">Deskripsi</Label>
                       <Textarea
                         id="edit-deskripsi"
-                        value={editKategoriForm.deskripsi}
-                        onChange={(e) => setEditKategoriForm({ ...editKategoriForm, deskripsi: e.target.value })}
+                        value={editKategoriBeritaForm.deskripsi}
+                        onChange={(e) => setEditKategoriBeritaForm({ ...editKategoriBeritaForm, deskripsi: e.target.value })}
                         placeholder="Masukkan deskripsi kategori"
                         rows={3}
                       />
@@ -1923,13 +2194,13 @@ export default function AdminPage() {
                     <div className="flex gap-2">
                       <Button 
                         variant="outline" 
-                        onClick={() => setIsEditKategoriOpen(false)}
+                        onClick={() => setIsEditKategoriBeritaOpen(false)}
                         className="flex-1"
                       >
                         Batal
                       </Button>
-                      <Button onClick={handleUpdateKategori} className="flex-1">
-                        Perbarui Kategori
+                      <Button onClick={handleUpdateKategoriBerita} className="flex-1">
+                        Perbarui Kategori Berita
                       </Button>
                     </div>
                   </div>
@@ -1944,20 +2215,20 @@ export default function AdminPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleEditKategori(item)
+                            handleEditKategoriBerita(item)
                           }}
                           className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
-                          title="Edit kategori"
+                          title="Edit kategori berita"
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleDeleteKategori(item.id, item.nama)
+                            handleDeleteKategoriBerita(item.id, item.nama)
                           }}
                           className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
-                          title="Hapus kategori"
+                          title="Hapus kategori berita"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -2306,6 +2577,531 @@ export default function AdminPage() {
                   </Card>
                 )}
               </div>
+            </TabsContent>
+
+            {/* Tab e-Pasar - Produk */}
+            <TabsContent value="epasar-produk" className="space-y-6 px-6 mt-6">
+              {epasarLoading ? (
+                <div className="text-center py-8">Memuat data e-Pasar...</div>
+              ) : (
+                <>
+                  {/* Header */}
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-2xl font-bold">Kelola e-Pasar</h2>
+                      <p className="text-muted-foreground">Kelola produk dan pesanan e-Pasar Pagesangan Timur</p>
+                    </div>
+                  </div>
+
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Total Produk</p>
+                            <p className="text-2xl font-bold">{epasarStats.totalProducts}</p>
+                          </div>
+                          <Package className="h-8 w-8 text-blue-600" />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Total Pesanan</p>
+                            <p className="text-2xl font-bold">{epasarStats.totalOrders}</p>
+                          </div>
+                          <ShoppingCart className="h-8 w-8 text-green-600" />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Total Pendapatan</p>
+                            <p className="text-2xl font-bold">Rp {epasarStats.totalRevenue.toLocaleString('id-ID')}</p>
+                          </div>
+                          <TrendingUp className="h-8 w-8 text-purple-600" />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Stok Menipis</p>
+                            <p className="text-2xl font-bold text-orange-600">{epasarStats.lowStock}</p>
+                          </div>
+                          <Users className="h-8 w-8 text-orange-600" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Main Content */}
+                  <Tabs defaultValue="products" className="space-y-4">
+                    <TabsList>
+                      <TabsTrigger value="products">Produk</TabsTrigger>
+                      <TabsTrigger value="orders">Pesanan</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="products" className="space-y-4">
+                      {/* Search and Filter */}
+                      <Card>
+                        <CardContent className="p-6">
+                          <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex-1">
+                              <div className="relative">
+                                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  placeholder="Cari produk..."
+                                  value={searchTerm}
+                                  onChange={(e) => setSearchTerm(e.target.value)}
+                                  className="pl-10"
+                                />
+                              </div>
+                            </div>
+                            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                              <SelectTrigger className="w-full sm:w-48">
+                                <Filter className="h-4 w-4 mr-2" />
+                                <SelectValue placeholder="Kategori" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">Semua Kategori</SelectItem>
+                                {categories.map((category) => (
+                                  <SelectItem key={category.id} value={category.id}>
+                                    <div className="flex items-center gap-2">
+                                      {category.icon && <LucideIcon name={category.icon} size={16} />}
+                                      {category.nama}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                              <DialogTrigger asChild>
+                                <Button onClick={resetEpasarForm}>
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Tambah Produk
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                <DialogHeader>
+                                  <DialogTitle>
+                                    {editingProduct ? 'Edit Produk' : 'Tambah Produk Baru'}
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    {editingProduct ? 'Perbarui informasi produk' : 'Tambahkan produk baru ke katalog'}
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <form onSubmit={handleEpasarSubmit} className="space-y-4">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <Label htmlFor="nama">Judul Produk</Label>
+                                      <Input
+                                        id="nama"
+                                        value={epasarFormData.nama}
+                                        onChange={(e) => setEpasarFormData(prev => ({ ...prev, nama: e.target.value }))}
+                                        required
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="kategori">Kategori</Label>
+                                      <Select value={epasarFormData.kategoriId} onValueChange={(value) => setEpasarFormData(prev => ({ ...prev, kategoriId: value }))}>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Pilih kategori" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {categories.map((category) => (
+                                            <SelectItem key={category.id} value={category.id}>
+                                              <div className="flex items-center gap-2">
+                                                {category.icon && <LucideIcon name={category.icon} size={16} />}
+                                                {category.nama}
+                                              </div>
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  
+                                  <div>
+                                    <Label htmlFor="deskripsi">Deskripsi</Label>
+                                    <Textarea
+                                      id="deskripsi"
+                                      value={epasarFormData.deskripsi}
+                                      onChange={(e) => setEpasarFormData(prev => ({ ...prev, deskripsi: e.target.value }))}
+                                      rows={3}
+                                    />
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                      <Label htmlFor="harga">Harga (Rp)</Label>
+                                      <Input
+                                        id="harga"
+                                        type="number"
+                                        value={epasarFormData.harga}
+                                        onChange={(e) => setEpasarFormData(prev => ({ ...prev, harga: e.target.value }))}
+                                        required
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="stok">Stok</Label>
+                                      <Input
+                                        id="stok"
+                                        type="number"
+                                        value={epasarFormData.stok}
+                                        onChange={(e) => setEpasarFormData(prev => ({ ...prev, stok: e.target.value }))}
+                                        required
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="status">Status</Label>
+                                      <Select value={epasarFormData.status} onValueChange={(value) => setEpasarFormData(prev => ({ ...prev, status: value }))}>
+                                        <SelectTrigger>
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="ACTIVE">Aktif</SelectItem>
+                                          <SelectItem value="INACTIVE">Tidak Aktif</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <Label htmlFor="gambar">URL Gambar (pisahkan dengan koma)</Label>
+                                    <Textarea
+                                      id="gambar"
+                                      value={epasarFormData.gambar}
+                                      onChange={(e) => setEpasarFormData(prev => ({ ...prev, gambar: e.target.value }))}
+                                      placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                                      rows={2}
+                                    />
+                                  </div>
+
+                                  <DialogFooter>
+                                    <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                                      Batal
+                                    </Button>
+                                    <Button type="submit">
+                                      {editingProduct ? 'Perbarui' : 'Simpan'}
+                                    </Button>
+                                  </DialogFooter>
+                                </form>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Products Table */}
+                      <Card>
+                        <CardContent className="p-6">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Produk</TableHead>
+                                <TableHead>Kategori</TableHead>
+                                <TableHead>Harga</TableHead>
+                                <TableHead>Stok</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Aksi</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {filteredProducts.length === 0 ? (
+                                <TableRow>
+                                  <TableCell colSpan={6} className="text-center py-8">
+                                    Tidak ada produk yang ditemukan
+                                  </TableCell>
+                                </TableRow>
+                              ) : (
+                                filteredProducts.map((product) => (
+                                  <TableRow key={product.id}>
+                                    <TableCell>
+                                      <div>
+                                        <div className="font-medium">{product.judul}</div>
+                                        <div className="text-sm text-muted-foreground line-clamp-1">
+                                          {product.deskripsi}
+                                        </div>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>{product.kategori?.nama || '-'}</TableCell>
+                                    <TableCell>Rp {product.harga.toLocaleString('id-ID')}</TableCell>
+                                    <TableCell>
+                                      <span className={product.stok < 10 ? 'text-orange-600 font-medium' : ''}>
+                                        {product.stok}
+                                      </span>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge variant={product.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                                        {product.status === 'ACTIVE' ? 'Aktif' : 'Tidak Aktif'}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleEditProduct(product)}
+                                        >
+                                          <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleDeleteProduct(product.id)}
+                                          className="text-red-600 hover:text-red-700"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              )}
+                            </TableBody>
+                          </Table>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+
+                    <TabsContent value="orders" className="space-y-4">
+                      <Card>
+                        <CardContent className="p-6">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Pelanggan</TableHead>
+                                <TableHead>Produk</TableHead>
+                                <TableHead>Jumlah</TableHead>
+                                <TableHead>Total</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Tanggal</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {orders.length === 0 ? (
+                                <TableRow>
+                                  <TableCell colSpan={6} className="text-center py-8">
+                                    Tidak ada pesanan yang ditemukan
+                                  </TableCell>
+                                </TableRow>
+                              ) : (
+                                orders.map((order) => (
+                                  <TableRow key={order.id}>
+                                    <TableCell>
+                                      <div>
+                                        <div className="font-medium">{order.nama}</div>
+                                        <div className="text-sm text-muted-foreground">{order.nomorWA}</div>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>{order.produk?.judul || '-'}</TableCell>
+                                    <TableCell>{order.jumlah}</TableCell>
+                                    <TableCell>Rp {order.total.toLocaleString('id-ID')}</TableCell>
+                                    <TableCell>
+                                      <Badge 
+                                        variant={
+                                          order.status === 'SELESAI' ? 'default' : 
+                                          order.status === 'DIPROSES' ? 'secondary' : 
+                                          'outline'
+                                        }
+                                      >
+                                        {order.status}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                      {new Date(order.createdAt).toLocaleDateString('id-ID')}
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              )}
+                            </TableBody>
+                          </Table>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
+                </>
+              )}
+            </TabsContent>
+
+            {/* Tab e-Pasar - Kategori */}
+            <TabsContent value="epasar-kategori" className="space-y-6 px-6 mt-6">
+              {epasarLoading ? (
+                <div className="text-center py-8">Memuat data kategori...</div>
+              ) : (
+                <>
+                  {/* Header */}
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-2xl font-bold">Kelola Kategori Produk</h2>
+                      <p className="text-muted-foreground">Kelola kategori produk e-Pasar Pagesangan Timur</p>
+                    </div>
+                    <Dialog open={isKategoriDialogOpen} onOpenChange={setIsKategoriDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button onClick={resetKategoriForm}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Tambah Kategori
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>
+                            {editingKategori ? 'Edit Kategori' : 'Tambah Kategori Baru'}
+                          </DialogTitle>
+                          <DialogDescription>
+                            {editingKategori ? 'Perbarui informasi kategori' : 'Tambahkan kategori produk baru'}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleKategoriSubmit} className="space-y-4">
+                          <div>
+                            <Label htmlFor="kategori-nama">Nama Kategori</Label>
+                            <Input
+                              id="kategori-nama"
+                              value={kategoriFormData.nama}
+                              onChange={(e) => setKategoriFormData(prev => ({ ...prev, nama: e.target.value }))}
+                              placeholder="Masukkan nama kategori"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="kategori-deskripsi">Deskripsi</Label>
+                            <Textarea
+                              id="kategori-deskripsi"
+                              value={kategoriFormData.deskripsi}
+                              onChange={(e) => setKategoriFormData(prev => ({ ...prev, deskripsi: e.target.value }))}
+                              placeholder="Deskripsi kategori"
+                              rows={3}
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="kategori-icon">Icon (Opsional)</Label>
+                            <Input
+                              id="kategori-icon"
+                              value={kategoriFormData.icon}
+                              onChange={(e) => setKategoriFormData(prev => ({ ...prev, icon: e.target.value }))}
+                              placeholder="Nama icon Lucide (contoh: ShoppingCart)"
+                            />
+                            {kategoriFormData.icon && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">Preview:</span>
+                                <LucideIcon name={kategoriFormData.icon} className="text-primary" />
+                                <span className="text-sm text-muted-foreground">{kategoriFormData.icon}</span>
+                              </div>
+                            )}
+                            <div className="mt-2">
+                              <p className="text-xs text-muted-foreground mb-1">Icon yang tersedia:</p>
+                              <div className="flex flex-wrap gap-2">
+                                {['ShoppingCart', 'Home', 'Building', 'Cow', 'Wheat', 'Utensils', 'User', 'Car', 'Fish', 'Smartphone'].map(icon => (
+                                  <button
+                                    key={icon}
+                                    type="button"
+                                    onClick={() => setKategoriFormData(prev => ({ ...prev, icon }))}
+                                    className="inline-flex items-center gap-1 px-2 py-1 text-xs border border-border rounded hover:bg-muted"
+                                    title={icon}
+                                  >
+                                    <LucideIcon name={icon} size={14} />
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsKategoriDialogOpen(false)}>
+                              Batal
+                            </Button>
+                            <Button type="submit">
+                              {editingKategori ? 'Perbarui' : 'Simpan'}
+                            </Button>
+                          </DialogFooter>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+
+                  {/* Kategori Table */}
+                  <Card>
+                    <CardContent className="p-6">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nama Kategori</TableHead>
+                            <TableHead>Deskripsi</TableHead>
+                            <TableHead>Icon</TableHead>
+                            <TableHead>Jumlah Produk</TableHead>
+                            <TableHead>Aksi</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {categories.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center py-8">
+                                Belum ada kategori yang ditambahkan
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            categories.map((kategori) => (
+                              <TableRow key={kategori.id}>
+                                <TableCell className="font-medium">{kategori.nama}</TableCell>
+                                <TableCell>
+                                  <div className="max-w-xs truncate">
+                                    {kategori.deskripsi || '-'}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    {kategori.icon ? (
+                                      <LucideIcon name={kategori.icon} className="text-primary" />
+                                    ) : (
+                                      <span className="text-muted-foreground">-</span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline">
+                                    {products.filter(p => p.kategoriId === kategori.id).length}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleEditKategoriProduk(kategori)}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteKategoriProduk(kategori.id)}
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </TabsContent>
 
             {/* Tab Notifikasi */}
