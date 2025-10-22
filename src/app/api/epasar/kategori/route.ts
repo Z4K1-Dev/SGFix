@@ -44,9 +44,16 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Fetch from database
+    // Fetch from database with optimized select
     const kategori = await db.kategoriProduk.findMany({
       where,
+      select: {
+        id: true,
+        nama: true,
+        deskripsi: true,
+        icon: true,
+        createdAt: true
+      },
       orderBy: {
         nama: 'asc'
       }

@@ -32,7 +32,7 @@ class EPasarAPI {
     } catch (error) {
       clearTimeout(timeoutId);
 
-      if (retries > 0 && error.name !== 'AbortError') {
+      if (retries > 0 && error instanceof Error && error.name !== 'AbortError') {
         console.log(`Retrying... (${retries} attempts left)`);
         await new Promise(resolve => setTimeout(resolve, 1000));
         return this.fetchWithTimeout(url, options, timeout, retries - 1);
@@ -156,88 +156,6 @@ class EPasarAPI {
     epasarCache.invalidateProductCache(id);
     
     return response.ok;
-  }
-
-  // Create pesanan dengan offline support
-  async createPesanan(pesananData: any) {
-    try {
-      const response = await this.fetchWithTimeout(`${this.baseURL}/pesanan`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(pesananData)
-      });
-
-      const data = await response.json();
-      return { success: true, data };
-    } catch (error) {
-      // Save to IndexedDB for later sync
-      if ('serviceWorker' in navigator && 'SyncManager' in window) {
-        await this.savePendingOrder(pesananData);
-        await this.registerBackgroundSync();
-      }
-      
-      throw error;
-    }
-  }
-
-  // Save pending order to IndexedDB
-  private async savePendingOrder(orderData: any) {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open('EPasarDB', 1);
-      
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        const db = request.result;
-        const transaction = db.transaction(['pendingOrders'], 'readwrite');
-        const store = transaction.objectStore('pendingOrders');
-        
-        const order = {
-          id: Date.now().toString(),
-          data: orderData,
-          timestamp: Date.now()
-        };
-        
-        const addRequest = store.add(order);
-        addRequest.onsuccess = () => resolve(addRequest.result);
-        addRequest.onerror = () => reject(addRequest.error);
-      };
-      
-      request.onupgradeneeded = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains('pendingOrders')) {
-          db.createObjectStore('pendingOrders', { keyPath: 'id' });
-        }
-      };
-    });
-  }
-
-  // Register background sync
-  private async registerBackgroundSync() {
-    if ('serviceWorker' in navigator && 'SyncManager' in window) {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.sync.register('background-sync-pesanan');
-    }
-  }
-
-  // Get pesanan
-  async getPesanan() {
-    const response = await this.fetchWithTimeout(`${this.baseURL}/pesanan`);
-    return response.json();
-  }
-
-  // Update pesanan status
-  async updatePesananStatus(id: string, status: string) {
-    const response = await this.fetchWithTimeout(`${this.baseURL}/pesanan/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ status })
-    });
-
-    return response.json();
   }
 
   // Batch operations untuk performance

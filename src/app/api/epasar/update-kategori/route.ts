@@ -57,8 +57,8 @@ const kategoriUpdates = [
 export async function POST(request: NextRequest) {
   try {
     const results = {
-      updated: [],
-      errors: []
+      updated: [] as Array<{ id: string; nama: string; deskripsi: string | null; icon: string | null }>,
+      errors: [] as Array<{ nama: string; error: string }>
     }
 
     for (const kategori of kategoriUpdates) {

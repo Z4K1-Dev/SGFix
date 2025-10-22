@@ -91,17 +91,30 @@ export async function GET(request: NextRequest) {
         break
     }
     
-    // Get total count
+    // Get total count with optimized query
     const total = await db.produk.count({ where })
     
-    // Get produk with pagination
+    // Get produk with optimized select and pagination
     const produk = await db.produk.findMany({
       where,
-      include: {
-        kategori: true,
-        _count: {
+      select: {
+        id: true,
+        judul: true,
+        deskripsi: true,
+        harga: true,
+        stok: true,
+        status: true,
+        dariAdmin: true,
+        views: true,
+        createdAt: true,
+        updatedAt: true,
+        gambar: true,
+        kategori: {
           select: {
-            pesanan: true
+            id: true,
+            nama: true,
+            deskripsi: true,
+            icon: true
           }
         }
       },
@@ -113,8 +126,7 @@ export async function GET(request: NextRequest) {
     // Process gambar field (JSON string to array)
     const processedProduk = produk.map(item => ({
       ...item,
-      gambar: item.gambar ? JSON.parse(item.gambar) : [],
-      totalPesanan: item._count.pesanan
+      gambar: item.gambar ? JSON.parse(item.gambar) : []
     }))
     
     const response = {
@@ -162,7 +174,7 @@ export async function POST(request: NextRequest) {
       stok, 
       kategoriId, 
       gambar = [],
-      status = StatusProduk.TERSEDIA,
+      status = StatusProduk.ACTIVE,
       dariAdmin = true
     } = body
     

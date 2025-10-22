@@ -187,34 +187,19 @@ model Produk {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   kategori     KategoriProduk @relation(fields: [kategoriId], references: [id])
-  pesanan      Pesanan[]
   notifikasi   Notifikasi[]
   
+  // Optimized indexes for better query performance
   @@index([kategoriId])
   @@index([status])
   @@index([dariAdmin])
   @@index([createdAt])
   @@index([views])
+  @@index([harga])
   @@index([status, createdAt])
-}
-
-model Pesanan {
-  id         String       @id @default(cuid())
-  produkId   String
-  nama       String
-  nomorWA    String       // Format: 62xxx
-  jumlah     Int          @default(1)
-  total      Float
-  status     StatusPesanan @default(BARU)
-  pesan      String?      // Optional message from buyer
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  produk     Produk       @relation(fields: [produkId], references: [id])
-  
-  @@index([produkId])
-  @@index([nama])
-  @@index([status])
-  @@index([createdAt])
+  @@index([kategoriId, status])
+  @@index([status, createdAt, kategoriId])
+  @@index([judul], map: "idx_produk_judul_text") // For search optimization
 }
 
 enum Status {
@@ -280,7 +265,6 @@ enum TipeNotif {
   PRODUK_PENGGUNAJUAN_DITERIMA
   PRODUK_PENGGUNAJUAN_DITOLAK
   PRODUK_BARU_ADMIN
-  PESANAN_BARU
 }
 
 enum StatusProduk {
@@ -290,11 +274,4 @@ enum StatusProduk {
   REJECTED     // Rejected oleh admin
   ACTIVE       // Aktif di marketplace
   INACTIVE     // Non-aktif (dihapus admin)
-}
-
-enum StatusPesanan {
-  BARU         // Order baru
-  DIPROSES     // Sedang diproses penjual
-  SELESAI      // Transaksi selesai
-  BATAL        // Order dibatalkan
 }

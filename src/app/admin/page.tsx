@@ -15,6 +15,7 @@ import { ChartPieLayanan } from '@/components/ui/pie-chart-layanan'
 
 
 import EditBeritaForm from '@/components/edit-berita-form'
+import CacheManagement from '@/components/admin/cache-management'
 import { LucideIcon } from '@/components/ui/lucide-icon'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -23,7 +24,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast as appToast } from '@/hooks/use-toast'
 import { playNotifSound } from '@/lib/notif-sound'
 import { connectSocket } from '@/lib/socket-client'
-import { Produk, KategoriProduk, Pesanan } from '@/types/epasar'
+import { Produk, KategoriProduk } from '@/types/epasar'
 
 import '@/styles/mdxeditor-theme.css'
 import {
@@ -63,6 +64,7 @@ import {
     ChevronDown,
     ChevronRight,
     Clock,
+    Database,
     Edit,
     Eye,
     FileText,
@@ -91,9 +93,7 @@ import {
     Users,
     Wifi,
     WifiOff,
-    X,
-    cowHead,
-    farm
+    X
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -529,7 +529,6 @@ export default function AdminPage() {
   // e-Pasar state
   const [products, setProducts] = useState<Produk[]>([])
   const [categories, setCategories] = useState<KategoriProduk[]>([])
-  const [orders, setOrders] = useState<Pesanan[]>([])
   const [epasarLoading, setEpasarLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -537,7 +536,6 @@ export default function AdminPage() {
   const [editingProduct, setEditingProduct] = useState<Produk | null>(null)
   const [epasarStats, setEpasarStats] = useState({
     totalProducts: 0,
-    totalOrders: 0,
     totalRevenue: 0,
     lowStock: 0
   })
@@ -765,34 +763,25 @@ export default function AdminPage() {
   // e-Pasar functions
   const fetchEpasarData = async () => {
     try {
-      const [productsRes, categoriesRes, ordersRes] = await Promise.all([
+      const [productsRes, categoriesRes] = await Promise.all([
         fetch('/api/epasar/produk'),
-        fetch('/api/epasar/kategori'),
-        fetch('/api/epasar/pesanan')
+        fetch('/api/epasar/kategori')
       ]);
 
       const productsResponse = await productsRes.json();
       const categoriesResponse = await categoriesRes.json();
-      const ordersResponse = await ordersRes.json();
 
       // Handle different response structures
       const productsData = productsResponse.data || productsResponse;
       const categoriesData = categoriesResponse.data || categoriesResponse;
-      const ordersData = ordersResponse.data || ordersResponse;
 
       setProducts(Array.isArray(productsData) ? productsData : []);
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-      setOrders(Array.isArray(ordersData) ? ordersData : []);
 
       // Calculate stats
-      const totalRevenue = ordersData.reduce((sum: number, order: Pesanan) => 
-        order.status === 'SELESAI' ? sum + (order.total || order.totalHarga || 0) : sum, 0
-      );
-
       setEpasarStats({
         totalProducts: Array.isArray(productsData) ? productsData.length : 0,
-        totalOrders: Array.isArray(ordersData) ? ordersData.length : 0,
-        totalRevenue,
+        totalRevenue: 0,
         lowStock: Array.isArray(productsData) ? productsData.filter((p: Produk) => p.stok < 10).length : 0
       });
 
@@ -1475,6 +1464,7 @@ export default function AdminPage() {
       ]
     },
     { id: 'notifikasi', label: 'Notifikasi', icon: Bell },
+    { id: 'cache', label: 'Cache', icon: Database },
   ]
 
   const handleTabChange = (tabId: string) => {
@@ -1638,6 +1628,12 @@ export default function AdminPage() {
                 <h1 className="text-xl font-bold text-foreground">Admin Panel</h1>
               </div>
               <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Button variant="outline" size="sm" className="transition-all duration-200 active:shadow-none active:scale-[0.98]" onClick={() => setActiveTab('cache')}>
+                    <Database className="text-foreground mr-2" size={18} />
+                    <span className="text-foreground">Cache</span>
+                  </Button>
+                </div>
                 <div className="relative">
                   <Button variant="outline" size="sm" className="transition-all duration-200 active:shadow-none active:scale-[0.98]" onClick={() => setActiveTab('notifikasi')}>
                     <Bell className="text-foreground mr-2" size={18} />
@@ -2589,12 +2585,12 @@ export default function AdminPage() {
                   <div className="flex justify-between items-center">
                     <div>
                       <h2 className="text-2xl font-bold">Kelola e-Pasar</h2>
-                      <p className="text-muted-foreground">Kelola produk dan pesanan e-Pasar Pagesangan Timur</p>
+                      <p className="text-muted-foreground">Kelola produk e-Pasar Pagesangan Timur</p>
                     </div>
                   </div>
 
                   {/* Stats Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <Card>
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
@@ -2611,8 +2607,8 @@ export default function AdminPage() {
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-muted-foreground">Total Pesanan</p>
-                            <p className="text-2xl font-bold">{epasarStats.totalOrders}</p>
+                            <p className="text-sm font-medium text-muted-foreground">Stok Menipis</p>
+                            <p className="text-2xl font-bold">{epasarStats.lowStock}</p>
                           </div>
                           <ShoppingCart className="h-8 w-8 text-green-600" />
                         </div>
@@ -2648,7 +2644,6 @@ export default function AdminPage() {
                   <Tabs defaultValue="products" className="space-y-4">
                     <TabsList>
                       <TabsTrigger value="products">Produk</TabsTrigger>
-                      <TabsTrigger value="orders">Pesanan</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="products" className="space-y-4">
@@ -2874,61 +2869,6 @@ export default function AdminPage() {
                       </Card>
                     </TabsContent>
 
-                    <TabsContent value="orders" className="space-y-4">
-                      <Card>
-                        <CardContent className="p-6">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Pelanggan</TableHead>
-                                <TableHead>Produk</TableHead>
-                                <TableHead>Jumlah</TableHead>
-                                <TableHead>Total</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Tanggal</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {orders.length === 0 ? (
-                                <TableRow>
-                                  <TableCell colSpan={6} className="text-center py-8">
-                                    Tidak ada pesanan yang ditemukan
-                                  </TableCell>
-                                </TableRow>
-                              ) : (
-                                orders.map((order) => (
-                                  <TableRow key={order.id}>
-                                    <TableCell>
-                                      <div>
-                                        <div className="font-medium">{order.nama}</div>
-                                        <div className="text-sm text-muted-foreground">{order.nomorWA}</div>
-                                      </div>
-                                    </TableCell>
-                                    <TableCell>{order.produk?.judul || '-'}</TableCell>
-                                    <TableCell>{order.jumlah}</TableCell>
-                                    <TableCell>Rp {order.total.toLocaleString('id-ID')}</TableCell>
-                                    <TableCell>
-                                      <Badge 
-                                        variant={
-                                          order.status === 'SELESAI' ? 'default' : 
-                                          order.status === 'DIPROSES' ? 'secondary' : 
-                                          'outline'
-                                        }
-                                      >
-                                        {order.status}
-                                      </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                      {new Date(order.createdAt).toLocaleDateString('id-ID')}
-                                    </TableCell>
-                                  </TableRow>
-                                ))
-                              )}
-                            </TableBody>
-                          </Table>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
                   </Tabs>
                 </>
               )}
@@ -3253,6 +3193,10 @@ export default function AdminPage() {
                   </Card>
                 ))}
               </div>
+            </TabsContent>
+
+            <TabsContent value="cache" className="space-y-6 px-6 mt-6">
+              <CacheManagement />
             </TabsContent>
           </Tabs>
           )}

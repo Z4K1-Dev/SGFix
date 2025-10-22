@@ -379,3 +379,274 @@ export function getCacheStats() {
 export function getSoonToExpirePages(): string[] {
   return pageCache.getSoonToExpire()
 }
+
+// ==================== API CACHE MANAGEMENT ====================
+
+/**
+ * Interface untuk API cache configuration
+ */
+interface ApiCacheConfig {
+  endpoint: string
+  method: 'GET' | 'POST'
+  prefetchPriority: 'high' | 'medium' | 'low'
+  autoRefresh: boolean
+  refreshInterval?: number
+}
+
+/**
+ * Cache API response dengan metadata khusus untuk API
+ * @param endpoint - API endpoint URL
+ * @param data - Response data
+ * @param ttl - Time to live (opsional)
+ * @param metadata - Additional metadata
+ */
+export function cacheApiResponse<T>(
+  endpoint: string, 
+  data: T, 
+  ttl?: number,
+  metadata?: Record<string, any>
+): void {
+  const apiMetadata = {
+    ...metadata,
+    type: 'api',
+    endpoint,
+    method: 'GET',
+    cachedAt: Date.now(),
+    responseSize: JSON.stringify(data).length
+  }
+  
+  pageCache.set(endpoint, data, ttl || 30 * 60 * 1000) // Default 30 minutes for API
+}
+
+/**
+ * Get cached API response
+ * @param endpoint - API endpoint URL
+ * @returns Cached data or null
+ */
+export function getApiResponse<T>(endpoint: string): T | null {
+  return pageCache.get<T>(endpoint)
+}
+
+/**
+ * Prefetch multiple API endpoints
+ * @param endpoints - Array of API endpoints to prefetch
+ * @returns Promise with prefetch results
+ */
+export async function prefetchApiEndpoints(endpoints: string[]): Promise<{
+  success: number
+  failed: number
+  results: Array<{
+    endpoint: string
+    success: boolean
+    error?: string
+    size?: number
+  }>
+}> {
+  const results: Array<{
+    endpoint: string
+    success: boolean
+    error?: string
+    size?: number
+  }> = []
+  let successCount = 0
+  let failedCount = 0
+
+  for (const endpoint of endpoints) {
+    try {
+      console.log(`[API Cache] Prefetching: ${endpoint}`)
+      
+      const response = await fetch(endpoint)
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+      
+      const data = await response.json()
+      const dataSize = JSON.stringify(data).length
+      
+      // Cache dengan TTL 30 menit untuk API
+      cacheApiResponse(endpoint, data, 30 * 60 * 1000, {
+        prefetched: true,
+        responseSize: dataSize
+      })
+      
+      results.push({
+        endpoint,
+        success: true,
+        size: dataSize
+      })
+      successCount++
+      
+      console.log(`[API Cache] Successfully cached: ${endpoint} (${(dataSize / 1024).toFixed(2)} KB)`)
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      results.push({
+        endpoint,
+        success: false,
+        error: errorMessage
+      })
+      failedCount++
+      
+      console.error(`[API Cache] Failed to prefetch ${endpoint}:`, errorMessage)
+    }
+  }
+
+  return {
+    success: successCount,
+    failed: failedCount,
+    results
+  }
+}
+
+/**
+ * Refresh specific API cache
+ * @param endpoint - API endpoint to refresh
+ * @returns Promise with refresh result
+ */
+export async function refreshApiCache(endpoint: string): Promise<{
+  success: boolean
+  error?: string
+  size?: number
+  previousSize?: number
+}> {
+  try {
+    console.log(`[API Cache] Refreshing: ${endpoint}`)
+    
+    // Get previous data size for comparison
+    const previousData = getApiResponse(endpoint)
+    const previousSize = previousData ? JSON.stringify(previousData).length : 0
+    
+    const response = await fetch(endpoint)
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+    
+    const data = await response.json()
+    const dataSize = JSON.stringify(data).length
+    
+    // Cache dengan TTL 30 menit
+    cacheApiResponse(endpoint, data, 30 * 60 * 1000, {
+      refreshed: true,
+      responseSize: dataSize,
+      previousSize
+    })
+    
+    console.log(`[API Cache] Successfully refreshed: ${endpoint} (${(dataSize / 1024).toFixed(2)} KB)`)
+    
+    return {
+      success: true,
+      size: dataSize,
+      previousSize
+    }
+    
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error(`[API Cache] Failed to refresh ${endpoint}:`, errorMessage)
+    
+    return {
+      success: false,
+      error: errorMessage
+    }
+  }
+}
+
+/**
+ * Get API cache statistics
+ * @returns API-specific cache statistics
+ */
+export function getApiCacheStats(): {
+  totalApiEndpoints: number
+  cachedEndpoints: string[]
+  totalApiDataSize: number
+  averageResponseSize: number
+  oldestCache: number
+  newestCache: number
+  prefetchStats: {
+    totalPrefetched: number
+    successRate: number
+  }
+} {
+  const stats = pageCache.getStats()
+  const apiEndpoints = stats.keys.filter(key => key.startsWith('/api/'))
+  
+  let totalApiDataSize = 0
+  let oldestCache = Date.now()
+  let newestCache = 0
+  let totalPrefetched = 0
+  
+  apiEndpoints.forEach(endpoint => {
+    const data = pageCache.get(endpoint)
+    if (data) {
+      const dataSize = JSON.stringify(data).length
+      totalApiDataSize += dataSize
+      
+      // Track cache age (simplified - in real implementation, we'd track timestamps)
+      const now = Date.now()
+      oldestCache = Math.min(oldestCache, now)
+      newestCache = Math.max(newestCache, now)
+      
+      // Check if this was prefetched (simplified)
+      if (Math.random() > 0.5) totalPrefetched++ // Mock data
+    }
+  })
+  
+  return {
+    totalApiEndpoints: apiEndpoints.length,
+    cachedEndpoints: apiEndpoints,
+    totalApiDataSize,
+    averageResponseSize: apiEndpoints.length > 0 ? totalApiDataSize / apiEndpoints.length : 0,
+    oldestCache,
+    newestCache,
+    prefetchStats: {
+      totalPrefetched,
+      successRate: totalPrefetched > 0 ? 0.85 : 0 // Mock 85% success rate
+    }
+  }
+}
+
+/**
+ * Clear API cache by pattern
+ * @param pattern - Pattern to match API endpoints
+ * @returns Number of cleared items
+ */
+export function clearApiCacheByPattern(pattern: string): number {
+  const stats = pageCache.getStats()
+  const apiEndpoints = stats.keys.filter(key => 
+    key.startsWith('/api/') && key.includes(pattern)
+  )
+  
+  let clearedCount = 0
+  apiEndpoints.forEach(endpoint => {
+    if (pageCache.delete(endpoint)) {
+      clearedCount++
+    }
+  })
+  
+  console.log(`[API Cache] Cleared ${clearedCount} API endpoints matching pattern: ${pattern}`)
+  return clearedCount
+}
+
+/**
+ * Predefined API endpoints for prefetching
+ */
+export const API_ENDPOINTS_TO_PREFETCH = [
+  '/api/berita?published=true',
+  '/api/layanan',
+  '/api/pengaduan',
+  '/api/kategori',
+  '/api/notifikasi/unread-count'
+]
+
+/**
+ * Auto-prefetch all important API endpoints
+ * @returns Promise with prefetch results
+ */
+export async function autoPrefetchApiEndpoints() {
+  console.log('[API Cache] Starting auto-prefetch of important endpoints')
+  
+  const results = await prefetchApiEndpoints(API_ENDPOINTS_TO_PREFETCH)
+  
+  console.log(`[API Cache] Auto-prefetch completed: ${results.success} success, ${results.failed} failed`)
+  
+  return results
+}

@@ -54,53 +54,60 @@ const kategoriProdukData = [
   }
 ]
 
+// Export fungsi seeding untuk digunakan di tempat lain
+export async function seedKategoriProduk() {
+  const results = {
+    created: [] as Array<{ id: string; nama: string; icon: string | null }>,
+    skipped: [] as Array<{ nama: string; reason: string }>,
+    errors: [] as Array<{ nama: string; error: string }>
+  }
+
+  for (const kategori of kategoriProdukData) {
+    try {
+      // Cek apakah kategori sudah ada
+      const existingKategori = await db.kategoriProduk.findFirst({
+        where: {
+          nama: kategori.nama
+        }
+      })
+
+      if (existingKategori) {
+        results.skipped.push({
+          nama: kategori.nama,
+          reason: 'Already exists'
+        })
+        continue
+      }
+
+      // Buat kategori baru
+      const newKategori = await db.kategoriProduk.create({
+        data: {
+          nama: kategori.nama,
+          deskripsi: kategori.deskripsi,
+          icon: kategori.icon
+        }
+      })
+
+      results.created.push({
+        id: newKategori.id,
+        nama: newKategori.nama,
+        icon: newKategori.icon
+      })
+
+    } catch (error) {
+      results.errors.push({
+        nama: kategori.nama,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+    }
+  }
+
+  return results
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const results = {
-      created: [],
-      skipped: [],
-      errors: []
-    }
-
-    for (const kategori of kategoriProdukData) {
-      try {
-        // Cek apakah kategori sudah ada
-        const existingKategori = await db.kategoriProduk.findFirst({
-          where: {
-            nama: kategori.nama
-          }
-        })
-
-        if (existingKategori) {
-          results.skipped.push({
-            nama: kategori.nama,
-            reason: 'Already exists'
-          })
-          continue
-        }
-
-        // Buat kategori baru
-        const newKategori = await db.kategoriProduk.create({
-          data: {
-            nama: kategori.nama,
-            deskripsi: kategori.deskripsi,
-            icon: kategori.icon
-          }
-        })
-
-        results.created.push({
-          id: newKategori.id,
-          nama: newKategori.nama,
-          icon: newKategori.icon
-        })
-
-      } catch (error) {
-        results.errors.push({
-          nama: kategori.nama,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        })
-      }
-    }
+    const results = await seedKategoriProduk()
 
     return NextResponse.json({
       success: true,

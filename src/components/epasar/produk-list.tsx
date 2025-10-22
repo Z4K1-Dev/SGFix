@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { toast as appToast } from '@/hooks/use-toast'
-import { useCachedData, usePrefetch, useIntersectionObserver, debounce } from '@/lib/epasar-cache'
+import { usePrefetch, debounce } from '@/lib/epasar-cache'
 
 import { 
   Search, 
@@ -41,7 +41,6 @@ interface Produk {
   views: number
   createdAt: string
   updatedAt: string
-  _aggr_count_pesanan: number
   kategori: {
     id: string
     nama: string
@@ -66,7 +65,7 @@ export function ProdukList({ className }: ProdukListProps) {
   const [kategori, setKategori] = useState<KategoriProduk[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedKategori, setSelectedKategori] = useState<string>('')
+  const [selectedKategori, setSelectedKategori] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('terbaru')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [page, setPage] = useState(1)
@@ -74,24 +73,6 @@ export function ProdukList({ className }: ProdukListProps) {
   
   const router = useRouter()
   const { prefetchProduct } = usePrefetch()
-  
-  // Use cached data for kategori
-  const { data: cachedKategori, loading: kategoriLoading } = useCachedData(
-    'kategori',
-    async () => {
-      const response = await fetch('/api/epasar/kategori')
-      if (!response.ok) throw new Error('Gagal memuat data kategori')
-      return response.json()
-    },
-    10 * 60 * 1000 // 10 minutes cache
-  )
-  
-  // Update kategori when cached data changes
-  useEffect(() => {
-    if (cachedKategori) {
-      setKategori(cachedKategori)
-    }
-  }, [cachedKategori])
 
   // Debounced search
   const debouncedSearch = useCallback(
@@ -101,19 +82,19 @@ export function ProdukList({ className }: ProdukListProps) {
     []
   )
 
-  // Fetch produk data with caching
-  const fetchProduk = async (reset = false) => {
+  // Combined data fetching with caching
+  const fetchCombinedData = async (reset = false) => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
         page: reset ? '1' : page.toString(),
         limit: '12',
         search: searchTerm,
-        kategoriId: selectedKategori,
+        kategori: selectedKategori === 'all' ? '' : selectedKategori,
         sort: sortBy
       })
       
-      const cacheKey = `produk:${params.toString()}`
+      const cacheKey = `combined:${params.toString()}`
       
       // Try to get from cache first
       const cachedData = localStorage.getItem(cacheKey)
@@ -121,38 +102,46 @@ export function ProdukList({ className }: ProdukListProps) {
         const { data, timestamp } = JSON.parse(cachedData)
         // Use cache if it's less than 2 minutes old
         if (Date.now() - timestamp < 2 * 60 * 1000) {
-          setProduk(data)
+          setKategori(data.kategori)
+          setProduk(data.produk)
           setPage(2)
-          setHasMore(data.length === 12)
+          setHasMore(data.produk.length === 12)
           setLoading(false)
           return
         }
       }
 
-      const response = await fetch(`/api/epasar/produk?${params}`)
-      if (!response.ok) throw new Error('Gagal memuat data produk')
+      const response = await fetch(`/api/epasar/combined?${params}`)
+      if (!response.ok) throw new Error('Gagal memuat data e-Pasar')
       
-      const data = await response.json()
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Gagal memuat data')
+      }
+      
+      const { kategori: kategoriData, produk: produkData } = result.data
       
       // Cache the results
       if (reset) {
         localStorage.setItem(cacheKey, JSON.stringify({
-          data,
+          data: result.data,
           timestamp: Date.now()
         }))
-        setProduk(data)
+        setKategori(kategoriData)
+        setProduk(produkData)
         setPage(2)
       } else {
-        setProduk(prev => [...prev, ...data])
+        setProduk(prev => [...prev, ...produkData])
         setPage(prev => prev + 1)
       }
       
-      setHasMore(data.length === 12)
+      setHasMore(produkData.length === 12)
     } catch (error: any) {
-      console.error('Fetch produk error:', error)
+      console.error('Fetch combined data error:', error)
       appToast({
         title: 'Error',
-        description: error.message || 'Gagal memuat data produk',
+        description: error.message || 'Gagal memuat data e-Pasar',
         variant: 'destructive'
       })
     } finally {
@@ -162,13 +151,13 @@ export function ProdukList({ className }: ProdukListProps) {
 
   // Initial fetch and refetch on filter change
   useEffect(() => {
-    fetchProduk(true)
+    fetchCombinedData(true)
   }, [searchTerm, selectedKategori, sortBy])
 
   // Load more products
   const loadMore = () => {
     if (!loading && hasMore) {
-      fetchProduk(false)
+      fetchCombinedData(false)
     }
   }
 
@@ -307,12 +296,6 @@ export function ProdukList({ className }: ProdukListProps) {
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Store size={12} />
             <span>{formatTanggal(produk.createdAt)}</span>
-            {produk._aggr_count_pesanan > 0 && (
-              <>
-                <span>•</span>
-                <span>{produk._aggr_count_pesanan} terjual</span>
-              </>
-            )}
           </div>
           
           <Button
@@ -376,7 +359,7 @@ export function ProdukList({ className }: ProdukListProps) {
                 <SelectValue placeholder="Semua Kategori" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Semua Kategori</SelectItem>
+                <SelectItem value="all">Semua Kategori</SelectItem>
                 {kategori.map((kat) => (
                   <SelectItem key={kat.id} value={kat.id}>
                     {kat.nama}

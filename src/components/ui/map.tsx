@@ -5,7 +5,7 @@ import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 // Set the Mapbox access token
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || process.env.MAPBOX_ACCESS_TOKEN || ''
 
 interface MapProps {
   initialCoordinates?: [number, number]
@@ -37,6 +37,13 @@ export function Map({
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return
+
+    // Check if access token is available
+    if (!mapboxgl.accessToken) {
+      setError('Mapbox access token is not configured')
+      setIsLoading(false)
+      return
+    }
 
     try {
       // Initialize the map
@@ -70,18 +77,14 @@ export function Map({
       // Handle errors
       map.current.on('error', (e) => {
         console.error('Mapbox error:', e)
-        setTimeout(() => {
-          setError('Failed to load map')
-          setIsLoading(false)
-        }, 0)
+        setError('Failed to load map. Please check your internet connection.')
+        setIsLoading(false)
       })
 
     } catch (err) {
       console.error('Error initializing map:', err)
-      setTimeout(() => {
-        setError('Failed to initialize map')
-        setIsLoading(false)
-      }, 0)
+      setError('Failed to initialize map. Please check your Mapbox configuration.')
+      setIsLoading(false)
     }
 
     // Cleanup
@@ -145,9 +148,17 @@ export function Map({
   if (error) {
     return (
       <div className={`flex items-center justify-center bg-gray-100 ${className}`}>
-        <div className="text-center p-4">
-          <p className="text-red-500 mb-2">Error loading map</p>
-          <p className="text-sm text-gray-600">{error}</p>
+        <div className="text-center p-4 max-w-sm">
+          <div className="mb-4">
+            <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+          </div>
+          <p className="text-red-500 font-medium mb-2">Map Error</p>
+          <p className="text-sm text-gray-600 mb-4">{error}</p>
+          <div className="text-xs text-gray-500">
+            <p>Try refreshing the page or check your internet connection.</p>
+          </div>
         </div>
       </div>
     )

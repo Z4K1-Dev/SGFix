@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { seedKategoriProduk } from '@/lib/seed-epasar'
+import { seedKategoriProduk } from '../kategori-produk/route'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -24,11 +24,13 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Berhasil seeding kategori produk e-Pasar',
       data: {
-        total: kategori.length,
-        kategori: kategori.map(k => ({
+        total: kategori.created.length,
+        created: kategori.created.length,
+        skipped: kategori.skipped.length,
+        errors: kategori.errors.length,
+        kategori: kategori.created.map(k => ({
           id: k.id,
           nama: k.nama,
-          deskripsi: k.deskripsi,
           icon: k.icon
         }))
       }

@@ -449,6 +449,75 @@ export async function seedData() {
       console.log('Notifikasi data already exists')
     }
 
+    // Cek apakah sudah ada data kategori produk
+    const existingKategoriProduk = await db.kategoriProduk.findFirst()
+    if (!existingKategoriProduk) {
+      // Buat data kategori produk dari database
+      await db.kategoriProduk.createMany({
+        data: [
+          {
+            nama: 'Elektronik',
+            deskripsi: 'Elektronik dan gadget',
+            icon: 'Smartphone'
+          },
+          {
+            nama: 'Hasil Laut',
+            deskripsi: 'Ikan dan hasil laut lainnya',
+            icon: 'Fish'
+          },
+          {
+            nama: 'Kendaraan',
+            deskripsi: 'Kendaraan dan sparepart',
+            icon: 'Car'
+          },
+          {
+            nama: 'Keperluan Pribadi',
+            deskripsi: 'Produk keperluan pribadi dan fashion',
+            icon: 'User'
+          },
+          {
+            nama: 'Kerajinan',
+            deskripsi: 'Produk kerajinan tangan dan seni lokal',
+            icon: 'Palette'
+          },
+          {
+            nama: 'Makanan & Minuman',
+            deskripsi: 'Produk makanan dan minuman olahan',
+            icon: 'Utensils'
+          },
+          {
+            nama: 'Perkebunan',
+            deskripsi: 'Hasil perkebunan komoditas',
+            icon: 'TreePine'
+          },
+          {
+            nama: 'Pertanian',
+            deskripsi: 'Hasil pertanian dan perkebunan',
+            icon: 'Wheat'
+          },
+          {
+            nama: 'Peternakan',
+            deskripsi: 'Hewan ternak dan produk peternakan',
+            icon: 'cow-head'
+          },
+          {
+            nama: 'Properti',
+            deskripsi: 'Tanah, rumah, dan properti lainnya',
+            icon: 'Home'
+          },
+          {
+            nama: 'Sembako',
+            deskripsi: 'Kebutuhan pokok sehari-hari seperti beras, minyak, gula, dll',
+            icon: 'ShoppingBasket'
+          }
+        ]
+      })
+
+      console.log('Kategori Produk data seeded successfully')
+    } else {
+      console.log('Kategori Produk data already exists')
+    }
+
     console.log('Data seeding completed')
   } catch (error) {
     console.error('Error seeding data:', error)

@@ -19,7 +19,6 @@ export interface Produk {
     deskripsi: string;
     icon?: string;
   };
-  totalPesanan?: number;
 }
 
 export interface KategoriProduk {
@@ -29,18 +28,4 @@ export interface KategoriProduk {
   icon?: string;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface Pesanan {
-  id: string;
-  produkId: string;
-  nama: string;
-  nomorWA: string;
-  jumlah: number;
-  total: number;
-  status: string;
-  pesan?: string;
-  createdAt: string;
-  updatedAt: string;
-  produk?: Produk;
 }

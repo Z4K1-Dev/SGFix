@@ -42,7 +42,6 @@ interface Produk {
   views: number
   createdAt: string
   updatedAt: string
-  _aggr_count_pesanan: number
   kategori: {
     id: string
     nama: string
@@ -326,9 +325,6 @@ export function ProdukDetail({ produkId, className }: ProdukDetailProps) {
                 
                 <div className="flex items-center gap-2 mb-4">
                   <Badge variant="secondary">{produk.kategori.nama}</Badge>
-                  {produk._aggr_count_pesanan > 0 && (
-                    <Badge variant="outline">{produk._aggr_count_pesanan} terjual</Badge>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-4 mb-4">
